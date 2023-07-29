@@ -1,13 +1,16 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const authConfig = require("../configs/auth.config");
+const authConfig = require("../../configs/auth.config");
 var newOTP = require("otp-generators");
-const User = require("../models/user.model");
-const Category = require("../models/CategoryModel");
-const subCategory = require("../models/subCategory");
-const banner = require('../models/banner')
-const ContactDetail = require("../models/ContactDetail");
-const subscription = require('../models/subscription');
+const User = require("../../models/user.model");
+const Category = require("../../models/CategoryModel");
+const subCategory = require("../../models/subCategory");
+
+// const ContactDetail = require("../models/ContactDetail");
+// const subscription = require('../models/subscription');
+// const banner = require('../models/banner')
+// const serviceCategory = require('../models/serviceCategory')
+
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -43,15 +46,7 @@ exports.signin = async (req, res) => {
         const accessToken = jwt.sign({ id: user._id }, authConfig.secret, {
             expiresIn: authConfig.accessTokenTime,
         });
-        let obj = {
-            fullName: user.fullName,
-            firstName: user.fullName,
-            lastName: user.lastName,
-            phone: user.phone,
-            email: user.email,
-            userType: user.userType,
-        }
-        return res.status(201).send({ data: obj, accessToken: accessToken });
+        return res.status(201).send({ data: user, accessToken: accessToken });
     } catch (error) {
         console.error(error);
         return res.status(500).send({ message: "Server error" + error.message });
@@ -85,6 +80,45 @@ exports.createCategory = async (req, res) => {
     try {
         let findCategory = await Category.findOne({ name: req.body.name });
         if (findCategory) {
+            return res.status(409).json({ message: "category already exit.", status: 404, data: {} });
+        } else {
+            const data = { name: req.body.name };
+            const category = await Category.create(data);
+            return res.status(200).json({ message: "category add successfully.", status: 200, data: category });
+        }
+
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getCategories = async (req, res) => {
+    const categories = await Category.find({});
+    return res.status(201).json({ success: true, categories, });
+};
+exports.updateCategory = async (req, res) => {
+    const { id } = req.params;
+    const category = await Category.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+    }
+    category.name = req.body.name;
+    let update = await category.save();
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeCategory = async (req, res) => {
+    const { id } = req.params;
+    const category = await Category.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+    } else {
+        await Category.findByIdAndDelete(category._id);
+        return res.status(200).json({ message: "Category Deleted Successfully !" });
+    }
+};
+exports.createServiceCategory = async (req, res) => {
+    try {
+        let findCategory = await serviceCategory.findOne({ name: req.body.name });
+        if (findCategory) {
             return res.status(409).json({ message: "Service Category already exit.", status: 404, data: {} });
         } else {
             let fileUrl;
@@ -92,20 +126,20 @@ exports.createCategory = async (req, res) => {
                 fileUrl = req.file ? req.file.path : "";
             }
             const data = { name: req.body.name, image: fileUrl };
-            const category = await Category.create(data);
+            const category = await serviceCategory.create(data);
             return res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
         }
     } catch (error) {
         return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
     }
 };
-exports.getCategories = async (req, res) => {
-    const categories = await Category.find({});
+exports.getServiceCategory = async (req, res) => {
+    const categories = await serviceCategory.find({});
     return res.status(201).json({ message: "Service Category Found", status: 200, data: categories, });
 };
-exports.updateCategory = async (req, res) => {
+exports.updateServiceCategory = async (req, res) => {
     const { id } = req.params;
-    const category = await Category.findById(id);
+    const category = await serviceCategory.findById(id);
     if (!category) {
         return res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
     }
@@ -118,86 +152,22 @@ exports.updateCategory = async (req, res) => {
     let update = await category.save();
     return res.status(200).json({ message: "Updated Successfully", data: update });
 };
-exports.removeCategory = async (req, res) => {
+exports.removeServiceCategory = async (req, res) => {
     const { id } = req.params;
-    const category = await Category.findById(id);
+    const category = await serviceCategory.findById(id);
     if (!category) {
         return res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
     } else {
-        await Category.findByIdAndDelete(category._id);
+        await serviceCategory.findByIdAndDelete(category._id);
         return res.status(200).json({ message: "Service Category Deleted Successfully !" });
     }
 };
-exports.createSubCategory = async (req, res) => {
-    try {
-        const findCategory = await Category.findById({ _id: req.body.categoryId });
-        if (!findCategory) {
-            return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
-        } else {
-            let findSubCategory = await subCategory.findOne({ categoryId: findCategory._id, name: req.body.name });
-            if (findSubCategory) {
-                return res.status(409).json({ message: "Sub Category already exit.", status: 404, data: {} });
-            } else {
-                let fileUrl;
-                if (req.file) {
-                    fileUrl = req.file ? req.file.path : "";
-                }
-                const data = { name: req.body.name, categoryId: findCategory._id, image: fileUrl };
-                const category = await subCategory.create(data);
-                return res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
-            }
-        }
-    } catch (error) {
-        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
-    }
-};
-exports.getSubCategories = async (req, res) => {
-    const findCategory = await Category.findById({ _id: req.body.categoryId });
-    if (!findCategory) {
-        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
-    } else {
-        let findSubCategory = await subCategory.find({ categoryId: findCategory._id })
-        if (findSubCategory.length > 0) {
-            return res.status(200).json({ message: "Sub Category Found", status: 200, data: findSubCategory, });
-        } else {
-            return res.status(201).json({ message: "Sub Category not Found", status: 404, data: {}, });
-        }
-    }
-};
-exports.updateSubCategory = async (req, res) => {
-    const { id } = req.params;
-    const findSubCategory = await subCategory.findById(id);
-    if (!findSubCategory) {
-        return res.status(404).json({ message: "Sub Category Not Found", status: 404, data: {} });
-    }
-    if (req.body.categoryId != (null || undefined)) {
-        const findCategory = await Category.findById({ _id: req.body.categoryId });
-        if (!findCategory) {
-            return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
-        }
-    }
-    let fileUrl;
-    if (req.file) {
-        fileUrl = req.file ? req.file.path : "";
-    }
-    let obj = {
-        name: req.body.name || findSubCategory.name,
-        categoryId: req.body.categoryId || findSubCategory.categoryId,
-        image: fileUrl || findSubCategory.image
-    }
-    let update = await subCategory.findByIdAndUpdate({ _id: findSubCategory._id }, { $set: obj }, { new: true });
-    return res.status(200).json({ message: "Updated Successfully", data: update });
-};
-exports.removeSubCategory = async (req, res) => {
-    const { id } = req.params;
-    const category = await subCategory.findById(id);
-    if (!category) {
-        return res.status(404).json({ message: "Sub Category Not Found", status: 404, data: {} });
-    } else {
-        await subCategory.findByIdAndDelete(category._id);
-        return res.status(200).json({ message: "Sub Category Deleted Successfully !" });
-    }
-};
+
+
+
+
+
+
 exports.addContactDetails = async (req, res) => {
     try {
         let findContact = await ContactDetail.findOne();

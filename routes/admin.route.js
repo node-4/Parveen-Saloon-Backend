@@ -1,41 +1,28 @@
 const auth = require("../controllers/admin.controller");
-const { authJwt } = require("../middlewares");
+const authJwt = require("../middlewares/authJwt");
 var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
-cloudinary.config({
-        cloud_name: "dbrvq9uxa",
-        api_key: "567113285751718",
-        api_secret: "rjTsz9ksqzlDtsrlOPcTs_-QtW4",
-});
-const storage = new CloudinaryStorage({
-        cloudinary: cloudinary,
-        params: {
-                folder: "images/image",
-                allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF"],
-        },
-});
-const upload = multer({ storage: storage });
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload,categoryUpload } = require('../middlewares/imageUpload')
+
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
 router.put("/update", [authJwt.verifyToken], auth.update);
-router.post("/Category/addCategory", [authJwt.verifyToken], auth.createCategory);
+router.post("/Category/addCategory", [authJwt.verifyToken], categoryUpload.single('image'), auth.createCategory);
 router.get("/Category/allCategory", auth.getCategories);
-router.put("/Category/updateCategory/:id", [authJwt.verifyToken], auth.updateCategory);
+router.put("/Category/updateCategory/:id", [authJwt.verifyToken], categoryUpload.single('image'), auth.updateCategory);
 router.delete("/Category/deleteCategory/:id", [authJwt.verifyToken], auth.removeCategory);
-router.post("/service/addCategory", [authJwt.verifyToken],upload.single('image'), auth.createServiceCategory);
-router.get("/service/allCategory", auth.getServiceCategory);
-router.put("/service/updateCategory/:id", [authJwt.verifyToken],upload.single('image'), auth.updateServiceCategory);
-router.delete("/service/deleteCategory/:id", [authJwt.verifyToken], auth.removeServiceCategory);
+router.post("/SubCategory/createSubCategory", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.createSubCategory);
+router.get("/SubCategory/allSubCategory", auth.getSubCategories);
+router.put("/SubCategory/update/:id", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.updateSubCategory);
+router.delete("/SubCategory/delete/:id", [authJwt.verifyToken], auth.removeSubCategory);
+router.post("/Banner/AddBanner", [authJwt.verifyToken], bannerUpload.single('image'), auth.AddBanner);
+router.get("/Banner/allBanner", auth.getBanner);
+router.get("/Banner/getBannerById/:id", auth.getBannerById);
+router.delete("/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
 router.post("/addContactDetails", [authJwt.verifyToken], auth.addContactDetails);
 router.get("/viewContactDetails", auth.viewContactDetails);
 router.post('/createSubscription', auth.createSubscription);
 router.get('/getSubscription', auth.getSubscription);
-router.post("/Banner/AddBanner", [authJwt.verifyToken], upload.single('image'), auth.AddBanner);
-router.get("/Banner/allBanner", auth.getBanner);
-router.get("/Banner/getBannerById/:id", auth.getBannerById);
-router.delete("/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
 module.exports = router;

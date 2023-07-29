@@ -1,5 +1,5 @@
 const staticContent = require('../controllers/static.Controller');
-const authJwt = require("../middlewares/authJwt");
+const { authJwt, authorizeRoles } = require("../middlewares");
 
 const express = require("express");
 const router = express();
