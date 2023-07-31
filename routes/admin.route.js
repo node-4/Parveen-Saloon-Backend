@@ -35,5 +35,12 @@ router.get("/Service/:categoryId/:subCategoryId", auth.getService);
 router.get("/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
 router.delete("/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
 router.put("/Service/update/:id", [authJwt.verifyToken], auth.updateService);
-
+router.post("/Charges/addCharges", [authJwt.verifyToken], auth.createCharge);
+router.get("/Charges/allCharges", auth.getCharges);
+router.put("/Charges/updateCharges/:id", [authJwt.verifyToken], auth.updateCharge);
+router.delete("/Charges/deleteCharges/:id", [authJwt.verifyToken], auth.removeCharge);
+router.post("/FreeService/addFreeService", [authJwt.verifyToken], auth.createFreeService);
+router.get("/FreeService/allFreeService", auth.getFreeServices);
+router.put("/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
+router.delete("/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
 module.exports = router;

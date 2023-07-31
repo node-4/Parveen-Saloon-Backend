@@ -9,7 +9,7 @@ const couponSchema = new mongoose.Schema({
                 type: schema.Types.ObjectId,
                 ref: "services"
         },
-        status: {
+        used: {
                 type: Boolean,
                 default: false,
         },

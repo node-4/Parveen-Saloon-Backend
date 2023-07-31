@@ -6,6 +6,19 @@ const couponSchema = new mongoose.Schema({
         },
         charge: {
                 type: Number,
+                default: 0
+        },
+        discountCharge: {
+                type: Number,
+                default: 0
+        },
+        discount: {
+                type: Boolean,
+                default: false
+        }, 
+        cancelation: {
+                type: Boolean,
+                default: false
         },
         status: {
                 type: Boolean,

@@ -17,7 +17,11 @@ const DocumentSchema = schema({
                 chargeId: {
                         type: schema.Types.ObjectId,
                         ref: "Charges"
-                }
+                },
+                charge: {
+                        type: Number,
+                        default: 0
+                },
         }],
         tipProvided: {
                 type: Number,
@@ -30,6 +34,9 @@ const DocumentSchema = schema({
         wallet: {
                 type: Number,
                 default: 0
+        },
+        suggestion: {
+                type: String,
         },
         address: {
                 type: String,
