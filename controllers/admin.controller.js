@@ -8,6 +8,8 @@ const subCategory = require("../models/subCategory");
 const banner = require('../models/banner')
 const ContactDetail = require("../models/ContactDetail");
 const subscription = require('../models/subscription');
+const service = require('../models/service');
+const facialType = require('../models/facialType');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -198,6 +200,44 @@ exports.removeSubCategory = async (req, res) => {
         return res.status(200).json({ message: "Sub Category Deleted Successfully !" });
     }
 };
+exports.createFacialType = async (req, res) => {
+    try {
+        let findFacialType = await facialType.findOne({ name: req.body.name });
+        if (findFacialType) {
+            return res.status(409).json({ message: "facialType already exit.", status: 404, data: {} });
+        } else {
+            const data = { name: req.body.name };
+            const category = await facialType.create(data);
+            return res.status(200).json({ message: "facialType add successfully.", status: 200, data: category });
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getFacialTypes = async (req, res) => {
+    const categories = await facialType.find({});
+    return res.status(201).json({ message: "facialType Found", status: 200, data: categories, });
+};
+exports.updateFacialType = async (req, res) => {
+    const { id } = req.params;
+    const category = await facialType.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "facialType Not Found", status: 404, data: {} });
+    }
+    category.name = req.body.name || category.name;
+    let update = await category.save();
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeFacialType = async (req, res) => {
+    const { id } = req.params;
+    const category = await facialType.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "facialType Not Found", status: 404, data: {} });
+    } else {
+        await Category.findByIdAndDelete(category._id);
+        return res.status(200).json({ message: "facialType Deleted Successfully !" });
+    }
+};
 exports.addContactDetails = async (req, res) => {
     try {
         let findContact = await ContactDetail.findOne();
@@ -306,5 +346,194 @@ exports.DeleteBanner = async (req, res) => {
     } catch (err) {
         console.log(err);
         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.createService = async (req, res) => {
+    try {
+        let findCategory = await Category.findById({ _id: req.body.categoryId });
+        if (!findCategory) {
+            return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+        } else {
+            let findSubCategory = await subCategory.findOne({ categoryId: findCategory._id, _id: req.body.subCategoryId });
+            if (!findSubCategory) {
+                return res.status(404).json({ message: "Sub Category not found.", status: 404, data: {} });
+            } else {
+                let findService = await service.findOne({ name: req.body.name, categoryId: findCategory._id, subCategoryId: findSubCategory._id });
+                if (findService) {
+                    return res.status(409).json({ message: "Service already exit.", status: 409, data: {} });
+                } else {
+                    let discountPrice = 0, discount = 0, totalTime;
+                    if (req.body.timeInMin > 60) {
+                        const hours = Math.floor(req.body.timeInMin / 60);
+                        const minutes = req.body.timeInMin % 60;
+                        totalTime = `${hours} hr ${minutes} min`
+                    } else {
+                        const minutes = req.body.timeInMin % 60;
+                        totalTime = `00 hr ${minutes} min`
+                    }
+                    if (req.body.discountActive == true) {
+                        discountPrice = Number((req.body.price) - (((req.body.price) * (req.body.discount)) / 100)).toFixed();
+                        discount = req.body.discount;
+                    } else {
+                        discountPrice = discountPrice;
+                        discount = discount;
+                    }
+                    const data = {
+                        categoryId: findCategory._id,
+                        subCategoryId: findSubCategory._id,
+                        name: req.body.name,
+                        totalTime: totalTime,
+                        timeInMin: req.body.timeInMin,
+                        price: req.body.price,
+                        discountPrice: discountPrice,
+                        discount: discount,
+                        discountActive: req.body.discountActive,
+                        E4uSafety: req.body.E4uSafety,
+                        thingsToKnow: req.body.thingsToKnow,
+                        E4uSuggestion: req.body.E4uSuggestion,
+                        type: req.body.type
+                    };
+                    const category = await service.create(data);
+                    return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
+                }
+            }
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.updateImagesinService = async (req, res) => {
+    const { id } = req.params;
+    let findService = await service.findById({ _id: id });
+    if (!findService) {
+        return res.status(409).json({ message: "Service not found.", status: 409, data: {} });
+    } else {
+        let fileUrl = [];
+        if (req.files) {
+            for (let i = 0; i < req.files.length; i++) {
+                let obj = {
+                    img: req.files[i] ? req.files[i].path : ""
+                };
+                fileUrl.push(obj)
+            }
+        }
+        let obj = {
+            images: fileUrl || findService.images
+        }
+        let update = await service.findByIdAndUpdate({ _id: findService._id }, { $set: obj }, { new: true });
+        return res.status(200).json({ message: "Updated Successfully", data: update });
+    }
+};
+exports.getService = async (req, res) => {
+    let findCategory = await Category.findById({ _id: req.params.categoryId });
+    if (!findCategory) {
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+    } else {
+        let findSubCategory = await subCategory.findOne({ categoryId: findCategory._id, _id: req.params.subCategoryId });
+        if (!findSubCategory) {
+            return res.status(404).json({ message: "Sub Category not found.", status: 404, data: {} });
+        } else {
+            let findService = await service.find({ categoryId: findCategory._id, subCategoryId: findSubCategory._id });
+            if (findService) {
+                return res.status(201).json({ message: "Service Found", status: 200, data: findService, });
+            } else {
+                return res.status(404).json({ message: "Service not found.", status: 404, data: {} });
+            }
+        }
+    }
+};
+exports.getTopSellingService = async (req, res) => {
+    let findCategory = await Category.findById({ _id: req.params.categoryId });
+    if (!findCategory) {
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+    } else {
+        let findSubCategory = await subCategory.findOne({ categoryId: findCategory._id, _id: req.params.subCategoryId });
+        if (!findSubCategory) {
+            return res.status(404).json({ message: "Sub Category not found.", status: 404, data: {} });
+        } else {
+            let findService = await service.find({ categoryId: findCategory._id, subCategoryId: findSubCategory._id, sellCount: [4, 5] })
+            let top = {
+                findService: findService
+            }
+            let findPremiumService = await service.find({ categoryId: findCategory._id, subCategoryId: findSubCategory._id, type: "Premium" }).sort({ sellCount: -1 });
+            let findClassicService = await service.find({ categoryId: findCategory._id, subCategoryId: findSubCategory._id, type: "Classic" }).sort({ sellCount: -1 });
+            let obj = {
+                top: top,
+                Premium: findPremiumService,
+                Classic: findClassicService
+            }
+            return res.status(201).json({ message: "Service Found", status: 200, data: obj, });
+
+        }
+    }
+};
+exports.removeService = async (req, res) => {
+    const { id } = req.params;
+    const category = await service.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "Service Not Found", status: 404, data: {} });
+    } else {
+        await service.findByIdAndDelete(category._id);
+        return res.status(200).json({ message: "Service Deleted Successfully !" });
+    }
+};
+exports.updateService = async (req, res) => {
+    try {
+        const { id } = req.params;
+        let findService = await service.findById(id);
+        if (!findService) {
+            return res.status(404).json({ message: "Service Not Found", status: 404, data: {} });
+        } else {
+            let findCategory, findSubCategory, discountPrice = 0, discount = 0, totalTime;
+            if (req.body.categoryId != (null || undefined)) {
+                findCategory = await Category.findById({ _id: req.body.categoryId });
+                if (!findCategory) {
+                    return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+                }
+            }
+            if (req.body.subCategoryId != (null || undefined)) {
+                findSubCategory = await subCategory.findOne({ categoryId: findCategory._id || findService.categoryId, _id: req.body.subCategoryId });
+                if (!findSubCategory) {
+                    return res.status(404).json({ message: "Sub Category not found.", status: 404, data: {} });
+                }
+            }
+            if (req.body.timeInMin != (null || undefined)) {
+                if (req.body.timeInMin > 60) {
+                    const hours = Math.floor(req.body.timeInMin / 60);
+                    const minutes = req.body.timeInMin % 60;
+                    totalTime = `${hours} hr ${minutes} min`
+                } else {
+                    const minutes = req.body.timeInMin % 60;
+                    totalTime = `00 hr ${minutes} min`
+                }
+            }
+            if (req.body.discountActive == true) {
+                discountPrice = (req.body.price) - (((req.body.price) * (req.body.discount)) / 100);
+                discount = req.body.discount;
+            } else {
+                discountPrice = findService.discountPrice;
+                discount = findService.discount;
+            }
+            const data = {
+                categoryId: findCategory._id || findService.categoryId,
+                subCategoryId: findSubCategory._id || findService.subCategoryId,
+                name: req.body.name || findService.name,
+                totalTime: totalTime || findService.totalTime,
+                timeInMin: req.body.timeInMin || findService.timeInMin,
+                price: req.body.price || findService.price,
+                discountPrice: discountPrice || findService.discountPrice,
+                discount: discount || findService.discount,
+                discountActive: req.body.discountActive || findService.discountActive,
+                E4uSafety: req.body.E4uSafety || findService.E4uSafety,
+                thingsToKnow: req.body.thingsToKnow || findService.thingsToKnow,
+                E4uSuggestion: req.body.E4uSuggestion || findService.E4uSuggestion,
+                type: req.body.type || findService.type
+            };
+            const category = await service.findByIdAndUpdate({ _id: findService._id }, { $set: data }, { new: true });
+            return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
     }
 };

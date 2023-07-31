@@ -18,11 +18,11 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 // require('./controllers/SubscriptionCronjob');
-// const user = require('./routes/user.route');
+const user = require('./routes/user.route');
 const admin = require('./routes/admin.route');
 const static = require('./routes/static.route');
 // const vendor = require('./routes/vendor.route');
-// app.use('/api/v1/user', user);
+app.use('/api/v1/user', user);
 app.use('/api/v1/admin', admin);
 // app.use('/api/v1/vendor', vendor);
 app.use('/api/v1/static', static);

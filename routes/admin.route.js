@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload,categoryUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload } = require('../middlewares/imageUpload')
 
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
@@ -17,6 +17,10 @@ router.post("/SubCategory/createSubCategory", [authJwt.verifyToken], subCategory
 router.get("/SubCategory/allSubCategory", auth.getSubCategories);
 router.put("/SubCategory/update/:id", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.updateSubCategory);
 router.delete("/SubCategory/delete/:id", [authJwt.verifyToken], auth.removeSubCategory);
+router.post("/FacialType/addFacialType", [authJwt.verifyToken], auth.createFacialType);
+router.get("/FacialType/allFacialType", auth.getFacialTypes);
+router.put("/FacialType/updateFacialType/:id", [authJwt.verifyToken], auth.updateFacialType);
+router.delete("/FacialType/deleteFacialType/:id", [authJwt.verifyToken], auth.removeFacialType);
 router.post("/Banner/AddBanner", [authJwt.verifyToken], bannerUpload.single('image'), auth.AddBanner);
 router.get("/Banner/allBanner", auth.getBanner);
 router.get("/Banner/getBannerById/:id", auth.getBannerById);
@@ -25,4 +29,11 @@ router.post("/addContactDetails", [authJwt.verifyToken], auth.addContactDetails)
 router.get("/viewContactDetails", auth.viewContactDetails);
 router.post('/createSubscription', auth.createSubscription);
 router.get('/getSubscription', auth.getSubscription);
+router.post("/Service/addService", [authJwt.verifyToken], auth.createService);
+router.put("/Service/uploadService/:id", [authJwt.verifyToken], serviceUpload.array('image'), auth.updateImagesinService);
+router.get("/Service/:categoryId/:subCategoryId", auth.getService);
+router.get("/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
+router.delete("/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
+router.put("/Service/update/:id", [authJwt.verifyToken], auth.updateService);
+
 module.exports = router;
