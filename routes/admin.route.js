@@ -43,4 +43,6 @@ router.post("/FreeService/addFreeService", [authJwt.verifyToken], auth.createFre
 router.get("/FreeService/allFreeService", auth.getFreeServices);
 router.put("/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
 router.delete("/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
+router.post("/Coupan/addCoupan", [authJwt.verifyToken], auth.addCoupan);
+router.get("/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
 module.exports = router;

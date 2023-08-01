@@ -1,9 +1,26 @@
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 const DocumentSchema = schema({
+        orderId: {
+                type: String
+        },
         userId: {
                 type: schema.Types.ObjectId,
                 ref: "user"
+        },
+        partnerId: {
+                type: schema.Types.ObjectId,
+                ref: "user"
+        },
+        partnerLocation: {
+                type: {
+                        type: String,
+                        default: "Point"
+                },
+                coordinates: {
+                        type: [Number],
+                        default: [0, 0]
+                },
         },
         coupanId: {
                 type: schema.Types.ObjectId,
@@ -128,5 +145,20 @@ const DocumentSchema = schema({
         totalItem: {
                 type: Number
         },
+        orderStatus: {
+                type: String,
+                enum: ["unconfirmed", "confirmed", "cancel"],
+                default: "unconfirmed",
+        },
+        serviceStatus: {
+                type: String,
+                enum: ["Pending", "Complete"],
+                default: "Pending",
+        },
+        paymentStatus: {
+                type: String,
+                enum: ["Pending", "Paid", "Failed"],
+                default: "Pending"
+        },
 }, { timestamps: true })
-module.exports = mongoose.model("cart", DocumentSchema);
+module.exports = mongoose.model("order", DocumentSchema);

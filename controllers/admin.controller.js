@@ -12,7 +12,7 @@ const service = require('../models/service');
 const facialType = require('../models/facialType');
 const Charges = require('../models/Charges');
 const freeService = require('../models/freeService');
-
+const Coupan = require('../models/Coupan')
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -396,7 +396,8 @@ exports.createService = async (req, res) => {
                         E4uSafety: req.body.E4uSafety,
                         thingsToKnow: req.body.thingsToKnow,
                         E4uSuggestion: req.body.E4uSuggestion,
-                        type: req.body.type
+                        type: req.body.type,
+                        discription: req.body.discription
                     };
                     const category = await service.create(data);
                     return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
@@ -532,7 +533,8 @@ exports.updateService = async (req, res) => {
                 E4uSafety: req.body.E4uSafety || findService.E4uSafety,
                 thingsToKnow: req.body.thingsToKnow || findService.thingsToKnow,
                 E4uSuggestion: req.body.E4uSuggestion || findService.E4uSuggestion,
-                type: req.body.type || findService.type
+                type: req.body.type || findService.type,
+                discription: req.body.discription || findService.discription,
             };
             const category = await service.findByIdAndUpdate({ _id: findService._id }, { $set: data }, { new: true });
             return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
@@ -658,3 +660,51 @@ exports.removeFreeServices = async (req, res) => {
         return res.status(200).json({ message: "freeService Deleted Successfully !" });
     }
 };
+exports.addCoupan = async (req, res) => {
+    try {
+        let vendorData = await User.findOne({ _id: req.body.userId });
+        if (!vendorData) {
+            return res.status(404).send({ status: 404, message: "User not found" });
+        } else {
+            const d = new Date(req.body.expirationDate);
+            req.body.expirationDate = d.toISOString();
+            const de = new Date(req.body.activationDate);
+            req.body.activationDate = de.toISOString();
+            req.body.userId = vendorData._id;
+            req.body.couponCode = await reffralCode();
+            let saveStore = await Coupan(req.body).save();
+            if (saveStore) {
+                res.json({ status: 200, message: 'Coupan add successfully.', data: saveStore });
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.listCoupan = async (req, res) => {
+    try {
+        let vendorData = await User.findOne({ _id: req.user._id });
+        if (!vendorData) {
+            return res.status(404).send({ status: 404, message: "User not found" });
+        } else {
+            let findService = await Coupan.find({});
+            if (findService.length == 0) {
+                return res.status(404).send({ status: 404, message: "Data not found" });
+            } else {
+                res.json({ status: 200, message: 'Coupan Data found successfully.', service: findService });
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+const reffralCode = async () => {
+    var digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let OTP = '';
+    for (let i = 0; i < 6; i++) {
+        OTP += digits[Math.floor(Math.random() * 36)];
+    }
+    return OTP;
+}

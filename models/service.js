@@ -40,6 +40,9 @@ var storeSchema = new schema({
                 type: Boolean,
                 default: false
         },
+        discription: {
+                type: Array
+        },
         E4uSafety: {
                 type: Array
         },

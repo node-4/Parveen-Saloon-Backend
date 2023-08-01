@@ -708,6 +708,7 @@ exports.placeOrder = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+expor
 exports.reOrder = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
@@ -796,8 +797,7 @@ exports.getOrder = async (req, res) => {
                 console.log(error);
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
-};
-exports.AddQuery = async (req, res) => {
+};ts.AddQuery = async (req, res) => {
         try {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
