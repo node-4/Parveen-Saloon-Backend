@@ -26,6 +26,10 @@ const DocumentSchema = schema({
                 type: schema.Types.ObjectId,
                 ref: "coupons"
         },
+        offerId: {
+                type: schema.Types.ObjectId,
+                ref: "offer"
+        },
         freeService: [{
                 freeServiceId: {
                         type: schema.Types.ObjectId,
@@ -70,6 +74,10 @@ const DocumentSchema = schema({
                 type: Boolean,
                 default: false
         },
+        offerUsed: {
+                type: Boolean,
+                default: false
+        },
         walletUsed: {
                 type: Boolean,
                 default: false
@@ -82,6 +90,10 @@ const DocumentSchema = schema({
                 type: Number,
                 default: 0
         },
+        offer: {
+                type: Number,
+                default: 0
+        },
         freeServiceCount: {
                 type: Number,
                 default: 0
@@ -89,23 +101,18 @@ const DocumentSchema = schema({
         suggestion: {
                 type: String,
         },
-        address: {
+        houseFlat: {
                 type: String,
         },
-        city: {
+        appartment: {
                 type: String,
-        },
-        state: {
-                type: String,
-        },
-        pinCode: {
-                type: Number,
         },
         landMark: {
                 type: String,
         },
-        street: {
+        houseType: {
                 type: String,
+                enum: ["home", "Other"],
         },
         Date: {
                 type: Date

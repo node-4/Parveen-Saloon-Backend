@@ -798,7 +798,7 @@ exports.addAdressToCart = async (req, res) => {
                                 } else {
                                         const data1 = await Address.findById({ _id: req.params.id });
                                         if (data1) {
-                                                let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { address: data1.address, city: data1.city, state: data1.state, pinCode: data1.pinCode, landMark: data1.landMark, street: data1.street, }, }, { new: true });
+                                                let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { houseFlat: data1.houseFlat, appartment: data1.appartment, landMark: data1.landMark, houseType: data1.houseType }, }, { new: true });
                                                 return res.status(200).json({ status: 200, message: "suggestion add to cart Successfully.", data: update1 })
                                         } else {
                                                 return res.status(404).json({ status: 404, message: "No data found", data: {} });

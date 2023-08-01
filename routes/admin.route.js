@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload } = require('../middlewares/imageUpload')
 
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
@@ -45,4 +45,13 @@ router.put("/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.upd
 router.delete("/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
 router.post("/Coupan/addCoupan", [authJwt.verifyToken], auth.addCoupan);
 router.get("/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
+router.post("/Brand/addBrand", [authJwt.verifyToken], BrandUpload.single('image'), auth.createBrands);
+router.get("/Brand/allBrand", auth.getBrands);
+router.put("/Brand/updateBrand/:id", [authJwt.verifyToken], BrandUpload.single('image'), auth.updateBrand);
+router.delete("/Brand/deleteBrand/:id", [authJwt.verifyToken], auth.removeBrand);
+router.post("/weCanhelpyou/createweCanhelpyou", [authJwt.verifyToken], auth.createweCanhelpyou);
+router.get("/weCanhelpyou/getAllweCanhelpyou/:type", auth.getAllweCanhelpyou);
+router.get("/weCanhelpyou/getweCanhelpyouById/:id", auth.getweCanhelpyouById);
+router.put("/weCanhelpyou/updateweCanhelpyou/:id", [authJwt.verifyToken], auth.updateweCanhelpyou);
+router.delete("/weCanhelpyou/deleteweCanhelpyou/:id", [authJwt.verifyToken], auth.deleteweCanhelpyou);
 module.exports = router;
