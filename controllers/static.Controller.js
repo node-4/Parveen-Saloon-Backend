@@ -1,5 +1,6 @@
 const staticContent = require('../models/staticContent');
 const Faq = require("../models/faq.Model");
+const Category = require("../models/CategoryModel");
 exports.createAboutUs = async (req, res) => {
         try {
                 const newAboutUs = {
@@ -192,11 +193,20 @@ exports.deletePrivacy = async (req, res) => {
 };
 exports.getAllFaqs = async (req, res) => {
         try {
-                const faqs = await Faq.find().lean();
-                if (faqs.length == 0) {
-                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                if (req.params.categoryId != (null || undefined)) {
+                        const faqs = await Faq.find({ categoryId: req.params.categoryId }).lean();
+                        if (faqs.length == 0) {
+                                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        }
+                        return res.status(200).json({ status: 200, message: "faqs retrieved successfully ", data: faqs });
+                } else {
+                        const faqs = await Faq.find({ type: "Support" }).lean();
+                        if (faqs.length == 0) {
+                                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        }
+                        return res.status(200).json({ status: 200, message: "faqs retrieved successfully ", data: faqs });
+
                 }
-                return res.status(200).json({ status: 200, message: "faqs retrieved successfully ", data: faqs });
         } catch (err) {
                 console.log(err);
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
@@ -216,13 +226,33 @@ exports.getFaqById = async (req, res) => {
         }
 };
 exports.createFaq = async (req, res) => {
-        const { question, answer } = req.body;
+        const { question, answer, categoryId } = req.body;
         try {
                 if (!question || !answer) {
                         return res.status(400).json({ message: "questions and answers cannot be blank " });
                 }
-                const faq = await Faq.create(req.body);
-                return res.status(200).json({ status: 200, message: "FAQ Added Successfully ", data: faq });
+                if (categoryId != (null || undefined)) {
+                        const findCategory = await Category.findById(categoryId);
+                        if (!findCategory) {
+                                return res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
+                        }
+                        let obj = {
+                                categoryId: findCategory._id,
+                                question: question,
+                                answer: answer,
+                                type: "Category"
+                        }
+                        const faq = await Faq.create(obj);
+                        return res.status(200).json({ status: 200, message: "FAQ Added Successfully ", data: faq });
+                } else {
+                        let obj = {
+                                question: question,
+                                answer: answer,
+                                type: "Support"
+                        }
+                        const faq = await Faq.create(obj);
+                        return res.status(200).json({ status: 200, message: "FAQ Added Successfully ", data: faq });
+                }
         } catch (err) {
                 console.log(err);
                 return res.status(500).json({ message: "Error ", status: 500, data: err.message });

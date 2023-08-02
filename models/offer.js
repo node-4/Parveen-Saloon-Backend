@@ -14,6 +14,10 @@ const FeedbackSchema = new mongoose.Schema(
             type: schema.Types.ObjectId,
             ref: "services"
         },
+        user: [{
+            type: schema.Types.ObjectId,
+            ref: "user"
+        }],
         couponCode: {
             type: String,
         },
@@ -34,6 +38,14 @@ const FeedbackSchema = new mongoose.Schema(
         },
         image: {
             type: String,
+        },
+        type: {
+            type: String,
+            enum: ["user", "other"]
+        },
+        status: {
+            type: Boolean,
+            default: false,
         },
     },
     { timeseries: true }

@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload,E4UUpload, offerUpload } = require('../middlewares/imageUpload')
 
 router.post("/registration", auth.registration);
 router.post("/login", auth.signin);
@@ -54,4 +54,14 @@ router.get("/weCanhelpyou/getAllweCanhelpyou/:type", auth.getAllweCanhelpyou);
 router.get("/weCanhelpyou/getweCanhelpyouById/:id", auth.getweCanhelpyouById);
 router.put("/weCanhelpyou/updateweCanhelpyou/:id", [authJwt.verifyToken], auth.updateweCanhelpyou);
 router.delete("/weCanhelpyou/deleteweCanhelpyou/:id", [authJwt.verifyToken], auth.deleteweCanhelpyou);
+router.post("/E4u/createE4u", [authJwt.verifyToken],E4UUpload.single('image'), auth.createE4u);
+router.get("/E4u/getE4uByType/:type", auth.getE4uByType);
+router.get("/E4u/getE4u", auth.getE4u);
+router.put("/E4u/updateE4u/:id", [authJwt.verifyToken],E4UUpload.single('image'), auth.updateE4u);
+router.delete("/E4u/removeE4u/:id", [authJwt.verifyToken], auth.removeE4u);
+router.get("/Feedback/getById/:id", auth.getById);
+router.get("/Feedback/getAllfeedback", auth.getAllfeedback);
+router.delete("/Feedback/DeleteFeedback/:id", [authJwt.verifyToken], auth.DeleteFeedback);
+router.post("/Offer/addOffer", [authJwt.verifyToken],offerUpload.single('image'), auth.addOffer);
+router.get("/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
 module.exports = router;

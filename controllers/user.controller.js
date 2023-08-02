@@ -9,7 +9,9 @@ const Charges = require('../models/Charges');
 const freeService = require('../models/freeService');
 const service = require('../models/service');
 const Coupan = require('../models/Coupan');
+const feedback = require('../models/feedback');
 const orderModel = require('../models/orderModel');
+const offer = require('../models/offer');
 exports.registration = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id });
@@ -957,6 +959,44 @@ exports.getOrder = async (req, res) => {
         } catch (error) {
                 console.log(error);
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.AddFeedback = async (req, res) => {
+        try {
+                const { type, Feedback, rating } = req.body;
+                if (!type && Feedback && rating) {
+                        return res.status(201).send({ message: "All filds are required" })
+                } else {
+                        let obj = {
+                                userId: req.user._id,
+                                type: type,
+                                Feedback: Feedback,
+                                rating: rating
+                        }
+                        const data = await feedback.create(obj);
+                        return res.status(200).json({ details: data })
+                }
+        } catch (err) {
+                console.log(err);
+                return res.status(400).json({ message: err.message })
+        }
+}
+exports.listOffer = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "other" }] }] });
+                        if (findService.length == 0) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                res.json({ status: 200, message: 'Offer Data found successfully.', service: findService });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
 const reffralCode = async () => {

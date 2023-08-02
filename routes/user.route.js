@@ -34,5 +34,7 @@ router.post("/Cart/cancelOrder/:orderId", [authJwt.verifyToken], auth.cancelOrde
 router.get('/getOngoingOrders', [authJwt.verifyToken], auth.getOngoingOrders);
 router.get('/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
 router.get("/getOrder/:id", [authJwt.verifyToken], auth.getOrder);
+router.post("/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
+router.get("/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
 
 module.exports = router;
