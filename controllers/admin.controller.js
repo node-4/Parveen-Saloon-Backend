@@ -18,6 +18,7 @@ const weCanhelpyou = require('../models/weCanhelpyou');
 const e4u = require('../models/e4u')
 const feedback = require('../models/feedback');
 const offer = require('../models/offer');
+const ticket = require('../models/ticket');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -1081,6 +1082,68 @@ exports.listOffer = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.listTicket = async (req, res) => {
+    try {
+        let findUser = await User.findOne({ _id: req.user._id });
+        if (!findUser) {
+            return res.status(404).send({ status: 404, message: "User not found" });
+        } else {
+            let findTicket = await ticket.find({});
+            if (findTicket.length == 0) {
+                return res.status(404).send({ status: 404, message: "Data not found" });
+            } else {
+                res.json({ status: 200, message: 'Ticket Data found successfully.', data: findTicket });
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.replyOnTicket = async (req, res) => {
+    try {
+        const data = await User.findOne({ _id: req.user._id, });
+        if (data) {
+            const data1 = await ticket.findById({ _id: req.params.id });
+            if (data1) {
+                let obj = {
+                    comment: req.body.comment,
+                    byUser: false,
+                    byAdmin: true,
+                    date: Date.now(),
+                }
+                let update = await ticket.findByIdAndUpdate({ _id: data1._id }, { $push: { messageDetails: obj } }, { new: true })
+                return res.status(200).json({ status: 200, message: "Ticket found successfully.", data: update });
+            } else {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.closeTicket = async (req, res) => {
+    try {
+        const data = await User.findOne({ _id: req.user._id, });
+        if (data) {
+            const data1 = await ticket.findById({ _id: req.params.id });
+            if (data1) {
+                let update = await ticket.findByIdAndUpdate({ _id: data1._id }, { $set: { close: true } }, { new: true })
+                return res.status(200).json({ status: 200, message: "Ticket close successfully.", data: update });
+            } else {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
 const reffralCode = async () => {

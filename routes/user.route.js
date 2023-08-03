@@ -1,7 +1,6 @@
 const auth = require("../controllers/user.controller");
 const authJwt = require("../middlewares/authJwt");
 const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../middlewares/imageUpload')
-
 const express = require("express");
 const router = express()
 router.post("/registration", [authJwt.verifyToken], auth.registration);
@@ -36,5 +35,10 @@ router.get('/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
 router.get("/getOrder/:id", [authJwt.verifyToken], auth.getOrder);
 router.post("/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
 router.get("/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
-
+router.post("/ticket/createTicket", [authJwt.verifyToken], auth.createTicket);
+router.get("/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
+router.get('/ticket/:id', auth.getTicketbyId);
+router.put('/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
+router.post("/FavouriteBooking/addFavouriteBooking/:orderId", [authJwt.verifyToken], auth.addFavouriteBooking);
+router.get("/FavouriteBooking/listFavouriteBooking", [authJwt.verifyToken], auth.listFavouriteBooking);
 module.exports = router;

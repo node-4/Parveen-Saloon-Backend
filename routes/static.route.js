@@ -1,6 +1,5 @@
 const staticContent = require('../controllers/static.Controller');
 const authJwt = require("../middlewares/authJwt");
-
 const express = require("express");
 const router = express();
 router.post('/createAboutus', [authJwt.verifyToken], staticContent.createAboutUs);
