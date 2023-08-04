@@ -6,6 +6,10 @@ const ratingSchema = new mongoose.Schema(
             type: schema.Types.ObjectId,
             ref: "user",
         },
+        partnerId: {
+            type: schema.Types.ObjectId,
+            ref: "user",
+        },
         orderId: {
             type: schema.Types.ObjectId,
             ref: "order"

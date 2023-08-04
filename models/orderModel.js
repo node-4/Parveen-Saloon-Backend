@@ -164,7 +164,7 @@ const DocumentSchema = schema({
         },
         status: {
                 type: String,
-                enum: ["Pending", "confirmed", "OnTheWay", "Arrived", "Complete", "Review"],
+                enum: ["Pending", "confirmed","assigned", "OnTheWay", "Arrived", "Complete", "Review"],
                 default: "Pending",
         },
         paymentStatus: {

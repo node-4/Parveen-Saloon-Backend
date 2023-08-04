@@ -19,6 +19,7 @@ const e4u = require('../models/e4u')
 const feedback = require('../models/feedback');
 const offer = require('../models/offer');
 const ticket = require('../models/ticket');
+const orderModel = require('../models/orderModel');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -1135,6 +1136,43 @@ exports.closeTicket = async (req, res) => {
             if (data1) {
                 let update = await ticket.findByIdAndUpdate({ _id: data1._id }, { $set: { close: true } }, { new: true })
                 return res.status(200).json({ status: 200, message: "Ticket close successfully.", data: update });
+            } else {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.getOrders = async (req, res) => {
+    try {
+        const data = await orderModel.find().populate('services.serviceId');
+        if (data.length > 0) {
+            return res.status(200).json({ message: "All orders", data: data });
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.assignOrder = async (req, res) => {
+    try {
+        const data = await User.findOne({ _id: req.user._id, });
+        if (data) {
+            const data1 = await User.findOne({ _id: req.params.userId, });
+            if (data1) {
+                const data2 = await orderModel.findById({ _id: req.params.orderId });
+                if (data2) {
+                    let update = await orderModel.findByIdAndUpdate({ _id: data2._id }, { $set: { partnerId: data1._id, status: "assigned" } }, { new: true })
+                    return res.status(200).json({ status: 200, message: "Order assign  successfully.", data: update });
+                } else {
+                    return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
             } else {
                 return res.status(404).json({ status: 404, message: "No data found", data: {} });
             }

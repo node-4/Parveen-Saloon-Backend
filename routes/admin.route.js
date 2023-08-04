@@ -67,4 +67,6 @@ module.exports = (app) => {
         app.get("/api/v1/admin/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
         app.put('/api/v1/admin/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
         app.put('/api/v1/admin/closeTicket/:id', [authJwt.verifyToken], auth.closeTicket);
+        app.get('/api/v1/admin/getOrders', [authJwt.verifyToken], auth.getOrders);
+        app.put('/api/v1/admin/assignOrder/:userId/:orderId', [authJwt.verifyToken], auth.assignOrder);
 }
