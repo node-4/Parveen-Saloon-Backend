@@ -17,11 +17,10 @@ if (process.env.NODE_ENV == "production") {
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
-// require('./controllers/SubscriptionCronjob');
-require('./routes/user.route')(app);
+// require('./routes/user.route')(app);
 require('./routes/admin.route')(app);
 require('./routes/static.route')(app);
-require('./routes/partner.route')(app);
+// require('./routes/partner.route')(app);
 mongoose.Promise = global.Promise;
 mongoose.set("strictQuery", true);
 

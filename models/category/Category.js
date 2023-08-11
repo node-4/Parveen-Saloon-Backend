@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const schema = mongoose.Schema;
 const categorySchema = schema({
+    categoryId: {
+        type: schema.Types.ObjectId,
+        ref: "mainCategory"
+    },
     name: {
         type: String
     },
@@ -14,4 +18,4 @@ const categorySchema = schema({
     },
 }, { timestamps: true });
 
-module.exports = mongoose.model("serviceCategory", categorySchema);
+module.exports = mongoose.model("Category", categorySchema);

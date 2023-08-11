@@ -1,6 +1,6 @@
 const auth = require("../controllers/user.controller");
-const authJwt = require("../middlewares/authJwt");
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../middlewares/imageUpload')
+const authJwt = require("../../middlewares/authJwt");
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../../middlewares/imageUpload')
 const express = require("express");
 const router = express()
 module.exports = (app) => {

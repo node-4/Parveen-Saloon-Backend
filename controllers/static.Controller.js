@@ -1,6 +1,6 @@
 const staticContent = require('../models/staticContent');
 const Faq = require("../models/faq.Model");
-const Category = require("../models/CategoryModel");
+const Category = require("../models/category/mainCategory");
 exports.createAboutUs = async (req, res) => {
         try {
                 const newAboutUs = {

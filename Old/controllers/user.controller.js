@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const authConfig = require("../configs/auth.config");
+const authConfig = require("../../configs/auth.config");
 var newOTP = require("otp-generators");
 const User = require("../models/user.model");
 const Address = require("../models/AddressModel");

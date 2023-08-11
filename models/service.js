@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const schema = mongoose.Schema;
 var storeSchema = new schema({
+        mainCategoryId: {
+                type: schema.Types.ObjectId,
+                ref: "mainCategory"
+        },
         categoryId: {
                 type: schema.Types.ObjectId,
                 ref: "Category"
@@ -9,11 +13,29 @@ var storeSchema = new schema({
                 type: schema.Types.ObjectId,
                 ref: "subCategory"
         },
-        facialTypeId: {
-                type: schema.Types.ObjectId,
-                ref: "facialType"
+        title: {
+                type: String
         },
-        name: {
+        discription: {
+                type: Array
+        },
+        originalPrice: {
+                type: Number
+        },
+        discountActive: {
+                type: Boolean,
+                default: false
+        },
+        discount: {
+                type: Number
+        },
+        price: {
+                type: Number
+        },
+        timeInMin: {
+                type: Number
+        },
+        totalTime: {
                 type: String
         },
         images: [{
@@ -21,28 +43,6 @@ var storeSchema = new schema({
                         type: String
                 }
         }],
-        timeInMin: {
-                type: Number
-        },
-        totalTime: {
-                type: String
-        },
-        price: {
-                type: Number
-        },
-        discountPrice: {
-                type: Number
-        },
-        discount: {
-                type: Number
-        },
-        discountActive: {
-                type: Boolean,
-                default: false
-        },
-        discription: {
-                type: Array
-        },
         E4uSafety: {
                 type: Array
         },
@@ -52,6 +52,11 @@ var storeSchema = new schema({
         E4uSuggestion: {
                 type: Array
         },
+        items: [{
+                item: {
+                        type: String
+                }
+        }],
         rating: {
                 type: Number,
                 default: 0
@@ -64,9 +69,28 @@ var storeSchema = new schema({
                 type: String,
                 enum: ["Male", "Female", "Both"]
         },
+        services: [{
+                service: {
+                        type: schema.Types.ObjectId,
+                        ref: "services"
+                }
+        }],
+        selectedCount: {
+                type: Number,
+                default: 0
+        },
+        selected: {
+                type: Boolean,
+                default: false
+        },
         type: {
                 type: String,
-                enum: ["Premium", "Classic"]
+                enum: ["Service", "Package"]
         },
+        packageType: {
+                type: String,
+                enum: ["Customise", "Normal", "Edit"]
+        },
+
 }, { timestamps: true });
 module.exports = mongoose.model("services", storeSchema);
