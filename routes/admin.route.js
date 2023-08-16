@@ -53,8 +53,10 @@ module.exports = (app) => {
         app.get("/api/v1/admin/SubCategory/:categoryId/:subCategoryId", auth.getSubCategories);
         app.put("/api/v1/admin/SubCategory/update/:id", [authJwt.verifyToken], auth.updateSubCategory);
         app.delete("/api/v1/admin/SubCategory/delete/:id", [authJwt.verifyToken], auth.removeSubCategory);
-
-
+        app.post("/api/v1/admin/ItemSubCategory/createCategory", [authJwt.verifyToken], auth.createItemSubCategory);
+        app.get("/api/v1/admin/ItemSubCategory/:categoryId/:subCategoryId", auth.getItemSubCategories);
+        app.put("/api/v1/admin/ItemSubCategory/update/:id", [authJwt.verifyToken], auth.updateItemSubCategory);
+        app.delete("/api/v1/admin/ItemSubCategory/delete/:id", [authJwt.verifyToken], auth.removeItemSubCategory);
 
 
 
