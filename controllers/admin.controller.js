@@ -7,6 +7,7 @@ const mainCategory = require("../models/category/mainCategory");
 const Category = require("../models/category/Category");
 const subCategory = require("../models/category/subCategory");
 const itemSubCategory = require("../models/category/itemSubCategory");
+const item = require("../models/category/item");
 const banner = require('../models/banner')
 const ContactDetail = require("../models/ContactDetail");
 // const subscription = require('../models/subscription');
@@ -812,10 +813,86 @@ exports.removeItemSubCategory = async (req, res) => {
         return res.status(200).json({ message: "Sub Category Deleted Successfully !" });
     }
 };
-
-
-
-
+exports.createItem = async (req, res) => {
+    try {
+        const findCategory = await Category.findById({ _id: req.body.categoryId });
+        if (!findCategory) {
+            return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
+        } else {
+            let findItemSubCategory = await itemSubCategory.findOne({ categoryId: findCategory._id, _id: req.body.itemSubCategoryId });
+            if (!findItemSubCategory) {
+                return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+            } else {
+                let findSubCategory = await item.findOne({ categoryId: findCategory._id, itemSubCategoryId: findItemSubCategory._id, name: req.body.name });
+                if (findSubCategory) {
+                    return res.status(409).json({ message: "Item already exit.", status: 404, data: {} });
+                } else {
+                    const data = { categoryId: findCategory._id, itemSubCategoryId: findItemSubCategory._id, name: req.body.name, price: req.body.price };
+                    const category = await item.create(data);
+                    return res.status(200).json({ message: "Item add successfully.", status: 200, data: category });
+                }
+            }
+        }
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+exports.getItem = async (req, res) => {
+    const findCategory = await Category.findById({ _id: req.params.categoryId });
+    if (!findCategory) {
+        return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+    } else {
+        let findItemSubCategory = await itemSubCategory.findOne({ categoryId: findCategory._id, _id: req.params.itemSubCategoryId });
+        if (!findItemSubCategory) {
+            return res.status(404).json({ message: "Sub Category Not Found", status: 404, data: {} });
+        } else {
+            let findSubCategory = await item.find({ categoryId: findCategory._id, itemSubCategoryId: findItemSubCategory._id, })
+            if (findSubCategory.length > 0) {
+                return res.status(200).json({ message: "Item Found", status: 200, data: findSubCategory, });
+            } else {
+                return res.status(201).json({ message: "Item not Found", status: 404, data: {}, });
+            }
+        }
+    }
+};
+exports.updateItem = async (req, res) => {
+    const { id } = req.params;
+    const findSubCategory = await item.findById(id);
+    if (!findSubCategory) {
+        return res.status(404).json({ message: "Item Not Found", status: 404, data: {} });
+    }
+    let findItemSubCategory, findCategory;
+    if (req.body.categoryId != (null || undefined)) {
+        findCategory = await Category.findById({ _id: req.body.categoryId });
+        if (!findCategory) {
+            return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+        }
+    }
+    if (req.body.itemSubCategoryId != (null || undefined)) {
+        findItemSubCategory = await itemSubCategory.findOne({ _id: req.body.itemSubCategoryId });
+        if (!findItemSubCategory) {
+            return res.status(404).json({ message: "Item sub Category Not Found", status: 404, data: {} });
+        }
+    }
+    let obj = {
+        name: req.body.name || findSubCategory.name,
+        categoryId: req.body.categoryId || findSubCategory.categoryId,
+        itemSubCategoryId: req.body.itemSubCategoryId || findSubCategory.itemSubCategoryId,
+        price: req.body.price || findSubCategory.price,
+    }
+    let update = await item.findByIdAndUpdate({ _id: findSubCategory._id }, { $set: obj }, { new: true });
+    return res.status(200).json({ message: "Updated Successfully", data: update });
+};
+exports.removeItem = async (req, res) => {
+    const { id } = req.params;
+    const category = await item.findById(id);
+    if (!category) {
+        return res.status(404).json({ message: "Item Not Found", status: 404, data: {} });
+    } else {
+        await item.findByIdAndDelete(category._id);
+        return res.status(200).json({ message: "Item Deleted Successfully !" });
+    }
+};
 
 
 
