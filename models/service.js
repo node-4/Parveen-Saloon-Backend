@@ -13,6 +13,10 @@ var storeSchema = new schema({
                 type: schema.Types.ObjectId,
                 ref: "subCategory"
         },
+        servicePackageId: [{
+                type: schema.Types.ObjectId,
+                ref: "servicePackage"
+        }],
         title: {
                 type: String
         },
