@@ -16,7 +16,7 @@ var storeSchema = new schema({
         title: {
                 type: String
         },
-        discription: {
+        description: {
                 type: Array
         },
         originalPrice: {
@@ -29,7 +29,7 @@ var storeSchema = new schema({
         discount: {
                 type: Number
         },
-        price: {
+        discountPrice: {
                 type: Number
         },
         timeInMin: {
@@ -54,7 +54,8 @@ var storeSchema = new schema({
         },
         items: [{
                 item: {
-                        type: String
+                        type: schema.Types.ObjectId,
+                        ref: "item"
                 }
         }],
         rating: {

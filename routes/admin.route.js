@@ -57,10 +57,15 @@ module.exports = (app) => {
         app.get("/api/v1/admin/ItemSubCategory/:categoryId", auth.getItemSubCategories);
         app.put("/api/v1/admin/ItemSubCategory/update/:id", [authJwt.verifyToken], auth.updateItemSubCategory);
         app.delete("/api/v1/admin/ItemSubCategory/delete/:id", [authJwt.verifyToken], auth.removeItemSubCategory);
-        app.post("/api/v1/admin/Item/createCategory", [authJwt.verifyToken], auth.createItem);
+        app.post("/api/v1/admin/Item/createItem", [authJwt.verifyToken], auth.createItem);
         app.get("/api/v1/admin/Item/:categoryId/:itemSubCategoryId", auth.getItem);
         app.put("/api/v1/admin/Item/update/:id", [authJwt.verifyToken], auth.updateItem);
         app.delete("/api/v1/admin/Item/delete/:id", [authJwt.verifyToken], auth.removeItem);
+        app.post("/api/v1/admin/Service/addService", [authJwt.verifyToken], serviceUpload.array('image'), auth.createService);
+        app.get("/api/v1/admin/Service/:mainCategoryId/:categoryId/:subCategoryId", auth.getService);
+        app.delete("/api/v1/admin/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
+        app.post("/api/v1/admin/Offer/addOffer", [authJwt.verifyToken], offerUpload.single('image'), auth.addOffer);
+        app.get("/api/v1/admin/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
 
 
 
@@ -75,21 +80,14 @@ module.exports = (app) => {
         app.put("/api/v1/admin/FacialType/updateFacialType/:id", [authJwt.verifyToken], auth.updateFacialType);
         app.delete("/api/v1/admin/FacialType/deleteFacialType/:id", [authJwt.verifyToken], auth.removeFacialType);
         app.post('/api/v1/admin/createSubscription', auth.createSubscription);
-        app.get('/api/v1/admin/getSubscription', auth.getSubscription);
-        app.post("/api/v1/admin/Service/addService", [authJwt.verifyToken], auth.createService);
+        app.get('/api/v1/admin/getSubscription/:mainCategoryId/:categoryId', auth.getSubscription);
         app.put("/api/v1/admin/Service/uploadService/:id", [authJwt.verifyToken], serviceUpload.array('image'), auth.updateImagesinService);
-        app.get("/api/v1/admin/Service/:categoryId/:subCategoryId", auth.getService);
         app.get("/api/v1/admin/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
-        app.delete("/api/v1/admin/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
         app.put("/api/v1/admin/Service/update/:id", [authJwt.verifyToken], auth.updateService);
         app.post("/api/v1/admin/FreeService/addFreeService", [authJwt.verifyToken], auth.createFreeService);
         app.get("/api/v1/admin/FreeService/allFreeService", auth.getFreeServices);
         app.put("/api/v1/admin/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
         app.delete("/api/v1/admin/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
-
-        app.post("/api/v1/admin/Offer/addOffer", [authJwt.verifyToken], offerUpload.single('image'), auth.addOffer);
-        app.get("/api/v1/admin/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
-
         app.get('/api/v1/admin/getOrders', [authJwt.verifyToken], auth.getOrders);
         app.put('/api/v1/admin/assignOrder/:userId/:orderId', [authJwt.verifyToken], auth.assignOrder);
 }
