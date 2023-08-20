@@ -66,6 +66,10 @@ module.exports = (app) => {
         app.delete("/api/v1/admin/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
         app.post("/api/v1/admin/Offer/addOffer", [authJwt.verifyToken], offerUpload.single('image'), auth.addOffer);
         app.get("/api/v1/admin/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
+        app.post("/api/v1/admin/FreeService/addFreeService", [authJwt.verifyToken], auth.createFreeService);
+        app.get("/api/v1/admin/FreeService/allFreeService", auth.getFreeServices);
+        app.put("/api/v1/admin/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
+        app.delete("/api/v1/admin/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
 
 
 
@@ -73,8 +77,7 @@ module.exports = (app) => {
 
 
 
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         app.post("/api/v1/admin/FacialType/addFacialType", [authJwt.verifyToken], auth.createFacialType);
         app.get("/api/v1/admin/FacialType/allFacialType", auth.getFacialTypes);
         app.put("/api/v1/admin/FacialType/updateFacialType/:id", [authJwt.verifyToken], auth.updateFacialType);
@@ -84,10 +87,6 @@ module.exports = (app) => {
         app.put("/api/v1/admin/Service/uploadService/:id", [authJwt.verifyToken], serviceUpload.array('image'), auth.updateImagesinService);
         app.get("/api/v1/admin/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
         app.put("/api/v1/admin/Service/update/:id", [authJwt.verifyToken], auth.updateService);
-        app.post("/api/v1/admin/FreeService/addFreeService", [authJwt.verifyToken], auth.createFreeService);
-        app.get("/api/v1/admin/FreeService/allFreeService", auth.getFreeServices);
-        app.put("/api/v1/admin/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
-        app.delete("/api/v1/admin/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
         app.get('/api/v1/admin/getOrders', [authJwt.verifyToken], auth.getOrders);
         app.put('/api/v1/admin/assignOrder/:userId/:orderId', [authJwt.verifyToken], auth.assignOrder);
 }

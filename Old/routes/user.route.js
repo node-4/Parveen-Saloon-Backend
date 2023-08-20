@@ -35,11 +35,6 @@ module.exports = (app) => {
         app.get('/api/v1/user/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
         app.get("/api/v1/user/getOrder/:id", [authJwt.verifyToken], auth.getOrder);
         app.post("/api/v1/user/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
-        app.get("/api/v1/user/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
-        app.post("/api/v1/user/ticket/createTicket", [authJwt.verifyToken], auth.createTicket);
-        app.get("/api/v1/user/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
-        app.get('/api/v1/user/ticket/:id', auth.getTicketbyId);
-        app.put('/api/v1/user/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
         app.post("/api/v1/user/FavouriteBooking/addFavouriteBooking/:orderId", [authJwt.verifyToken], auth.addFavouriteBooking);
         app.get("/api/v1/user/FavouriteBooking/listFavouriteBooking", [authJwt.verifyToken], auth.listFavouriteBooking);
 }
