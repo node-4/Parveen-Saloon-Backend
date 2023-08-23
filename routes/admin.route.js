@@ -70,6 +70,10 @@ module.exports = (app) => {
         app.get("/api/v1/admin/FreeService/allFreeService", auth.getFreeServices);
         app.put("/api/v1/admin/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);
         app.delete("/api/v1/admin/FreeService/deleteFreeService/:id", [authJwt.verifyToken], auth.removeFreeServices);
+        app.get('/api/v1/admin/getOrders', [authJwt.verifyToken], auth.getOrders);
+        app.put('/api/v1/admin/assignOrder/:userId/:orderId', [authJwt.verifyToken], auth.assignOrder);
+        app.post('/api/v1/admin/assignItems', [authJwt.verifyToken], auth.assignItems);
+        app.get('/api/v1/admin/assignItemslist', [authJwt.verifyToken], auth.assignItemslist);
 
 
 
@@ -77,7 +81,7 @@ module.exports = (app) => {
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         app.post("/api/v1/admin/FacialType/addFacialType", [authJwt.verifyToken], auth.createFacialType);
         app.get("/api/v1/admin/FacialType/allFacialType", auth.getFacialTypes);
         app.put("/api/v1/admin/FacialType/updateFacialType/:id", [authJwt.verifyToken], auth.updateFacialType);
@@ -87,6 +91,4 @@ module.exports = (app) => {
         app.put("/api/v1/admin/Service/uploadService/:id", [authJwt.verifyToken], serviceUpload.array('image'), auth.updateImagesinService);
         app.get("/api/v1/admin/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
         app.put("/api/v1/admin/Service/update/:id", [authJwt.verifyToken], auth.updateService);
-        app.get('/api/v1/admin/getOrders', [authJwt.verifyToken], auth.getOrders);
-        app.put('/api/v1/admin/assignOrder/:userId/:orderId', [authJwt.verifyToken], auth.assignOrder);
 }

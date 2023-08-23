@@ -125,3 +125,42 @@ exports.reSetPassword = async (req, res) => {
                 return res.status(500).json({ message: "Server error" });
         }
 };
+exports.getTodayOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ partnerId: req.user._id, Date: { $gte: fromDate }, Date: { $lte: toDate } });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getTomorrowOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ partnerId: req.user._id });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllOrders = async (req, res) => {
+        try {
+                const data = await orderModel.find({ partnerId: req.user._id });
+                if (data.length > 0) {
+                        return res.status(200).json({ message: "All orders", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};

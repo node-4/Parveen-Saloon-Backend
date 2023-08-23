@@ -9,4 +9,7 @@ module.exports = (app) => {
         app.put("/api/v1/partner/changePassword", [authJwt.verifyToken], auth.changePassword);
         app.post("/api/v1/partner/signin", auth.signin);
         app.post("/api/v1/partner/reset/Password", auth.reSetPassword);
+        app.get('/api/v1/partner/getAllOrders', [authJwt.verifyToken], auth.getAllOrders);
+        app.get('/api/v1/partner/getTodayOrders', [authJwt.verifyToken], auth.getTodayOrders);
+        app.get('/api/v1/partner/getTomorrowOrders', [authJwt.verifyToken], auth.getTomorrowOrders);
 }

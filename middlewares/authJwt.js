@@ -28,7 +28,6 @@ const verifyToken = (req, res, next) => {
             });
         }
         req.user = user || user1;
-        console.log(user);
         next();
     });
 };

@@ -1,43 +1,5 @@
 
-exports.getTodayOrders = async (req, res) => {
-        try {
-                const data = await orderModel.find({ partnerId: req.user._id });
-                if (data.length > 0) {
-                        return res.status(200).json({ message: "All orders", data: data });
-                } else {
-                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
-                }
-        } catch (error) {
-                console.log(error);
-                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
-        }
-};
-exports.getTomorrowOrders = async (req, res) => {
-        try {
-                const data = await orderModel.find({ partnerId: req.user._id });
-                if (data.length > 0) {
-                        return res.status(200).json({ message: "All orders", data: data });
-                } else {
-                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
-                }
-        } catch (error) {
-                console.log(error);
-                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
-        }
-};
-exports.getAllOrders = async (req, res) => {
-        try {
-                const data = await orderModel.find({ partnerId: req.user._id });
-                if (data.length > 0) {
-                        return res.status(200).json({ message: "All orders", data: data });
-                } else {
-                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
-                }
-        } catch (error) {
-                console.log(error);
-                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
-        }
-};
+
 exports.getRating = async (req, res) => {
         try {
                 let overAllrating = 0, totalRating = 0;
@@ -58,14 +20,14 @@ exports.getRating = async (req, res) => {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 }
                 let obj = {
-                        overAllrating:overAllrating,
-                        minRating:minRating,
+                        overAllrating: overAllrating,
+                        minRating: minRating,
                         jobs: jobs,
                         totalReview: totalReviews,
                         Escalations: Escalations,
                         Rating: Rating,
                         repeatCustomer: repeatCustomer,
-                        allRating:data
+                        allRating: data
 
                 }
         } catch (error) {

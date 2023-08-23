@@ -23,7 +23,8 @@ const e4u = require('../models/e4u')
 const feedback = require('../models/feedback');
 // const offer = require('../models/offer');
 const ticket = require('../models/ticket');
-// const orderModel = require('../models/orderModel');
+const orderModel = require('../models/orderModel');
+const partnerItems = require('../models/partnerItems');
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -1378,7 +1379,99 @@ exports.removeFreeServices = async (req, res) => {
         return res.status(200).json({ message: "freeService Deleted Successfully !" });
     }
 };
-
+exports.getOrders = async (req, res) => {
+    try {
+        const data = await orderModel.find().populate('services.serviceId');
+        if (data.length > 0) {
+            return res.status(200).json({ message: "All orders", data: data });
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.assignOrder = async (req, res) => {
+    try {
+        const data = await User.findOne({ _id: req.user._id, });
+        if (data) {
+            const data1 = await User.findOne({ _id: req.params.userId, });
+            if (data1) {
+                const data2 = await orderModel.findById({ _id: req.params.orderId });
+                if (data2) {
+                    let update = await orderModel.findByIdAndUpdate({ _id: data2._id }, { $set: { partnerId: data1._id, status: "assigned" } }, { new: true })
+                    return res.status(200).json({ status: 200, message: "Order assign  successfully.", data: update });
+                } else {
+                    return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+            } else {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.assignItems = async (req, res) => {
+    try {
+        const data = await User.findOne({ _id: req.user._id, });
+        if (data) {
+            const data1 = await item.findOne({ _id: req.body.itemId, });
+            if (data1) {
+                const findPartner = await User.findOne({ _id: req.body.userId, });
+                if (findPartner) {
+                    let findPartnerItem = await partnerItems.findOne({ userId: findPartner._id, itemId: data1._id });
+                    if (findPartnerItem) {
+                        let obj = { totalStock: req.body.totalStock + findPartnerItem.totalStock, useStock: findPartnerItem.useStock, liveStock: req.body.liveStock + findPartnerItem.totalStock, }
+                        let update = await partnerItems.findByIdAndUpdate({ _id: findPartnerItem._id }, { $set: obj }, { new: true })
+                        return res.status(200).json({ status: 200, message: "Item assign to partner successfully. ", data: update })
+                    } else {
+                        let obj = {
+                            userId: findPartner._id,
+                            itemId: data1._id,
+                            totalStock: req.body.totalStock,
+                            useStock: 0,
+                            liveStock: req.body.totalStock,
+                        }
+                        const Data = await partnerItems.create(obj);
+                        return res.status(200).json({ status: 200, message: "Item assign to partner successfully. ", data: Data })
+                    }
+                } else {
+                    return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+            } else {
+                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+exports.assignItemslist = async (req, res) => {
+    try {
+        const data = await User.findOne({ _id: req.user._id, });
+        if (data) {
+            let findPartnerItem = await partnerItems.find({}).populate('userId itemId');
+            if (findPartnerItem.length > 0) {
+                return res.status(200).json({ status: 200, message: "Assign Item  get successfully. ", data: findPartnerItem })
+            } else {
+                return res.status(200).json({ status: 200, message: "Assign Item  get successfully. ", data: [] })
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
 
 
 
@@ -1574,43 +1667,6 @@ exports.updateService = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
-    }
-};
-exports.getOrders = async (req, res) => {
-    try {
-        const data = await orderModel.find().populate('services.serviceId');
-        if (data.length > 0) {
-            return res.status(200).json({ message: "All orders", data: data });
-        } else {
-            return res.status(404).json({ status: 404, message: "No data found", data: {} });
-        }
-    } catch (error) {
-        console.log(error);
-        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
-    }
-};
-exports.assignOrder = async (req, res) => {
-    try {
-        const data = await User.findOne({ _id: req.user._id, });
-        if (data) {
-            const data1 = await User.findOne({ _id: req.params.userId, });
-            if (data1) {
-                const data2 = await orderModel.findById({ _id: req.params.orderId });
-                if (data2) {
-                    let update = await orderModel.findByIdAndUpdate({ _id: data2._id }, { $set: { partnerId: data1._id, status: "assigned" } }, { new: true })
-                    return res.status(200).json({ status: 200, message: "Order assign  successfully.", data: update });
-                } else {
-                    return res.status(404).json({ status: 404, message: "No data found", data: {} });
-                }
-            } else {
-                return res.status(404).json({ status: 404, message: "No data found", data: {} });
-            }
-        } else {
-            return res.status(404).json({ status: 404, message: "No data found", data: {} });
-        }
-    } catch (error) {
-        console.log(error);
-        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
 const reffralCode = async () => {
