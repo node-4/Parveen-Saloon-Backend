@@ -3,7 +3,7 @@ const leaveController = require('../controllers/leavesController');
 const HelpLines = require('../controllers/helpLinesController');
 
 const authJwt = require("../middlewares/authJwt");
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload, spAgreementUpload } = require('../middlewares/imageUpload')
 const express = require("express");
 const app = express()
 module.exports = (app) => {
@@ -20,6 +20,24 @@ module.exports = (app) => {
         app.get('/api/v1/partner/leaves/:id', [authJwt.verifyToken], leaveController.getLeaveById);
         app.post("/api/v1/partner/help/contact", [authJwt.verifyToken], HelpLines.createHelpLine);
         app.get("/api/v1/partner/help/contact", [authJwt.verifyToken], HelpLines.getAllHelpLines);
+        app.post('/api/v1/partner-sp-agreements', authJwt.verifyToken, spAgreementUpload.fields([
+                { name: 'photo', maxCount: 1 },
+                { name: 'agreementDocument', maxCount: 1 },
+                { name: 'aadharFrontImage', maxCount: 1 },
+                { name: 'aadharBackImage', maxCount: 1 },
+                { name: 'panCardImage', maxCount: 1 }
+        ]), auth.createSPAgreement);
+        app.get('/api/v1/partner-sp-agreements', authJwt.verifyToken, auth.getAllSPAgreements);
+        app.get('/api/v1/partner-sp-agreements/:id', authJwt.verifyToken, auth.getSPAgreementById);
+        app.put('/api/v1/partner-sp-agreements/:id', authJwt.verifyToken, spAgreementUpload.fields([
+                { name: 'photo', maxCount: 1 },
+                { name: 'agreementDocument', maxCount: 1 },
+                { name: 'aadharFrontImage', maxCount: 1 },
+                { name: 'aadharBackImage', maxCount: 1 },
+                { name: 'panCardImage', maxCount: 1 }
+        ]), auth.updateSPAgreement);
+
+
 
 
 }

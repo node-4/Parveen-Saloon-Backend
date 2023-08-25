@@ -13,6 +13,7 @@ const feedback = require('../models/feedback');
 const orderModel = require('../models/orderModel');
 const offer = require('../models/offer');
 const ticket = require('../models/ticket');
+const SPAgreement = require('../models/spAgreementModel');
 // const rating = require('../models/ratingModel');
 // const favouriteBooking = require('../models/favouriteBooking');
 exports.partnerRegistration = async (req, res) => {
@@ -164,3 +165,100 @@ exports.getAllOrders = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+
+exports.createSPAgreement = async (req, res) => {
+        try {
+                const {
+                        mobile,
+                        email,
+                        panNumber,
+                        aadharNumber
+                } = req.body;
+
+                const spAgreement = new SPAgreement({
+                        photo: req.files['photo'][0].path,
+                        agreementDocument: req.files['agreementDocument'][0].path,
+                        mobile: mobile,
+                        email: email,
+                        aadharNumber: aadharNumber,
+                        aadharFrontImage: req.files['aadharFrontImage'][0].path,
+                        aadharBackImage: req.files['aadharBackImage'][0].path,
+                        panNumber: panNumber,
+                        panCardImage: req.files['panCardImage'][0].path
+                });
+
+                const savedSPAgreement = await spAgreement.save();
+
+                res.status(201).json({ status: 201, message: "created sucessfully", data: savedSPAgreement });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create SP Agreement' });
+        }
+};
+
+exports.getAllSPAgreements = async (req, res) => {
+        try {
+                const spAgreements = await SPAgreement.find();
+                res.json(spAgreements);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to get SP Agreements' });
+        }
+};
+
+exports.getSPAgreementById = async (req, res) => {
+        const spAgreementId = req.params.id;
+
+        try {
+                const spAgreement = await SPAgreement.findById(spAgreementId);
+                if (!spAgreement) {
+                        return res.status(404).json({ message: 'SP Agreement not found' });
+                }
+                res.json(spAgreement);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to get SP Agreement' });
+        }
+};
+
+exports.updateSPAgreement = async (req, res) => {
+        const spAgreementId = req.params.id;
+
+        try {
+                const {
+                        mobile,
+                        email,
+                        panNumber,
+                        aadharNumber
+                } = req.body;
+
+                const updatedSPAgreement = {
+                        photo: req.files['photo'][0].path,
+                        agreementDocument: req.files['agreementDocument'][0].path,
+                        mobile: mobile,
+                        email: email,
+                        aadharNumber: aadharNumber,
+                        aadharFrontImage: req.files['aadharFrontImage'][0].path,
+                        aadharBackImage: req.files['aadharBackImage'][0].path,
+                        panNumber: panNumber,
+                        panCardImage: req.files['panCardImage'][0].path
+                };
+
+                const updatedSPAgreementResult = await SPAgreement.findByIdAndUpdate(
+                        spAgreementId,
+                        updatedSPAgreement,
+                        { new: true }
+                );
+
+                if (!updatedSPAgreementResult) {
+                        return res.status(404).json({ message: 'SP Agreement not found' });
+                }
+
+                res.json({status: 200, message: "updated sucessfully", data: updatedSPAgreementResult});
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to update SP Agreement' });
+        }
+};
+
+
