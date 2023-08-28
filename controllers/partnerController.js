@@ -14,6 +14,11 @@ const orderModel = require('../models/orderModel');
 const offer = require('../models/offer');
 const ticket = require('../models/ticket');
 const SPAgreement = require('../models/spAgreementModel');
+const TransportationCharges = require('../models/transportationModel');
+const Training = require('../models/traningVideoModel');
+const ComplaintSuggestion = require('../models/complainet&suggestionModel');
+
+
 // const rating = require('../models/ratingModel');
 // const favouriteBooking = require('../models/favouriteBooking');
 exports.partnerRegistration = async (req, res) => {
@@ -199,7 +204,7 @@ exports.createSPAgreement = async (req, res) => {
 exports.getAllSPAgreements = async (req, res) => {
         try {
                 const spAgreements = await SPAgreement.find();
-                res.json(spAgreements);
+                res.json({ tatus: 200, message: "spAgreement data retrived sucessfully", data: spAgreements });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: 'Failed to get SP Agreements' });
@@ -214,7 +219,7 @@ exports.getSPAgreementById = async (req, res) => {
                 if (!spAgreement) {
                         return res.status(404).json({ message: 'SP Agreement not found' });
                 }
-                res.json(spAgreement);
+                res.json({ status: 200, message: "spAgreement data retrived sucessfully", data: spAgreement });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: 'Failed to get SP Agreement' });
@@ -254,11 +259,117 @@ exports.updateSPAgreement = async (req, res) => {
                         return res.status(404).json({ message: 'SP Agreement not found' });
                 }
 
-                res.json({status: 200, message: "updated sucessfully", data: updatedSPAgreementResult});
+                res.json({ status: 200, message: "updated sucessfully", data: updatedSPAgreementResult });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: 'Failed to update SP Agreement' });
         }
 };
 
+exports.createTransportationCharges = async (req, res) => {
+        try {
+                const { amount, reason } = req.body;
 
+                let attachFile;
+
+                if (req.file) {
+                        attachFile = req.file ? req.file.path : "";
+                }
+                const transportationCharges = new TransportationCharges({
+                        amount,
+                        reason,
+                        attachFile
+                });
+
+                const savedTransportationCharges = await transportationCharges.save();
+
+                res.status(201).json({ status: 201, message: "created sucessfully", data: savedTransportationCharges });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create transportation charges' });
+        }
+};
+
+exports.getAllTransportationCharges = async (req, res) => {
+        try {
+                const transportationCharges = await TransportationCharges.find();
+                res.status(200).json({ status: 200, message: "data retrived sucessfully", data: transportationCharges });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to fetch transportation charges' });
+        }
+};
+
+exports.getTransportationChargesById = async (req, res) => {
+        const transportationId = req.params.id;
+
+        try {
+                const transportationCharges = await TransportationCharges.findById(transportationId);
+                if (!transportationCharges) {
+                        return res.status(404).json({ message: 'Transportation Charges not found' });
+                }
+                res.json({ tatus: 200, message: "transportation Chasrges data retrived sucessfully", data: transportationCharges });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to get Transportation Charges' });
+        }
+};
+
+exports.createTraining = async (req, res) => {
+        try {
+                const { link, description, date } = req.body;
+
+                const training = new Training({
+                        link,
+                        description,
+                        date
+                });
+
+                const savedTraining = await training.save();
+
+                res.status(201).json(savedTraining);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create training' });
+        }
+};
+
+exports.getAllTrainings = async (req, res) => {
+        try {
+                const trainings = await Training.find();
+                res.status(200).json(trainings);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to fetch trainings' });
+        }
+};
+
+exports.createComplaintSuggestion = async (req, res) => {
+        try {
+                const { suggestion, complaint } = req.body;
+                const createdBy = req.user.id;
+
+                const complaintSuggestion = new ComplaintSuggestion({
+                        suggestion,
+                        complaint,
+                        createdBy
+                });
+
+                const savedComplaintSuggestion = await complaintSuggestion.save();
+
+                res.status(201).json(savedComplaintSuggestion);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create complaint/suggestion' });
+        }
+};
+
+exports.getAllComplaintSuggestions = async (req, res) => {
+        try {
+                const complaintSuggestion = await ComplaintSuggestion.find();
+                res.status(200).json(complaintSuggestion);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to fetch trainings' });
+        }
+};

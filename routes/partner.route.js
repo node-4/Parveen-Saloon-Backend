@@ -3,7 +3,7 @@ const leaveController = require('../controllers/leavesController');
 const HelpLines = require('../controllers/helpLinesController');
 
 const authJwt = require("../middlewares/authJwt");
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload, spAgreementUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload, spAgreementUpload, transportationCharges, complaintSuggestion } = require('../middlewares/imageUpload')
 const express = require("express");
 const app = express()
 module.exports = (app) => {
@@ -36,8 +36,16 @@ module.exports = (app) => {
                 { name: 'aadharBackImage', maxCount: 1 },
                 { name: 'panCardImage', maxCount: 1 }
         ]), auth.updateSPAgreement);
-
-
+        app.post('/api/v1/partner-transportation-charges', [authJwt.verifyToken], transportationCharges.single("attachFile"), auth.createTransportationCharges);
+        app.get('/api/v1/partner-transportation-charges', [authJwt.verifyToken], auth.getAllTransportationCharges);
+        app.get('/api/v1/partner-transportation-charges/:id', authJwt.verifyToken, auth.getTransportationChargesById);
+        app.post('/api/v1/partner-trainings', [authJwt.verifyToken], auth.createTraining);
+        app.get('/api/v1/partner/trainings', [authJwt.verifyToken], auth.getAllTrainings);
+        app.post('/api/v1/partner-complaints-suggestions', [authJwt.verifyToken], complaintSuggestion.fields([
+                { name: 'complaintAudio', maxCount: 1 },
+                { name: 'suggestionAudio', maxCount: 1 }
+        ]), auth.createComplaintSuggestion);
+        app.get('/api/v1/partner/complaint-suggestiion', [authJwt.verifyToken], auth.getAllComplaintSuggestions);
 
 
 }

@@ -37,4 +37,22 @@ const storage11 = new CloudinaryStorage({
 
 const spAgreementUpload = multer({ storage: storage11 });
 
-module.exports = { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, E4UUpload, userProfileUpload, BrandUpload, offerUpload, spAgreementUpload };
+const storage12 = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'parveenSalon/images/transportCharges',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'xlsx', 'xls', 'pdf', 'PDF']
+    }
+});
+const transportationCharges = multer({ storage: storage12 });
+
+const storage13 = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'parveenSalon/images/copmlaint&suggestionAudio',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'xlsx', 'xls', 'pdf', 'PDF', "mp3", "wav", "ogg"]
+    }
+});
+const complaintSuggestion = multer({ storage: storage13 });
+
+module.exports = { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, E4UUpload, userProfileUpload, BrandUpload, offerUpload, spAgreementUpload, transportationCharges, complaintSuggestion };
