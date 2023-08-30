@@ -91,4 +91,16 @@ module.exports = (app) => {
         app.put("/api/v1/admin/Service/uploadService/:id", [authJwt.verifyToken], serviceUpload.array('image'), auth.updateImagesinService);
         app.get("/api/v1/admin/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
         app.put("/api/v1/admin/Service/update/:id", [authJwt.verifyToken], auth.updateService);
+        app.get('/api/v1/admin/all-leaves', [authJwt.verifyToken], auth.getAllLeaves);
+        app.put('/api/v1/admin/approve-leave/:id', [authJwt.verifyToken], auth.approveLeave);
+        app.put('/api/v1/admin/cancel-leave/:id', [authJwt.verifyToken], auth.cancelLeave);
+        app.get('/api/v1/admin/all-sp-agreements', [authJwt.verifyToken], auth.getAllSPAgreements);
+        app.get('/api/v1/admin/sp-agreements/:id', [authJwt.verifyToken], auth.getSPAgreementById);
+        app.get('/api/v1/admin/all-training-videos', [authJwt.verifyToken], auth.getAllTrainingVideos);
+        app.get('/api/v1/admin/training-videos/:id', [authJwt.verifyToken], auth.getTrainingVideoById);
+        app.get('/api/v1/admin/all-transportation-charges', [authJwt.verifyToken], auth.getAllTransportationCharges);
+        app.get('/api/v1/admin/transportation-charges/:id', [authJwt.verifyToken], auth.getTransportationChargeById);
+
+
+        
 }

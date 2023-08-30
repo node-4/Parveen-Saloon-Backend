@@ -25,6 +25,14 @@ const feedback = require('../models/feedback');
 const ticket = require('../models/ticket');
 const orderModel = require('../models/orderModel');
 const partnerItems = require('../models/partnerItems');
+const Leave = require('../models/leavesModel');
+const SPAgreement = require('../models/spAgreementModel');
+const TrainingVideo = require('../models/traningVideoModel');
+const TransportationCharge = require('../models/transportationModel');
+
+
+
+
 exports.registration = async (req, res) => {
     const { phone, email } = req.body;
     try {
@@ -1481,24 +1489,6 @@ exports.assignItemslist = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 exports.createFacialType = async (req, res) => {
     try {
@@ -1677,3 +1667,100 @@ const reffralCode = async () => {
     }
     return OTP;
 }
+exports.getAllLeaves = async (req, res) => {
+    try {
+        const allLeaves = await Leave.find();
+        res.json({ status: 200, message: ' All Leave data retrieved successfully', data: allLeaves });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve leave requests' });
+    }
+};
+exports.approveLeave = async (req, res) => {
+    try {
+        const leaveId = req.params.id;
+        const updatedLeave = await Leave.findByIdAndUpdate(leaveId, { status: 'approved' }, { new: true });
+        res.json({ status: 200, message: 'Approved leave successfully', data: updatedLeave });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to approve leave' });
+    }
+};
+exports.cancelLeave = async (req, res) => {
+    try {
+        const leaveId = req.params.id;
+        const updatedLeave = await Leave.findByIdAndUpdate(leaveId, { status: 'cancelled' }, { new: true });
+        res.json({ status: 200, message: 'Cancel Leave successfully', data: updatedLeave });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to cancel leave' });
+    }
+};
+exports.getAllSPAgreements = async (req, res) => {
+    try {
+        const allSPAgreements = await SPAgreement.find();
+        res.json({ status: 200, message: 'All SpAgreement data retrieved successfully', data: allSPAgreements });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve SP agreements' });
+    }
+};
+exports.getSPAgreementById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const spAgreement = await SPAgreement.findById(id);
+        if (!spAgreement) {
+            return res.status(404).json({ error: 'SP agreement not found' });
+        }
+        res.json({ status: 200, message: 'SpAgreement retrieved successfully', data: spAgreement });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve SP agreement' });
+    }
+};
+exports.getAllTrainingVideos = async (req, res) => {
+    try {
+        const allTrainingVideos = await TrainingVideo.find();
+        res.json({ status: 200, message: 'All traning Video retrieved successfully', data: allTrainingVideos });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve training videos' });
+    }
+};
+exports.getTrainingVideoById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const trainingVideo = await TrainingVideo.findById(id);
+        if (!trainingVideo) {
+            return res.status(404).json({ error: 'Training video not found' });
+        }
+        res.json({ status: 200, message: 'Traning Video retrieved successfully', data: trainingVideo });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve training video' });
+    }
+};
+exports.getAllTransportationCharges = async (req, res) => {
+    try {
+        const allCharges = await TransportationCharge.find();
+        res.json({ status: 200, message: 'All transportation charges retrieved successfully', data: allCharges });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve transportation charges' });
+    }
+};
+exports.getTransportationChargeById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const charge = await TransportationCharge.findById(id);
+        if (!charge) {
+            return res.status(404).json({ error: 'Transportation charge not found' });
+        }
+        res.json({ status: 200, message: 'Transportation charge retrieved successfully', data: charge });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve transportation charge' });
+    }
+};
+
+
