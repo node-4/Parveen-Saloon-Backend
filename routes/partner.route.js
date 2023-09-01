@@ -15,6 +15,7 @@ module.exports = (app) => {
         app.get('/api/v1/partner/getAllOrders', [authJwt.verifyToken], auth.getAllOrders);
         app.get('/api/v1/partner/getTodayOrders', [authJwt.verifyToken], auth.getTodayOrders);
         app.get('/api/v1/partner/getTomorrowOrders', [authJwt.verifyToken], auth.getTomorrowOrders);
+        app.get('/api/v1/partner/orders/:id', [authJwt.verifyToken], auth.getOrderById);
         app.post('/api/v1/partner-leaves', [authJwt.verifyToken], leaveController.createLeave);
         app.get('/api/v1/partner/leaves', [authJwt.verifyToken], leaveController.getAllLeaves);
         app.get('/api/v1/partner/leaves/:id', [authJwt.verifyToken], leaveController.getLeaveById);
@@ -46,6 +47,9 @@ module.exports = (app) => {
                 { name: 'suggestionAudio', maxCount: 1 }
         ]), auth.createComplaintSuggestion);
         app.get('/api/v1/partner/complaint-suggestiion', [authJwt.verifyToken], auth.getAllComplaintSuggestions);
+        app.post('/api/v1/partner-create-referral', authJwt.verifyToken, auth.createReferral);
+        app.post('/api/v1/partner/consent/forms', [authJwt.verifyToken], auth.createConsentForm);
+
 
 
 }

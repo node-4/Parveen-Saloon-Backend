@@ -143,7 +143,7 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image refferalCode');
+                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image refferalCode completeProfile');
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
@@ -1147,3 +1147,43 @@ const ticketCode = async () => {
         }
         return OTP;
 }
+exports.addWallet = async (req, res) => {
+        try {
+                const { amount } = req.body;
+                const userId = req.user.id;
+
+                await User.findByIdAndUpdate(userId, { $inc: { wallet: amount } });
+
+                return res.status(200).json({ message: 'Funds added successfully' });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to add funds to the wallet' });
+        }
+};
+exports.removeWallet = async (req, res) => {
+        try {
+                const { amount } = req.body;
+                const userId = req.user.id;
+
+                await User.findByIdAndUpdate(userId, { $inc: { wallet: -amount } });
+
+                return res.status(200).json({ message: 'Funds removed successfully' });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to remove funds from the wallet' });
+        }
+};
+exports.getwallet = async (req, res) => {
+        try {
+                const userId = req.user.id;
+                const user = await User.findById(userId, 'wallet');
+                if (!user) {
+                        return res.status(404).json({ message: 'User not found' });
+                }
+
+                return res.status(200).json({ message: 'Wallet balance retrieved successfully', data: { wallet: user.wallet } });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to retrieve wallet balance' });
+        }
+};

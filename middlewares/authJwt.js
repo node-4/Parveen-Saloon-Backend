@@ -49,7 +49,7 @@ const isAdmin = (req, res, next) => {
             });
         }
 
-        const user = await AdminModel.findOne({ email: decoded.id });
+        const user = await User.findOne({ email: decoded.id });
 
         if (!user) {
             return res.status(400).send({

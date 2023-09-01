@@ -17,6 +17,8 @@ const SPAgreement = require('../models/spAgreementModel');
 const TransportationCharges = require('../models/transportationModel');
 const Training = require('../models/traningVideoModel');
 const ComplaintSuggestion = require('../models/complainet&suggestionModel');
+const Referral = require('../models/refferalModel');
+const ConsentForm = require('../models/consentFormModel');
 
 
 // const rating = require('../models/ratingModel');
@@ -168,6 +170,21 @@ exports.getAllOrders = async (req, res) => {
         } catch (error) {
                 console.log(error);
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getOrderById = async (req, res) => {
+        try {
+                const orderId = req.params.id;
+                const order = await orderModel.findById(orderId);
+
+                if (!order) {
+                        return res.status(404).json({ status: 404, message: "Order not found", data: {} });
+                }
+
+                return res.status(200).json({ status: 200, message: "Order found", data: order });
+        } catch (error) {
+                console.log(error);
+                return res.status(500).send({ status: 500, message: "Server error.", data: {} });
         }
 };
 
@@ -371,5 +388,41 @@ exports.getAllComplaintSuggestions = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: 'Failed to fetch trainings' });
+        }
+};
+
+exports.createReferral = async (req, res) => {
+        try {
+                const { name, mobileNumber, city, hub, address } = req.body;
+
+                const referral = new Referral({
+                        name,
+                        mobileNumber,
+                        city,
+                        hub,
+                        address
+                });
+
+                const savedReferral = await referral.save();
+
+                res.status(201).json({ success: true, message: 'Referral created successfully', data: savedReferral });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ success: false, message: 'Failed to create referral' });
+        }
+};
+exports.createConsentForm = async (req, res) => {
+        try {
+                const { title, description } = req.body;
+                const consentForm = new ConsentForm({
+                        title,
+                        description,
+                });
+                const savedConsentForm = await consentForm.save();
+
+                res.status(201).json(savedConsentForm);
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create consent form' });
         }
 };
