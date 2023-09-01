@@ -42,4 +42,8 @@ module.exports = (app) => {
         app.post("/api/v1/user/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
         app.post("/api/v1/user/FavouriteBooking/addFavouriteBooking/:orderId", [authJwt.verifyToken], auth.addFavouriteBooking);
         app.get("/api/v1/user/FavouriteBooking/listFavouriteBooking", [authJwt.verifyToken], auth.listFavouriteBooking);
+        app.post('/api/v1/user/wallet/addWallet', [authJwt.verifyToken], auth.addWallet);
+        app.post('/api/v1/user/wallet/removeWallet', [authJwt.verifyToken], auth.removeWallet);
+        app.get('/api/v1/user/wallet/getwallet', [authJwt.verifyToken], auth.getwallet);
+
 }

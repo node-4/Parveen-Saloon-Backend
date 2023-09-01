@@ -87,7 +87,8 @@ module.exports = (app) => {
         app.put("/api/v1/admin/FacialType/updateFacialType/:id", [authJwt.verifyToken], auth.updateFacialType);
         app.delete("/api/v1/admin/FacialType/deleteFacialType/:id", [authJwt.verifyToken], auth.removeFacialType);
         app.post('/api/v1/admin/createSubscription', auth.createSubscription);
-        app.get('/api/v1/admin/getSubscription/:mainCategoryId/:categoryId', auth.getSubscription);
+        // app.get('/api/v1/admin/getSubscription/:mainCategoryId/:categoryId', auth.getSubscription);
+        app.get('/api/v1/admin/getSubscription', auth.getSubscription);
         app.put("/api/v1/admin/Service/uploadService/:id", [authJwt.verifyToken], serviceUpload.array('image'), auth.updateImagesinService);
         app.get("/api/v1/admin/Service/top/:categoryId/:subCategoryId", auth.getTopSellingService);
         app.put("/api/v1/admin/Service/update/:id", [authJwt.verifyToken], auth.updateService);
@@ -100,7 +101,11 @@ module.exports = (app) => {
         app.get('/api/v1/admin/training-videos/:id', [authJwt.verifyToken], auth.getTrainingVideoById);
         app.get('/api/v1/admin/all-transportation-charges', [authJwt.verifyToken], auth.getAllTransportationCharges);
         app.get('/api/v1/admin/transportation-charges/:id', [authJwt.verifyToken], auth.getTransportationChargeById);
+        app.get('/api/v1/admin/referrals', [authJwt.verifyToken], auth.getAllReferrals);
+        app.get('/api/v1/admin/referrals/:id', [authJwt.verifyToken], auth.getReferralById);
+        app.get('/api/v1/admin/consent-forms', [authJwt.verifyToken], auth.getAllConsentForms);
+        app.get('/api/v1/admin/consent-forms/:id', [authJwt.verifyToken], auth.getConsentFormById);
 
 
-        
+
 }
