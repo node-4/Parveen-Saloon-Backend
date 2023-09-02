@@ -3,7 +3,7 @@ const schema = mongoose.Schema;
 const bannerSchema = mongoose.Schema({
     categoryId: {
         type: schema.Types.ObjectId,
-        ref: "Category"
+        ref: "mainCategory"
     },
     image: {
         type: String,

@@ -169,8 +169,11 @@ exports.AddBanner = async (req, res) => {
         if (req.file) {
             fileUrl = req.file ? req.file.path : "";
         }
-        const data = { image: fileUrl, desc: req.body.desc, position: req.body.position }
-        const Data = await banner.create(data);
+        req.body.categoryId = req.body.categoryId;
+        req.body.image = fileUrl;
+        req.body.desc = req.body.desc;
+        req.body.position = req.body.position;
+        const Data = await banner.create(req.body);
         return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
     } catch (err) {
         console.log(err);
@@ -196,6 +199,28 @@ exports.getBannerByPosition = async (req, res) => {
             return res.status(400).json({ status: 400, message: "Invalid position" });
         }
         const banners = await banner.find({ position });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+        }
+        if (banners.length === 1) {
+            return res.status(200).json({ status: 200, message: "Banner found successfully.", data: banners[0] });
+        }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+exports.getBannerForCategoryByPosition = async (req, res) => {
+    try {
+        const categoryId = req.params.categoryId
+        const position = req.query.position;
+        if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
+            return res.status(400).json({ status: 400, message: "Invalid position" });
+        }
+        const banners = await banner.find({ position: position, categoryId: categoryId });
 
         if (banners.length === 0) {
             return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });

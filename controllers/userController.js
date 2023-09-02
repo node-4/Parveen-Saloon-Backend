@@ -1253,60 +1253,11 @@ exports.getTestimonialById = async (req, res) => {
                 res.status(500).json({ error: "Failed to retrieve testimonial" });
         }
 };
-// exports.createRating = async (req, res) => {
-//         try {
-//                 const {
-//                         userId,
-//                         partnerId,
-//                         orderId,
-//                         categoryId,
-//                         ratingValue,
-//                         comment,
-//                         date,
-//                 } = req.body;
-
-//                 if (!userId || !partnerId || !orderId || !categoryId || !ratingValue || !date) {
-//                         return res.status(400).json({ error: 'Incomplete data for rating creation' });
-//                 }
-
-//                 const user = await User.findOne({ _id: userId });
-//                 const partner = await User.findOne({ _id: partnerId });
-//                 const order = await Order.findOne({ _id: orderId });
-//                 const category = await Category.findOne({ _id: categoryId });
-
-//                 if (!user || !partner || !order || !category) {
-//                         return res.status(404).json({ error: 'User, partner, order, or category not found' });
-//                 }
-
-//                 const newRating = new rating({
-//                         userId: user._id,
-//                         partnerId: partner._id,
-//                         orderId: order._id,
-//                         categoryId: category._id,
-//                         rating: {
-//                                 userId: user._id,
-//                                 rating: ratingValue,
-//                                 comment,
-//                                 date,
-//                         },
-//                 });
-
-//                 const savedRating = await newRating.save();
-
-//                 res.status(201).json({ message: 'Rating created successfully', data: savedRating });
-//         } catch (error) {
-//                 console.error(error);
-//                 res.status(500).json({ error: 'Failed to create rating' });
-//         }
-// };
-
-
-
 exports.createRating = async (req, res) => {
         try {
+                const userId = req.user._id;
+
                 const {
-                        userId,
-                        partnerId,
                         orderId,
                         categoryId,
                         ratingValue,
@@ -1314,22 +1265,22 @@ exports.createRating = async (req, res) => {
                         date
                 } = req.body;
 
-                if (!userId || !partnerId || !orderId || !categoryId || !ratingValue || !date) {
+                if (!orderId || !categoryId || !ratingValue || !date) {
                         return res.status(400).json({ error: 'Incomplete data for rating creation' });
                 }
 
                 const user = await User.findOne({ _id: userId });
-                const partner = await User.findOne({ _id: partnerId });
                 const order = await Order.findOne({ _id: orderId });
+                console.log("order", order);
                 const category = await Category.findOne({ _id: categoryId });
 
-                if (!user || !partner || !order || !category) {
-                        return res.status(404).json({ error: 'User, partner, order, or category not found' });
+                if (!user || !order || !category) {
+                        return res.status(404).json({ error: 'User, order, or category not found' });
                 }
 
                 let rating = await Rating.findOne({
                         userId: user._id,
-                        partnerId: partner._id,
+                        partnerId: order.partnerId,
                         orderId: order._id,
                         categoryId: category._id,
                 });
@@ -1337,7 +1288,7 @@ exports.createRating = async (req, res) => {
                 if (!rating) {
                         rating = new Rating({
                                 userId: user._id,
-                                partnerId: partner._id,
+                                partnerId: order.partnerId,
                                 orderId: order._id,
                                 categoryId: category._id,
                                 rating: [{
@@ -1390,6 +1341,29 @@ exports.createRating = async (req, res) => {
                 res.status(500).json({ error: 'Failed to create rating' });
         }
 };
+exports.getAllRatings = async (req, res) => {
+        try {
+                const allRatings = await Rating.find();
+                res.status(200).json({ message: "All Ratings Found", status: 200, data: allRatings });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Server error", status: 500, data: {} });
+        }
+};
+exports.getRatingById = async (req, res) => {
+        try {
+                const ratingId = req.params.ratingId;
+                const rating = await Rating.findById(ratingId);
+                if (!rating) {
+                        return res.status(404).json({ message: "Rating Not Found", status: 404, data: {} });
+                }
+                res.status(200).json({ message: "Rating Found", status: 200, data: rating });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Server error", status: 500, data: {} });
+        }
+};
+
 
 
 
