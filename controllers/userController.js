@@ -13,7 +13,7 @@ const feedback = require('../models/feedback');
 const orderModel = require('../models/orderModel');
 const offer = require('../models/offer');
 const ticket = require('../models/ticket');
-// const rating = require('../models/ratingModel');
+const rating = require('../models/ratingModel');
 const favouriteBooking = require('../models/favouriteBooking');
 const servicePackage = require('../models/servicePackage');
 const Testimonial = require("../models/testimonial");
@@ -351,6 +351,24 @@ exports.listOffer = async (req, res) => {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
                         let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "other" }] }] });
+                        if (findService.length == 0) {
+                                return res.status(404).send({ status: 404, message: "Data not found" });
+                        } else {
+                                res.json({ status: 200, message: 'Offer Data found successfully.', service: findService });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+exports.getUserOffer = async (req, res) => {
+        try {
+                let vendorData = await User.findOne({ _id: req.user._id });
+                if (!vendorData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "user" }] }] });
                         if (findService.length == 0) {
                                 return res.status(404).send({ status: 404, message: "Data not found" });
                         } else {
@@ -1205,7 +1223,7 @@ exports.createTestimonial = async (req, res) => {
                 });
 
                 const savedTestimonial = await testimonial.save();
-                res.status(201).json({status: 201, data: savedTestimonial});
+                res.status(201).json({ status: 201, data: savedTestimonial });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: "Failed to create testimonial" });
@@ -1214,7 +1232,7 @@ exports.createTestimonial = async (req, res) => {
 exports.getAllTestimonials = async (req, res) => {
         try {
                 const testimonials = await Testimonial.find();
-                res.status(200).json({status: 200, data: testimonials});
+                res.status(200).json({ status: 200, data: testimonials });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: "Failed to retrieve testimonials" });
@@ -1226,9 +1244,45 @@ exports.getTestimonialById = async (req, res) => {
                 if (!testimonial) {
                         return res.status(404).json({ message: "Testimonial not found" });
                 }
-                res.status(200).json({status: 200, data: testimonial});
+                res.status(200).json({ status: 200, data: testimonial });
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ error: "Failed to retrieve testimonial" });
         }
 };
+exports.createRating = async (req, res) => {
+        try {
+                const {
+                        userId,
+                        partnerId,
+                        orderId,
+                        categoryId,
+                        ratingValue,
+                        comment,
+                        date,
+                } = req.body;
+                if (!userId || !orderId || !categoryId || !ratingValue || !date) {
+                        return res.status(400).json({ error: 'Incomplete data for rating creation' });
+                }
+                const newRating = new Rating({
+                        userId,
+                        partnerId,
+                        orderId,
+                        categoryId,
+                        rating: {
+                                userId,
+                                rating: ratingValue,
+                                comment,
+                                date,
+                        },
+                });
+
+                const savedRating = await newRating.save();
+
+                res.status(201).json({ message: 'Rating created successfully', data: savedRating });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create rating' });
+        }
+};
+

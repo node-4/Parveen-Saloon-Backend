@@ -66,6 +66,8 @@ module.exports = (app) => {
         app.delete("/api/v1/admin/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
         app.post("/api/v1/admin/Offer/addOffer", [authJwt.verifyToken], offerUpload.single('image'), auth.addOffer);
         app.get("/api/v1/admin/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
+        app.get("/api/v1/admin/Offer/userOffer", [authJwt.verifyToken], auth.getUserOffer);
+        app.get("/api/v1/admin/Offer/OtherOffer", [authJwt.verifyToken], auth.getOtherOffer);
         app.post("/api/v1/admin/FreeService/addFreeService", [authJwt.verifyToken], auth.createFreeService);
         app.get("/api/v1/admin/FreeService/allFreeService", auth.getFreeServices);
         app.put("/api/v1/admin/FreeService/updateFreeService/:id", [authJwt.verifyToken], auth.updateFreeServices);

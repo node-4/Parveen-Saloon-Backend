@@ -20,6 +20,7 @@ module.exports = (app) => {
         app.get("/api/v1/user/getFreeServices", [authJwt.verifyToken], auth.getFreeServices);
         app.get("/api/v1/user/getCart", [authJwt.verifyToken], auth.getCart);
         app.get("/api/v1/user/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);
+        app.get("/api/v1/user/Offer/userOffer", [authJwt.verifyToken], auth.getUserOffer);
         app.post("/api/v1/user/ticket/createTicket", [authJwt.verifyToken], auth.createTicket);
         app.get("/api/v1/user/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
         app.get('/api/v1/user/ticket/:id', auth.getTicketbyId);

@@ -1403,6 +1403,42 @@ exports.listOffer = async (req, res) => {
         return res.status(500).send({ status: 500, message: "Server error" + error.message });
     }
 };
+exports.getUserOffer = async (req, res) => {
+    try {
+        let vendorData = await User.findOne({ _id: req.user._id });
+        if (!vendorData) {
+            return res.status(404).send({ status: 404, message: "User not found" });
+        } else {
+            let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "user" }] }] });
+            if (findService.length == 0) {
+                return res.status(404).send({ status: 404, message: "Data not found" });
+            } else {
+                res.json({ status: 200, message: 'Offer Data found successfully.', service: findService });
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
+exports.getOtherOffer = async (req, res) => {
+    try {
+        let vendorData = await User.findOne({ _id: req.user._id });
+        if (!vendorData) {
+            return res.status(404).send({ status: 404, message: "User not found" });
+        } else {
+            let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "other" }] }] });
+            if (findService.length == 0) {
+                return res.status(404).send({ status: 404, message: "Data not found" });
+            } else {
+                res.json({ status: 200, message: 'Offer Data found successfully.', service: findService });
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 500, message: "Server error" + error.message });
+    }
+};
 exports.createFreeService = async (req, res) => {
     try {
         let findUser = await User.findById({ _id: req.body.userId });
