@@ -189,6 +189,28 @@ exports.getBanner = async (req, res) => {
         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
+exports.getBannerByPosition = async (req, res) => {
+    try {
+        const position = req.query.position;
+        if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
+            return res.status(400).json({ status: 400, message: "Invalid position" });
+        }
+        const banners = await banner.find({ position });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+        }
+        if (banners.length === 1) {
+            return res.status(200).json({ status: 200, message: "Banner found successfully.", data: banners[0] });
+        }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+
 exports.getBannerById = async (req, res) => {
     try {
         const Banner = await banner.findById({ _id: req.params.id });
@@ -1338,7 +1360,7 @@ exports.addOffer = async (req, res) => {
         };
 
         if (req.body.categoryId) {
-            const findCategory = await Category.findById(req.body.categoryId);
+            const findCategory = await mainCategory.findById(req.body.categoryId);
             if (!findCategory) {
                 return res.status(404).json({ status: 404, message: "Category not found" });
             }
@@ -1409,7 +1431,9 @@ exports.getUserOffer = async (req, res) => {
         if (!vendorData) {
             return res.status(404).send({ status: 404, message: "User not found" });
         } else {
-            let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "user" }] }] });
+            let findService = await offer.find({ $and: [{ $or: [{ userId: vendorData._id }, { type: "user" }] }] })
+                .populate('categoryId');
+
             if (findService.length == 0) {
                 return res.status(404).send({ status: 404, message: "Data not found" });
             } else {
@@ -1421,6 +1445,7 @@ exports.getUserOffer = async (req, res) => {
         return res.status(500).send({ status: 500, message: "Server error" + error.message });
     }
 };
+
 exports.getOtherOffer = async (req, res) => {
     try {
         let vendorData = await User.findOne({ _id: req.user._id });

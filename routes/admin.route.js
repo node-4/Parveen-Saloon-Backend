@@ -11,6 +11,7 @@ module.exports = (app) => {
         app.put("/api/v1/admin/update", [authJwt.verifyToken], auth.update);
         app.post("/api/v1/admin/Banner/AddBanner", [authJwt.verifyToken], bannerUpload.single('image'), auth.AddBanner);
         app.get("/api/v1/admin/Banner/allBanner", auth.getBanner);
+        app.get("/api/v1/admin/Banner/bannerByPosition", auth.getBannerByPosition);
         app.get("/api/v1/admin/Banner/getBannerById/:id", auth.getBannerById);
         app.delete("/api/v1/admin/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
         app.post("/api/v1/admin/Brand/addBrand", [authJwt.verifyToken], BrandUpload.single('image'), auth.createBrands);

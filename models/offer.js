@@ -8,7 +8,7 @@ const FeedbackSchema = new mongoose.Schema(
         },
         categoryId: {
             type: schema.Types.ObjectId,
-            ref: "Category"
+            ref: "mainCategory"
         },
         serviceId: {
             type: schema.Types.ObjectId,
