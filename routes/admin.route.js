@@ -47,7 +47,7 @@ module.exports = (app) => {
         app.put("/api/v1/admin/mainCategory/updateCategory/:id", [authJwt.verifyToken], categoryUpload.single('image'), auth.updateMainCategory);
         app.delete("/api/v1/admin/mainCategory/deleteCategory/:id", [authJwt.verifyToken], auth.removeMainCategory);
         app.post("/api/v1/admin/Category/createCategory", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.createCategory);
-        app.get("/api/v1/admin/Category/allCategory", auth.getCategories);
+        app.get("/api/v1/admin/Category/allCategory/:categoryId", auth.getCategories);
         app.put("/api/v1/admin/Category/update/:id", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.updateCategory);
         app.delete("/api/v1/admin/Category/delete/:id", [authJwt.verifyToken], auth.removeCategory);
         app.post("/api/v1/admin/SubCategory/createCategory", [authJwt.verifyToken], auth.createSubCategory);

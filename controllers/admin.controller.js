@@ -674,7 +674,8 @@ exports.createCategory = async (req, res) => {
     }
 };
 exports.getCategories = async (req, res) => {
-    const findCategory = await mainCategory.findById({ _id: req.body.categoryId });
+    const categoryId = req.params.categoryId
+    const findCategory = await mainCategory.findById({ _id: categoryId });
     if (!findCategory) {
         return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
     } else {

@@ -13,10 +13,13 @@ const feedback = require('../models/feedback');
 const orderModel = require('../models/orderModel');
 const offer = require('../models/offer');
 const ticket = require('../models/ticket');
-const rating = require('../models/ratingModel');
+const Rating = require('../models/ratingModel');
 const favouriteBooking = require('../models/favouriteBooking');
 const servicePackage = require('../models/servicePackage');
 const Testimonial = require("../models/testimonial");
+const Order = require('../models/orderModel')
+const Category = require("../models/category/Category");
+
 
 
 exports.registration = async (req, res) => {
@@ -1250,6 +1253,55 @@ exports.getTestimonialById = async (req, res) => {
                 res.status(500).json({ error: "Failed to retrieve testimonial" });
         }
 };
+// exports.createRating = async (req, res) => {
+//         try {
+//                 const {
+//                         userId,
+//                         partnerId,
+//                         orderId,
+//                         categoryId,
+//                         ratingValue,
+//                         comment,
+//                         date,
+//                 } = req.body;
+
+//                 if (!userId || !partnerId || !orderId || !categoryId || !ratingValue || !date) {
+//                         return res.status(400).json({ error: 'Incomplete data for rating creation' });
+//                 }
+
+//                 const user = await User.findOne({ _id: userId });
+//                 const partner = await User.findOne({ _id: partnerId });
+//                 const order = await Order.findOne({ _id: orderId });
+//                 const category = await Category.findOne({ _id: categoryId });
+
+//                 if (!user || !partner || !order || !category) {
+//                         return res.status(404).json({ error: 'User, partner, order, or category not found' });
+//                 }
+
+//                 const newRating = new rating({
+//                         userId: user._id,
+//                         partnerId: partner._id,
+//                         orderId: order._id,
+//                         categoryId: category._id,
+//                         rating: {
+//                                 userId: user._id,
+//                                 rating: ratingValue,
+//                                 comment,
+//                                 date,
+//                         },
+//                 });
+
+//                 const savedRating = await newRating.save();
+
+//                 res.status(201).json({ message: 'Rating created successfully', data: savedRating });
+//         } catch (error) {
+//                 console.error(error);
+//                 res.status(500).json({ error: 'Failed to create rating' });
+//         }
+// };
+
+
+
 exports.createRating = async (req, res) => {
         try {
                 const {
@@ -1259,25 +1311,78 @@ exports.createRating = async (req, res) => {
                         categoryId,
                         ratingValue,
                         comment,
-                        date,
+                        date
                 } = req.body;
-                if (!userId || !orderId || !categoryId || !ratingValue || !date) {
+
+                if (!userId || !partnerId || !orderId || !categoryId || !ratingValue || !date) {
                         return res.status(400).json({ error: 'Incomplete data for rating creation' });
                 }
-                const newRating = new Rating({
-                        userId,
-                        partnerId,
-                        orderId,
-                        categoryId,
-                        rating: {
-                                userId,
+
+                const user = await User.findOne({ _id: userId });
+                const partner = await User.findOne({ _id: partnerId });
+                const order = await Order.findOne({ _id: orderId });
+                const category = await Category.findOne({ _id: categoryId });
+
+                if (!user || !partner || !order || !category) {
+                        return res.status(404).json({ error: 'User, partner, order, or category not found' });
+                }
+
+                let rating = await Rating.findOne({
+                        userId: user._id,
+                        partnerId: partner._id,
+                        orderId: order._id,
+                        categoryId: category._id,
+                });
+
+                if (!rating) {
+                        rating = new Rating({
+                                userId: user._id,
+                                partnerId: partner._id,
+                                orderId: order._id,
+                                categoryId: category._id,
+                                rating: [{
+                                        userId: user._id,
+                                        rating: ratingValue,
+                                        comment,
+                                        date,
+                                }],
+                        });
+                } else {
+                        rating.rating.push({
+                                userId: user._id,
                                 rating: ratingValue,
                                 comment,
                                 date,
-                        },
-                });
+                        });
+                }
 
-                const savedRating = await newRating.save();
+                switch (ratingValue) {
+                        case 1:
+                                rating.rating1++;
+                                break;
+                        case 2:
+                                rating.rating2++;
+                                break;
+                        case 3:
+                                rating.rating3++;
+                                break;
+                        case 4:
+                                rating.rating4++;
+                                break;
+                        case 5:
+                                rating.rating5++;
+                                break;
+                        default:
+                                break;
+                }
+
+                rating.totalRating = rating.rating1 + rating.rating2 + rating.rating3 + rating.rating4 + rating.rating5;
+
+                const totalRatings = rating.totalRating;
+                const sumRatings = rating.rating1 + rating.rating2 * 2 + rating.rating3 * 3 + rating.rating4 * 4 + rating.rating5 * 5;
+                rating.averageRating = totalRatings === 0 ? 0 : sumRatings / totalRatings;
+
+                const savedRating = await rating.save();
 
                 res.status(201).json({ message: 'Rating created successfully', data: savedRating });
         } catch (error) {
@@ -1285,4 +1390,9 @@ exports.createRating = async (req, res) => {
                 res.status(500).json({ error: 'Failed to create rating' });
         }
 };
+
+
+
+
+
 
