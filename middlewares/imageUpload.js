@@ -54,5 +54,13 @@ const storage13 = new CloudinaryStorage({
     }
 });
 const complaintSuggestion = multer({ storage: storage13 });
+const storage14 = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'parveenSalon/images/testimonial',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'xlsx', 'xls', 'pdf', 'PDF']
+    }
+});
+const testimonial = multer({ storage: storage14 });
 
-module.exports = { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, E4UUpload, userProfileUpload, BrandUpload, offerUpload, spAgreementUpload, transportationCharges, complaintSuggestion };
+module.exports = { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, E4UUpload, userProfileUpload, BrandUpload, offerUpload, spAgreementUpload, transportationCharges, complaintSuggestion, testimonial };

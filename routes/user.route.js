@@ -1,6 +1,6 @@
 const auth = require("../controllers/userController");
 const authJwt = require("../middlewares/authJwt");
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, userProfileUpload, testimonial } = require('../middlewares/imageUpload')
 const express = require("express");
 const router = express()
 module.exports = (app) => {
@@ -45,5 +45,7 @@ module.exports = (app) => {
         app.post('/api/v1/user/wallet/addWallet', [authJwt.verifyToken], auth.addWallet);
         app.post('/api/v1/user/wallet/removeWallet', [authJwt.verifyToken], auth.removeWallet);
         app.get('/api/v1/user/wallet/getwallet', [authJwt.verifyToken], auth.getwallet);
-
+        app.post("/api/v1/user-testimonial", [authJwt.verifyToken], testimonial.single('image'), auth.createTestimonial);
+        app.get("/api/v1/user/testimonial", [authJwt.verifyToken], auth.getAllTestimonials);
+        app.get("/api/v1/user/testimonial/:id", [authJwt.verifyToken], auth.getTestimonialById);
 }

@@ -321,11 +321,19 @@ exports.createE4u = async (req, res) => {
     }
 };
 exports.getE4uByType = async (req, res) => {
-    const findE4U = await e4u.find({ type: req.params.type });
-    if (findE4U.length == 0) {
-        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+    if(req.params.type == "FR"){
+        const findE4U = await e4u.findOne({ type: req.params.type });
+        if (!findE4U) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
+    }else{
+        const findE4U = await e4u.find({ type: req.params.type });
+        if (findE4U.length == 0) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
     }
-    return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
 };
 exports.getE4u = async (req, res) => {
     const findE4U = await e4u.find({});
@@ -1376,7 +1384,6 @@ exports.addOffer = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Server error: " + error.message });
     }
 };
-
 
 exports.listOffer = async (req, res) => {
     try {

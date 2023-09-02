@@ -16,6 +16,9 @@ const ticket = require('../models/ticket');
 // const rating = require('../models/ratingModel');
 const favouriteBooking = require('../models/favouriteBooking');
 const servicePackage = require('../models/servicePackage');
+const Testimonial = require("../models/testimonial");
+
+
 exports.registration = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id });
@@ -1185,5 +1188,47 @@ exports.getwallet = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to retrieve wallet balance' });
+        }
+};
+exports.createTestimonial = async (req, res) => {
+        try {
+                if (!req.file) {
+                        return res.status(400).json({ error: "Image file is required" });
+                }
+                const { userName, userProffession, title, description } = req.body;
+                const testimonial = new Testimonial({
+                        userName,
+                        userProffession,
+                        title,
+                        description,
+                        image: req.file.path,
+                });
+
+                const savedTestimonial = await testimonial.save();
+                res.status(201).json({status: 201, data: savedTestimonial});
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: "Failed to create testimonial" });
+        }
+};
+exports.getAllTestimonials = async (req, res) => {
+        try {
+                const testimonials = await Testimonial.find();
+                res.status(200).json({status: 200, data: testimonials});
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: "Failed to retrieve testimonials" });
+        }
+};
+exports.getTestimonialById = async (req, res) => {
+        try {
+                const testimonial = await Testimonial.findById(req.params.id);
+                if (!testimonial) {
+                        return res.status(404).json({ message: "Testimonial not found" });
+                }
+                res.status(200).json({status: 200, data: testimonial});
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: "Failed to retrieve testimonial" });
         }
 };
