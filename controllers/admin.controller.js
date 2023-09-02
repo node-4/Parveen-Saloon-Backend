@@ -169,7 +169,7 @@ exports.AddBanner = async (req, res) => {
         if (req.file) {
             fileUrl = req.file ? req.file.path : "";
         }
-        const data = { image: fileUrl, desc: req.body.desc }
+        const data = { image: fileUrl, desc: req.body.desc, position: req.body.position }
         const Data = await banner.create(data);
         return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
     } catch (err) {
@@ -321,13 +321,13 @@ exports.createE4u = async (req, res) => {
     }
 };
 exports.getE4uByType = async (req, res) => {
-    if(req.params.type == "FR"){
+    if (req.params.type == "FR") {
         const findE4U = await e4u.findOne({ type: req.params.type });
         if (!findE4U) {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
         }
         return res.status(201).json({ message: "E4u Found", status: 200, data: findE4U, });
-    }else{
+    } else {
         const findE4U = await e4u.find({ type: req.params.type });
         if (findE4U.length == 0) {
             return res.status(404).json({ status: 404, message: "No data found", data: {} });
