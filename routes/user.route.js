@@ -52,5 +52,7 @@ module.exports = (app) => {
         app.post('/api/v1/user/rating/ratings', [authJwt.verifyToken], auth.createRating);
         app.get("/api/v1/user/rating", [authJwt.verifyToken], auth.getAllRatings);
         app.get("/api/v1/user/rating/:ratingId", [authJwt.verifyToken], auth.getRatingById);
+        app.get('/api/v1/user/rating-rating1', [authJwt.verifyToken], auth.getRating1Data);
+        app.get('/api/v1/user/user-ratings', [authJwt.verifyToken], auth.getUserRatingsWithOrders);
 
 }

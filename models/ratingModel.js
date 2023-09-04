@@ -18,6 +18,10 @@ const ratingSchema = new mongoose.Schema(
             type: schema.Types.ObjectId,
             ref: "Category"
         },
+        mainCategory: {
+            type: schema.Types.ObjectId,
+            ref: "mainCategory"
+        },
         rating: [{
             userId: {
                 type: schema.Types.ObjectId,

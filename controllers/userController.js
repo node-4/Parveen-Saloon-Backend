@@ -475,6 +475,40 @@ exports.addToCart = async (req, res) => {
                 } else {
                         let findCart = await Cart.findOne({ userId: userData._id });
                         if (findCart) {
+                                let findService = await service.findById({ _id: req.body._id });
+                                const existingService = findCart.services.find(service => service.serviceId.equals(findService._id));
+
+                                if (existingService) {
+                                    existingService.quantity += req.body.quantity;
+                                    existingService.total = existingService.price * existingService.quantity;
+
+                                    findCart.totalAmount += existingService.price * req.body.quantity;
+                                    findCart.paidAmount += existingService.price * req.body.quantity;
+
+                                    await findCart.save();
+
+                                    return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
+                                } else {
+                                    const price = findService.discountActive ? findService.discountPrice : findService.originalPrice;
+
+                                    const newService = {
+                                        serviceId: findService._id,
+                                        price: price,
+                                        quantity: req.body.quantity,
+                                        total: price * req.body.quantity,
+                                        type: "Service"
+                                    };
+
+                                    findCart.services.push(newService);
+
+                                    findCart.totalAmount += newService.total;
+                                    findCart.paidAmount += newService.total;
+                                    findCart.totalItem++; 
+
+                                    await findCart.save();
+
+                                    return res.status(200).json({ status: 200, message: "Service added to the cart.", data: findCart });
+                                }
 
                         } else {
                                 let findService = await service.findById({ _id: req.body._id });
@@ -652,6 +686,10 @@ exports.addToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+
+
+
+
 exports.provideTip = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
@@ -1363,7 +1401,36 @@ exports.getRatingById = async (req, res) => {
                 res.status(500).json({ message: "Server error", status: 500, data: {} });
         }
 };
+exports.getRating1Data = async (req, res) => {
+        try {
+                const rating1Data = await Rating.find({ rating1: { $gt: 0 } });
+                res.json({ status: 200, data: rating1Data });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to fetch rating1 data' });
+        }
+};
+exports.getUserRatingsWithOrders = async (req, res) => {
+        try {
+                const userId = req.user._id;
+                console.log("useId", userId)
 
+                const userWithRatings = await Rating.findById(userId).populate({
+                        populate: {
+                                path: "partnerId orderId categoryId",
+                        }
+                });
+
+                if (!userWithRatings) {
+                        return res.status(404).json({ error: 'User not found' });
+                }
+
+                res.status(200).json({ userWithRatings });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to fetch user ratings' });
+        }
+};
 
 
 
