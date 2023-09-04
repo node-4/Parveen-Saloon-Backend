@@ -250,7 +250,7 @@ exports.getBannerForCategoryByPosition = async (req, res) => {
             return res.status(404).json({ status: 404, message: "No data found for the specified position", data: [] });
         }
 
-        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", position: position, data: banners });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ status: 500, message: "Server error.", data: [] });

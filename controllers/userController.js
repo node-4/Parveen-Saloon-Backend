@@ -1431,7 +1431,93 @@ exports.getUserRatingsWithOrders = async (req, res) => {
                 res.status(500).json({ error: 'Failed to fetch user ratings' });
         }
 };
+exports.giveMaincategoryRating = async (req, res) => {
+        try {
+                const userId = req.user._id;
 
+                const {
+                        categoryId,
+                        ratingValue,
+                        comment,
+                        date
+                } = req.body;
+
+                if (!categoryId || !ratingValue || !date) {
+                        return res.status(400).json({ error: 'Incomplete data for rating creation' });
+                }
+
+                const user = await User.findOne({ _id: userId });
+                const order = await Order.findOne({ _id: orderId });
+                console.log("order", order);
+                const category = await Category.findOne({ _id: categoryId });
+
+                if (!user || !order || !category) {
+                        return res.status(404).json({ error: 'User, order, or category not found' });
+                }
+
+                let rating = await Rating.findOne({
+                        userId: user._id,
+                        partnerId: order.partnerId,
+                        orderId: order._id,
+                        categoryId: category._id,
+                });
+
+                if (!rating) {
+                        rating = new Rating({
+                                userId: user._id,
+                                partnerId: order.partnerId,
+                                orderId: order._id,
+                                categoryId: category._id,
+                                rating: [{
+                                        userId: user._id,
+                                        rating: ratingValue,
+                                        comment,
+                                        date,
+                                }],
+                        });
+                } else {
+                        rating.rating.push({
+                                userId: user._id,
+                                rating: ratingValue,
+                                comment,
+                                date,
+                        });
+                }
+
+                switch (ratingValue) {
+                        case 1:
+                                rating.rating1++;
+                                break;
+                        case 2:
+                                rating.rating2++;
+                                break;
+                        case 3:
+                                rating.rating3++;
+                                break;
+                        case 4:
+                                rating.rating4++;
+                                break;
+                        case 5:
+                                rating.rating5++;
+                                break;
+                        default:
+                                break;
+                }
+
+                rating.totalRating = rating.rating1 + rating.rating2 + rating.rating3 + rating.rating4 + rating.rating5;
+
+                const totalRatings = rating.totalRating;
+                const sumRatings = rating.rating1 + rating.rating2 * 2 + rating.rating3 * 3 + rating.rating4 * 4 + rating.rating5 * 5;
+                rating.averageRating = totalRatings === 0 ? 0 : sumRatings / totalRatings;
+
+                const savedRating = await rating.save();
+
+                res.status(201).json({ message: 'Rating created successfully', data: savedRating });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create rating' });
+        }
+};
 
 
 
