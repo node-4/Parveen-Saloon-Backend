@@ -19,6 +19,7 @@ const servicePackage = require('../models/servicePackage');
 const Testimonial = require("../models/testimonial");
 const Order = require('../models/orderModel')
 const Category = require("../models/category/Category");
+const MainCategory = require("../models/category/mainCategory");
 
 
 
@@ -479,35 +480,35 @@ exports.addToCart = async (req, res) => {
                                 const existingService = findCart.services.find(service => service.serviceId.equals(findService._id));
 
                                 if (existingService) {
-                                    existingService.quantity += req.body.quantity;
-                                    existingService.total = existingService.price * existingService.quantity;
+                                        existingService.quantity += req.body.quantity;
+                                        existingService.total = existingService.price * existingService.quantity;
 
-                                    findCart.totalAmount += existingService.price * req.body.quantity;
-                                    findCart.paidAmount += existingService.price * req.body.quantity;
+                                        findCart.totalAmount += existingService.price * req.body.quantity;
+                                        findCart.paidAmount += existingService.price * req.body.quantity;
 
-                                    await findCart.save();
+                                        await findCart.save();
 
-                                    return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
+                                        return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
                                 } else {
-                                    const price = findService.discountActive ? findService.discountPrice : findService.originalPrice;
+                                        const price = findService.discountActive ? findService.discountPrice : findService.originalPrice;
 
-                                    const newService = {
-                                        serviceId: findService._id,
-                                        price: price,
-                                        quantity: req.body.quantity,
-                                        total: price * req.body.quantity,
-                                        type: "Service"
-                                    };
+                                        const newService = {
+                                                serviceId: findService._id,
+                                                price: price,
+                                                quantity: req.body.quantity,
+                                                total: price * req.body.quantity,
+                                                type: "Service"
+                                        };
 
-                                    findCart.services.push(newService);
+                                        findCart.services.push(newService);
 
-                                    findCart.totalAmount += newService.total;
-                                    findCart.paidAmount += newService.total;
-                                    findCart.totalItem++; 
+                                        findCart.totalAmount += newService.total;
+                                        findCart.paidAmount += newService.total;
+                                        findCart.totalItem++;
 
-                                    await findCart.save();
+                                        await findCart.save();
 
-                                    return res.status(200).json({ status: 200, message: "Service added to the cart.", data: findCart });
+                                        return res.status(200).json({ status: 200, message: "Service added to the cart.", data: findCart });
                                 }
 
                         } else {
@@ -686,9 +687,6 @@ exports.addToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-
-
-
 
 exports.provideTip = async (req, res) => {
         try {
@@ -1300,7 +1298,8 @@ exports.createRating = async (req, res) => {
                         categoryId,
                         ratingValue,
                         comment,
-                        date
+                        date,
+                        type,
                 } = req.body;
 
                 if (!orderId || !categoryId || !ratingValue || !date) {
@@ -1329,6 +1328,7 @@ exports.createRating = async (req, res) => {
                                 partnerId: order.partnerId,
                                 orderId: order._id,
                                 categoryId: category._id,
+                                type: "order",
                                 rating: [{
                                         userId: user._id,
                                         rating: ratingValue,
@@ -1379,9 +1379,9 @@ exports.createRating = async (req, res) => {
                 res.status(500).json({ error: 'Failed to create rating' });
         }
 };
-exports.getAllRatings = async (req, res) => {
+exports.getAllRatingsForOrder = async (req, res) => {
         try {
-                const allRatings = await Rating.find();
+                const allRatings = await Rating.find({ type: "order" });
                 res.status(200).json({ message: "All Ratings Found", status: 200, data: allRatings });
         } catch (error) {
                 console.error(error);
@@ -1401,13 +1401,38 @@ exports.getRatingById = async (req, res) => {
                 res.status(500).json({ message: "Server error", status: 500, data: {} });
         }
 };
-exports.getRating1Data = async (req, res) => {
+exports.getRatingCountsForOrder = async (req, res) => {
         try {
-                const rating1Data = await Rating.find({ rating1: { $gt: 0 } });
-                res.json({ status: 200, data: rating1Data });
+                const ratingCounts = await Rating.aggregate([
+                        {
+                                $match: { type: "order" }
+                        },
+                        {
+                                $group: {
+                                        _id: null,
+                                        rating1Count: { $sum: "$rating1" },
+                                        rating2Count: { $sum: "$rating2" },
+                                        rating3Count: { $sum: "$rating3" },
+                                        rating4Count: { $sum: "$rating4" },
+                                        rating5Count: { $sum: "$rating5" }
+                                }
+                        },
+                        {
+                                $project: {
+                                        _id: 0
+                                }
+                        }
+                ]);
+
+                if (ratingCounts.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No ratings found for order" });
+                }
+                const orderRatings = ratingCounts[0];
+
+                res.status(200).json({ status: 200, message: "Order rating counts", data: orderRatings });
         } catch (error) {
                 console.error(error);
-                res.status(500).json({ error: 'Failed to fetch rating1 data' });
+                res.status(500).json({ status: 500, message: "Server error", data: {} });
         }
 };
 exports.getUserRatingsWithOrders = async (req, res) => {
@@ -1437,9 +1462,11 @@ exports.giveMaincategoryRating = async (req, res) => {
 
                 const {
                         categoryId,
+                        partnerId,
                         ratingValue,
                         comment,
-                        date
+                        date,
+                        type,
                 } = req.body;
 
                 if (!categoryId || !ratingValue || !date) {
@@ -1447,27 +1474,24 @@ exports.giveMaincategoryRating = async (req, res) => {
                 }
 
                 const user = await User.findOne({ _id: userId });
-                const order = await Order.findOne({ _id: orderId });
-                console.log("order", order);
-                const category = await Category.findOne({ _id: categoryId });
+                const category = await MainCategory.findOne({ _id: categoryId });
 
-                if (!user || !order || !category) {
-                        return res.status(404).json({ error: 'User, order, or category not found' });
+                if (!user || !category) {
+                        return res.status(404).json({ error: 'User, or category not found' });
                 }
 
                 let rating = await Rating.findOne({
                         userId: user._id,
-                        partnerId: order.partnerId,
-                        orderId: order._id,
+                        partnerId: partnerId,
                         categoryId: category._id,
                 });
 
                 if (!rating) {
                         rating = new Rating({
                                 userId: user._id,
-                                partnerId: order.partnerId,
-                                orderId: order._id,
+                                partnerId: partnerId,
                                 categoryId: category._id,
+                                type: "mainCategory",
                                 rating: [{
                                         userId: user._id,
                                         rating: ratingValue,
@@ -1518,6 +1542,50 @@ exports.giveMaincategoryRating = async (req, res) => {
                 res.status(500).json({ error: 'Failed to create rating' });
         }
 };
+exports.getAllRatingsForMainCategory = async (req, res) => {
+        try {
+                const allRatings = await Rating.find({ type: "mainCategory" });
+                res.status(200).json({ message: "All Ratings Found", status: 200, data: allRatings });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: "Server error", status: 500, data: {} });
+        }
+};
+exports.getRatingCountsForMainCategory = async (req, res) => {
+        try {
+                const ratingCounts = await Rating.aggregate([
+                        {
+                                $match: { type: "mainCategory" }
+                        },
+                        {
+                                $group: {
+                                        _id: null,
+                                        rating1Count: { $sum: "$rating1" },
+                                        rating2Count: { $sum: "$rating2" },
+                                        rating3Count: { $sum: "$rating3" },
+                                        rating4Count: { $sum: "$rating4" },
+                                        rating5Count: { $sum: "$rating5" }
+                                }
+                        },
+                        {
+                                $project: {
+                                        _id: 0
+                                }
+                        }
+                ]);
+
+                if (ratingCounts.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No ratings found for mainCategory" });
+                }
+                const mainCategoryRatings = ratingCounts[0];
+
+                res.status(200).json({ status: 200, message: "Main category rating counts", data: mainCategoryRatings });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ status: 500, message: "Server error", data: {} });
+        }
+};
+
 
 
 

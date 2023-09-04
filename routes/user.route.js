@@ -50,9 +50,12 @@ module.exports = (app) => {
         app.get("/api/v1/user/testimonial", [authJwt.verifyToken], auth.getAllTestimonials);
         app.get("/api/v1/user/testimonial/:id", [authJwt.verifyToken], auth.getTestimonialById);
         app.post('/api/v1/user/rating/ratings', [authJwt.verifyToken], auth.createRating);
-        app.get("/api/v1/user/rating", [authJwt.verifyToken], auth.getAllRatings);
+        app.get("/api/v1/user/allRatingsForOrder", [authJwt.verifyToken], auth.getAllRatingsForOrder);
         app.get("/api/v1/user/rating/:ratingId", [authJwt.verifyToken], auth.getRatingById);
-        app.get('/api/v1/user/rating-rating1', [authJwt.verifyToken], auth.getRating1Data);
+        app.get('/api/v1/user/rating-orderRatings', [authJwt.verifyToken], auth.getRatingCountsForOrder);
         app.get('/api/v1/user/user-ratings', [authJwt.verifyToken], auth.getUserRatingsWithOrders);
+        app.post('/api/v1/user/rating/maincategoryRating', [authJwt.verifyToken], auth.giveMaincategoryRating);
+        app.get("/api/v1/user/allRatingsForMainCategory", [authJwt.verifyToken], auth.getAllRatingsForMainCategory);
+        app.get('/api/v1/user/rating-mainCategoryRatings', [authJwt.verifyToken], auth.getRatingCountsForMainCategory);
 
 }

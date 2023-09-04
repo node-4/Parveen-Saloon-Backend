@@ -78,6 +78,8 @@ const ratingSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        type: String,
+        enum: ["order", "mainCategory"],
     },
     { timestamps: true }
 );
