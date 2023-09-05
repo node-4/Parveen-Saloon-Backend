@@ -1456,10 +1456,96 @@ exports.getUserRatingsWithOrders = async (req, res) => {
                 res.status(500).json({ error: 'Failed to fetch user ratings' });
         }
 };
+// exports.giveMaincategoryRating = async (req, res) => {
+//         try {
+//                 const userId = req.user._id;
+
+//                 const {
+//                         categoryId,
+//                         partnerId,
+//                         ratingValue,
+//                         comment,
+//                         date,
+//                         type,
+//                 } = req.body;
+
+//                 if (!categoryId || !ratingValue || !date) {
+//                         return res.status(400).json({ error: 'Incomplete data for rating creation' });
+//                 }
+
+//                 const user = await User.findOne({ _id: userId });
+//                 const category = await MainCategory.findOne({ _id: categoryId });
+
+//                 if (!user || !category) {
+//                         return res.status(404).json({ error: 'User, or category not found' });
+//                 }
+
+//                 let rating = await Rating.findOne({
+//                         userId: user._id,
+//                         partnerId: partnerId,
+//                         categoryId: category._id,
+//                 });
+
+//                 if (!rating) {
+//                         rating = new Rating({
+//                                 userId: user._id,
+//                                 partnerId: partnerId,
+//                                 categoryId: category._id,
+//                                 type: "mainCategory",
+//                                 rating: [{
+//                                         userId: user._id,
+//                                         rating: ratingValue,
+//                                         comment,
+//                                         date,
+//                                 }],
+//                         });
+//                 } else {
+//                         rating.rating.push({
+//                                 userId: user._id,
+//                                 rating: ratingValue,
+//                                 comment,
+//                                 date,
+//                         });
+//                 }
+
+//                 switch (ratingValue) {
+//                         case 1:
+//                                 rating.rating1++;
+//                                 break;
+//                         case 2:
+//                                 rating.rating2++;
+//                                 break;
+//                         case 3:
+//                                 rating.rating3++;
+//                                 break;
+//                         case 4:
+//                                 rating.rating4++;
+//                                 break;
+//                         case 5:
+//                                 rating.rating5++;
+//                                 break;
+//                         default:
+//                                 break;
+//                 }
+
+//                 rating.totalRating = rating.rating1 + rating.rating2 + rating.rating3 + rating.rating4 + rating.rating5;
+
+//                 const totalRatings = rating.totalRating;
+//                 const sumRatings = rating.rating1 + rating.rating2 * 2 + rating.rating3 * 3 + rating.rating4 * 4 + rating.rating5 * 5;
+//                 rating.averageRating = totalRatings === 0 ? 0 : sumRatings / totalRatings;
+
+//                 const savedRating = await rating.save();
+
+//                 res.status(201).json({ message: 'Rating created successfully', data: savedRating });
+//         } catch (error) {
+//                 console.error(error);
+//                 res.status(500).json({ error: 'Failed to create rating' });
+//         }
+// };
+
 exports.giveMaincategoryRating = async (req, res) => {
         try {
                 const userId = req.user._id;
-
                 const {
                         categoryId,
                         partnerId,
@@ -1477,38 +1563,28 @@ exports.giveMaincategoryRating = async (req, res) => {
                 const category = await MainCategory.findOne({ _id: categoryId });
 
                 if (!user || !category) {
-                        return res.status(404).json({ error: 'User, or category not found' });
+                        return res.status(404).json({ error: 'User or category not found' });
                 }
 
-                let rating = await Rating.findOne({
-                        userId: user._id,
-                        partnerId: partnerId,
-                        categoryId: category._id,
-                });
+                let rating = await Rating.findOne({ categoryId: category._id });
 
                 if (!rating) {
                         rating = new Rating({
-                                userId: user._id,
-                                partnerId: partnerId,
                                 categoryId: category._id,
+                                partnerId: partnerId,
                                 type: "mainCategory",
-                                rating: [{
-                                        userId: user._id,
-                                        rating: ratingValue,
-                                        comment,
-                                        date,
-                                }],
-                        });
-                } else {
-                        rating.rating.push({
-                                userId: user._id,
-                                rating: ratingValue,
-                                comment,
-                                date,
+                                rating: [],
                         });
                 }
 
-                switch (ratingValue) {
+                rating.rating.push({
+                        userId: user._id,
+                        rating: Number(ratingValue),
+                        comment,
+                        date,
+                });
+
+                switch (Number(ratingValue)) {
                         case 1:
                                 rating.rating1++;
                                 break;
@@ -1530,6 +1606,7 @@ exports.giveMaincategoryRating = async (req, res) => {
 
                 rating.totalRating = rating.rating1 + rating.rating2 + rating.rating3 + rating.rating4 + rating.rating5;
 
+
                 const totalRatings = rating.totalRating;
                 const sumRatings = rating.rating1 + rating.rating2 * 2 + rating.rating3 * 3 + rating.rating4 * 4 + rating.rating5 * 5;
                 rating.averageRating = totalRatings === 0 ? 0 : sumRatings / totalRatings;
@@ -1542,20 +1619,27 @@ exports.giveMaincategoryRating = async (req, res) => {
                 res.status(500).json({ error: 'Failed to create rating' });
         }
 };
+
 exports.getAllRatingsForMainCategory = async (req, res) => {
         try {
-                const allRatings = await Rating.find({ type: "mainCategory" });
-                res.status(200).json({ message: "All Ratings Found", status: 200, data: allRatings });
+                const mainCategory = req.params.mainCategory
+                console.log("mainCategory", mainCategory);
+                const allRatings = await Rating.findOne({ categoryId: mainCategory, type: "mainCategory" }).populate({ path: 'rating.userId', model: 'user' });
+                return res.status(200).json({ message: "All Ratings Found", status: 200, data: allRatings });
         } catch (error) {
                 console.error(error);
-                res.status(500).json({ message: "Server error", status: 500, data: {} });
+                return res.status(500).json({ message: "Server error", status: 500, data: {} });
         }
 };
+
 exports.getRatingCountsForMainCategory = async (req, res) => {
         try {
+                const mainCategory = req.params.mainCategory
                 const ratingCounts = await Rating.aggregate([
                         {
-                                $match: { type: "mainCategory" }
+                                // $match: { type: "mainCategory" }
+                                $match: { type: "mainCategory", categoryId: mainCategory }
+
                         },
                         {
                                 $group: {
@@ -1585,8 +1669,6 @@ exports.getRatingCountsForMainCategory = async (req, res) => {
                 res.status(500).json({ status: 500, message: "Server error", data: {} });
         }
 };
-
-
 
 
 

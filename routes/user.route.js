@@ -55,7 +55,7 @@ module.exports = (app) => {
         app.get('/api/v1/user/rating-orderRatings', [authJwt.verifyToken], auth.getRatingCountsForOrder);
         app.get('/api/v1/user/user-ratings', [authJwt.verifyToken], auth.getUserRatingsWithOrders);
         app.post('/api/v1/user/rating/maincategoryRating', [authJwt.verifyToken], auth.giveMaincategoryRating);
-        app.get("/api/v1/user/allRatingsForMainCategory", [authJwt.verifyToken], auth.getAllRatingsForMainCategory);
-        app.get('/api/v1/user/rating-mainCategoryRatings', [authJwt.verifyToken], auth.getRatingCountsForMainCategory);
+        app.get("/api/v1/user/allRatingsForMainCategory/:mainCategory", [authJwt.verifyToken], auth.getAllRatingsForMainCategory);
+        app.get('/api/v1/user/rating-mainCategoryRatings/:categoryId', [authJwt.verifyToken], auth.getRatingCountsForMainCategory);
 
 }
