@@ -1624,7 +1624,11 @@ exports.getAllRatingsForMainCategory = async (req, res) => {
         try {
                 const mainCategory = req.params.mainCategory
                 console.log("mainCategory", mainCategory);
-                const allRatings = await Rating.findOne({ categoryId: mainCategory, type: "mainCategory" }).populate({ path: 'rating.userId', model: 'user' });
+                const allRatings = await Rating.findOne({ categoryId: mainCategory, type: "mainCategory" }).populate({
+                        path: 'rating.userId',
+                        model: 'user',
+                        select: 'fullName image date rating comment reply -_id',
+                });
                 return res.status(200).json({ message: "All Ratings Found", status: 200, data: allRatings });
         } catch (error) {
                 console.error(error);
@@ -1670,6 +1674,99 @@ exports.getRatingCountsForMainCategory = async (req, res) => {
         }
 };
 
+// exports.commentOnImage = async (req, res) => {
+//         const userid = req.user?._id;
+//         const User1 = await User.findById({ _id: userid });
+//         try {
+//                 if (!User1) {
+//                         response(res, ErrorCode.NOT_FOUND, [], ErrorMessage.USER_NOT_FOUND);
+//                 } else {
+//                         const data = await createProject.findById({ _id: req.params._id });
+//                         if (!data) {
+//                                 response(res, ErrorCode.NOT_FOUND, [], ErrorMessage.NOT_FOUND);
+//                         } else {
+//                                 let obj = {
+//                                         userId: req.user._id,
+//                                         comment: req.body.comment,
+//                                 }
+//                                 let desc = await createProject.findOneAndUpdate({ 'rating._id': req.body.ratingId }, { $push: { 'rating.$.reply': obj } }, { new: true })
+//                                 if (desc) {
+//                                         response(res, SuccessCode.SUCCESS, data1, SuccessMessage.DATA_SAVED);
+//                                 }
+//                         }
+//                 }
+//         }
+//         catch (error) {
+//                 console.log(error);
+//                 response(res, ErrorCode.SOMETHING_WRONG, [], ErrorMessage.SOMETHING_WRONG);
+//         }
+// }
+
+exports.commentOnImage = async (req, res) => {
+        try {
+                const userId = req.user?._id;
+                const user = await User.findById(userId);
+
+                if (!user) {
+                        return res.status(404).json({ status: 404, message: "User Not found" });
+                }
+
+                const project = await Rating.findById(req.params._id);
+
+                if (!project) {
+                        return res.status(404).json({ status: 404, message: "Not found" });
+                }
+
+                const commentObj = {
+                        userId: req.user._id,
+                        comment: req.body.comment,
+                };
+
+                const updatedProject = await Rating.findOneAndUpdate(
+                        { 'rating._id': req.body.ratingId },
+                        { $push: { 'rating.$.reply': commentObj } },
+                        { new: true }
+                );
+
+                if (updatedProject) {
+                        return res.status(200).json({ status: 200, message: "Reply on rating", data: updatedProject });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ status: 500, message: "Not found" });
+        }
+};
+
+
+exports.updateOrderStatus = async (req, res) => {
+        try {
+                const { orderId } = req.params;
+                const { status } = req.body;
+                const validStatusValues = ["Pending", "confirmed", "assigned", "OnTheWay", "Arrived", "Complete", "Review"];
+                if (!validStatusValues.includes(status)) {
+                        return res.status(400).json({ message: "Invalid status value" });
+                }
+
+                const updatedOrder = await Order.findByIdAndUpdate(
+                        orderId,
+                        { status },
+                        { new: true }
+                );
+
+                if (!updatedOrder) {
+                        return res.status(404).json({ message: "Order not found" });
+                }
+
+                if (status === "Complete") {
+                        updatedOrder.serviceStatus = "Complete";
+                        await updatedOrder.save();
+                }
+
+                res.status(200).json({ message: "Order status updated successfully", data: updatedOrder });
+        } catch (error) {
+                res.status(500).json({ error: error.message });
+        }
+};
 
 
 
