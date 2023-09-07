@@ -6,14 +6,14 @@ const transactionSchema = mongoose.Schema({
         type: schema.Types.ObjectId,
         ref: "user",
     },
-    orderId: {
-        type: schema.Types.ObjectId,
-        ref: "order",
-    },
-    subscriptionId: {
-        type: schema.Types.ObjectId,
-        ref: "subscription",
-    },
+    // orderId: {
+    //     type: schema.Types.ObjectId,
+    //     ref: "order",
+    // },
+    // subscriptionId: {
+    //     type: schema.Types.ObjectId,
+    //     ref: "subscription",
+    // },
     date: {
         type: Date,
         default: Date.now,

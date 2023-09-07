@@ -43,9 +43,12 @@ module.exports = (app) => {
         app.post("/api/v1/user/Feedback/AddFeedback", [authJwt.verifyToken], auth.AddFeedback);
         app.post("/api/v1/user/FavouriteBooking/addFavouriteBooking/:orderId", [authJwt.verifyToken], auth.addFavouriteBooking);
         app.get("/api/v1/user/FavouriteBooking/listFavouriteBooking", [authJwt.verifyToken], auth.listFavouriteBooking);
-        app.post('/api/v1/user/wallet/addWallet', [authJwt.verifyToken], auth.addWallet);
-        app.post('/api/v1/user/wallet/removeWallet', [authJwt.verifyToken], auth.removeWallet);
-        app.get('/api/v1/user/wallet/getwallet', [authJwt.verifyToken], auth.getwallet);
+        app.get("/api/v1/user/wallet/allTransactionUser", [authJwt.verifyToken], auth.allTransactionUser);
+        app.get("/api/v1/user/wallet/allcreditTransactionUser", [authJwt.verifyToken], auth.allcreditTransactionUser);
+        app.get("/api/v1/user/wallet/allDebitTransactionUser", [authJwt.verifyToken], auth.allDebitTransactionUser);
+        app.post('/api/v1/user/wallet/addWallet', [authJwt.verifyToken], auth.addMoney);
+        app.post('/api/v1/user/wallet/removeWallet', [authJwt.verifyToken], auth.removeMoney);
+        app.get('/api/v1/user/wallet/getwallet', [authJwt.verifyToken], auth.getWallet);
         app.post("/api/v1/user-testimonial", [authJwt.verifyToken], testimonial.single('image'), auth.createTestimonial);
         app.get("/api/v1/user/testimonial", [authJwt.verifyToken], auth.getAllTestimonials);
         app.get("/api/v1/user/testimonial/:id", [authJwt.verifyToken], auth.getTestimonialById);

@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const mongoose = require('mongoose');
 const jwt = require("jsonwebtoken");
 const authConfig = require("../configs/auth.config");
 var newOTP = require("otp-generators");
@@ -20,6 +21,7 @@ const Testimonial = require("../models/testimonial");
 const Order = require('../models/orderModel')
 const Category = require("../models/category/Category");
 const MainCategory = require("../models/category/mainCategory");
+const transactionModel = require("../models/transactionModel");
 
 
 
@@ -327,7 +329,7 @@ exports.getAddressbyId = async (req, res, next) => {
         }
 };
 exports.getFreeServices = async (req, res) => {
-        const findFreeService = await freeService.find({ userId: req.user._id }).populate([{ path: 'userId', select: 'fullName firstName lastName' }, { path: 'serviceId', select: 'name price totalTime timeInMin discountPrice discount discountActive ' }]);
+        const findFreeService = await freeService.find({ userId: req.user._id }).populate([{ path: 'userId', select: 'fullName firstName lastName' }, { path: 'serviceId' }]);
         return res.status(201).json({ message: "Free Service Found", status: 200, data: findFreeService, });
 };
 exports.getCart = async (req, res) => {
@@ -1207,46 +1209,136 @@ const ticketCode = async () => {
         }
         return OTP;
 }
-exports.addWallet = async (req, res) => {
+exports.addMoney = async (req, res) => {
         try {
-                const { amount } = req.body;
-                const userId = req.user.id;
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: data.wallet + parseInt(req.body.balance) } }, { new: true });
+                        if (update) {
+                                const date = new Date();
+                                let month = date.getMonth() + 1
+                                let obj = {
+                                        user: req.user._id,
+                                        date: date,
+                                        month: month,
+                                        amount: req.body.balance,
+                                        type: "Credit",
+                                };
+                                const data1 = await transactionModel.create(obj);
+                                if (data1) {
+                                        return res.status(200).json({ status: 200, message: "Money has been added.", data: update, });
+                                }
 
-                await User.findByIdAndUpdate(userId, { $inc: { wallet: amount } });
-
-                return res.status(200).json({ message: 'Funds added successfully' });
-        } catch (error) {
-                console.error(error);
-                return res.status(500).json({ error: 'Failed to add funds to the wallet' });
-        }
-};
-exports.removeWallet = async (req, res) => {
-        try {
-                const { amount } = req.body;
-                const userId = req.user.id;
-
-                await User.findByIdAndUpdate(userId, { $inc: { wallet: -amount } });
-
-                return res.status(200).json({ message: 'Funds removed successfully' });
-        } catch (error) {
-                console.error(error);
-                return res.status(500).json({ error: 'Failed to remove funds from the wallet' });
-        }
-};
-exports.getwallet = async (req, res) => {
-        try {
-                const userId = req.user.id;
-                const user = await User.findById(userId, 'wallet');
-                if (!user) {
-                        return res.status(404).json({ message: 'User not found' });
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 }
-
-                return res.status(200).json({ message: 'Wallet balance retrieved successfully', data: { wallet: user.wallet } });
         } catch (error) {
-                console.error(error);
-                return res.status(500).json({ error: 'Failed to retrieve wallet balance' });
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+exports.removeMoney = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        let update = await User.findByIdAndUpdate({ _id: data._id }, { $set: { wallet: data.wallet - parseInt(req.body.balance) } }, { new: true });
+                        if (update) {
+                                const date = new Date();
+                                let month = date.getMonth() + 1;
+                                let obj;
+                                // if (req.body.orderId) {
+                                //         obj = {
+                                //                 orderId: req.body.orderId,
+                                //                 user: req.user._id,
+                                //                 date: date,
+                                //                 month: month,
+                                //                 amount: req.body.balance,
+                                //                 type: "Debit",
+                                //         };
+                                // }
+                                // if (req.body.subscriptionId) {
+                                obj = {
+                                        // subscriptionId: req.body.subscriptionId,
+                                        user: req.user._id,
+                                        date: date,
+                                        month: month,
+                                        amount: req.body.balance,
+                                        type: "Debit",
+                                };
+                                // }
+                                const data1 = await transactionModel.create(obj);
+                                if (data1) {
+                                        return res.status(200).json({ status: 200, message: "Money has been deducted.", data: update, });
+                                }
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getWallet = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        return res.status(200).json({ message: "Wallet balance found.", data: data.wallet });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.allTransactionUser = async (req, res) => {
+        try {
+                if (req.query.month != (null || undefined)) {
+                        const data = await transactionModel.find({ user: req.user._id, month: req.query.month }).populate("user");
+                        if (data.length > 0) {
+                                return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+                        } else {
+                                return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
+                        }
+                } else {
+                        const data = await transactionModel.find({ user: req.user._id }).populate("user");
+                        if (data.length > 0) {
+                                return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+                        } else {
+                                return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
+                        }
+                }
+        } catch (err) {
+                return res.status(400).json({ message: err.message });
+        }
+};
+exports.allcreditTransactionUser = async (req, res) => {
+        try {
+                const data = await transactionModel.find({ user: req.user._id, type: "Credit" });
+                if (data.length > 0) {
+                        return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
+                }
+        } catch (err) {
+                return res.status(400).json({ message: err.message });
+        }
+};
+exports.allDebitTransactionUser = async (req, res) => {
+        try {
+                const data = await transactionModel.find({ user: req.user._id, type: "Debit" });
+                if (data.length > 0) {
+                        return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
+                }
+        } catch (err) {
+                return res.status(400).json({ message: err.message });
+        }
+};
+
 exports.createTestimonial = async (req, res) => {
         try {
                 if (!req.file) {
@@ -1438,16 +1530,12 @@ exports.getRatingCountsForOrder = async (req, res) => {
 exports.getUserRatingsWithOrders = async (req, res) => {
         try {
                 const userId = req.user._id;
-                console.log("useId", userId)
+                console.log("userId", userId);
 
-                const userWithRatings = await Rating.findById(userId).populate({
-                        populate: {
-                                path: "partnerId orderId categoryId",
-                        }
-                });
+                const userWithRatings = await Rating.find({ userId: userId }).populate("userId");
 
-                if (!userWithRatings) {
-                        return res.status(404).json({ error: 'User not found' });
+                if (!userWithRatings || userWithRatings.length === 0) {
+                        return res.status(404).json({ error: 'User not found or has no ratings' });
                 }
 
                 res.status(200).json({ userWithRatings });
@@ -1456,6 +1544,7 @@ exports.getUserRatingsWithOrders = async (req, res) => {
                 res.status(500).json({ error: 'Failed to fetch user ratings' });
         }
 };
+
 // exports.giveMaincategoryRating = async (req, res) => {
 //         try {
 //                 const userId = req.user._id;
@@ -1636,14 +1725,102 @@ exports.getAllRatingsForMainCategory = async (req, res) => {
         }
 };
 
-exports.getRatingCountsForMainCategory = async (req, res) => {
+// exports.getRatingCountsForMainCategory = async (req, res) => {
+//         try {
+//                 const mainCategory = req.params.mainCategory;
+//                 console.log("mainCategory", mainCategory);
+
+//                 const ratings = await Rating.find({ categoryId: mainCategory, type: "mainCategory" });
+//                 console.log("ratings", ratings);
+//                 const ratingCounts = await Rating.aggregate([
+//                         {
+//                                 // $match: { type: "mainCategory" }
+//                                 $match: { type: "mainCategory", categoryId: mainCategory }
+
+//                         },
+//                         {
+//                                 $group: {
+//                                         _id: null,
+//                                         rating1Count: { $sum: "$rating1" },
+//                                         rating2Count: { $sum: "$rating2" },
+//                                         rating3Count: { $sum: "$rating3" },
+//                                         rating4Count: { $sum: "$rating4" },
+//                                         rating5Count: { $sum: "$rating5" }
+//                                 }
+//                         },
+//                         {
+//                                 $project: {
+//                                         _id: 0
+//                                 }
+//                         }
+//                 ]);
+
+//                 if (ratingCounts.length === 0) {
+//                         return res.status(404).json({ status: 404, message: "No ratings found for mainCategory" });
+//                 }
+//                 const mainCategoryRatings = ratingCounts[0];
+
+//                 res.status(200).json({ status: 200, message: "Main category rating counts", data: mainCategoryRatings });
+//         } catch (error) {
+//                 console.error(error);
+//                 res.status(500).json({ status: 500, message: "Server error", data: {} });
+//         }
+// };
+
+exports.getRatingCountsForMainCategory1 = async (req, res) => {
         try {
-                const mainCategory = req.params.mainCategory
+                const mainCategory = req.params.categoryId;
+                console.log("mainCategory", mainCategory);
+
+                const ratings = await Rating.find({ categoryId: mainCategory, type: "mainCategory" });
+                console.log("ratings", ratings);
+
                 const ratingCounts = await Rating.aggregate([
                         {
-                                // $match: { type: "mainCategory" }
-                                $match: { type: "mainCategory", categoryId: mainCategory }
+                                $match: { type: "mainCategory", /*categoryId: mainCategory*/ }
+                        },
+                        {
+                                $group: {
+                                        _id: null,
+                                        rating1Count: { $sum: "$rating1" },
+                                        rating2Count: { $sum: "$rating2" },
+                                        rating3Count: { $sum: "$rating3" },
+                                        rating4Count: { $sum: "$rating4" },
+                                        rating5Count: { $sum: "$rating5" }
+                                }
+                        },
+                        {
+                                $project: {
+                                        _id: 0,
+                                        // rating1Count: 1,
+                                        // rating2Count: 1,
+                                        // rating3Count: 1,
+                                        // rating4Count: 1,
+                                        // rating5Count: 1
+                                }
+                        }
+                ]);
+                console.log("ratingCounts", ratingCounts);
+                if (ratingCounts.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No ratings found for mainCategory" });
+                }
 
+                const mainCategoryRatings = ratingCounts[0];
+                res.status(200).json({ status: 200, message: "Main category rating counts", data: mainCategoryRatings });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ status: 500, message: "Server error", data: {} });
+        }
+};
+
+exports.getRatingCountsForMainCategory = async (req, res) => {
+        try {
+                const mainCategory = new mongoose.Types.ObjectId(req.params.categoryId);
+                console.log("mainCategory", mainCategory);
+
+                const ratingCounts = await Rating.aggregate([
+                        {
+                                $match: { type: "mainCategory", categoryId: new mongoose.Types.ObjectId(mainCategory) }
                         },
                         {
                                 $group: {
@@ -1661,12 +1838,13 @@ exports.getRatingCountsForMainCategory = async (req, res) => {
                                 }
                         }
                 ]);
+                console.log("ratingCounts", ratingCounts);
 
-                if (ratingCounts.length === 0) {
+                if (!ratingCounts || ratingCounts.length === 0) {
                         return res.status(404).json({ status: 404, message: "No ratings found for mainCategory" });
                 }
-                const mainCategoryRatings = ratingCounts[0];
 
+                const mainCategoryRatings = ratingCounts[0];
                 res.status(200).json({ status: 200, message: "Main category rating counts", data: mainCategoryRatings });
         } catch (error) {
                 console.error(error);
@@ -1674,33 +1852,7 @@ exports.getRatingCountsForMainCategory = async (req, res) => {
         }
 };
 
-// exports.commentOnImage = async (req, res) => {
-//         const userid = req.user?._id;
-//         const User1 = await User.findById({ _id: userid });
-//         try {
-//                 if (!User1) {
-//                         response(res, ErrorCode.NOT_FOUND, [], ErrorMessage.USER_NOT_FOUND);
-//                 } else {
-//                         const data = await createProject.findById({ _id: req.params._id });
-//                         if (!data) {
-//                                 response(res, ErrorCode.NOT_FOUND, [], ErrorMessage.NOT_FOUND);
-//                         } else {
-//                                 let obj = {
-//                                         userId: req.user._id,
-//                                         comment: req.body.comment,
-//                                 }
-//                                 let desc = await createProject.findOneAndUpdate({ 'rating._id': req.body.ratingId }, { $push: { 'rating.$.reply': obj } }, { new: true })
-//                                 if (desc) {
-//                                         response(res, SuccessCode.SUCCESS, data1, SuccessMessage.DATA_SAVED);
-//                                 }
-//                         }
-//                 }
-//         }
-//         catch (error) {
-//                 console.log(error);
-//                 response(res, ErrorCode.SOMETHING_WRONG, [], ErrorMessage.SOMETHING_WRONG);
-//         }
-// }
+
 
 exports.commentOnImage = async (req, res) => {
         try {
