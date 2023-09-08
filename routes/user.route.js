@@ -26,6 +26,10 @@ module.exports = (app) => {
         app.get('/api/v1/user/ticket/:id', auth.getTicketbyId);
         app.put('/api/v1/user/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
         app.post("/api/v1/user/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
+        //
+        app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
+        app.put('/api/v1/user/Cart/update-quantity', [authJwt.verifyToken], auth.updateServiceQuantityInCart);
+        //
         app.put("/api/v1/user/Cart/provideTip", [authJwt.verifyToken], auth.provideTip);
         app.get("/api/v1/user/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
         app.put("/api/v1/user/Cart/applyCoupan", [authJwt.verifyToken], auth.applyCoupan);
@@ -60,6 +64,7 @@ module.exports = (app) => {
         app.post('/api/v1/user/rating/maincategoryRating', [authJwt.verifyToken], auth.giveMaincategoryRating);
         app.get("/api/v1/user/allRatingsForMainCategory/:mainCategory", [authJwt.verifyToken], auth.getAllRatingsForMainCategory);
         app.get('/api/v1/user/rating-mainCategoryRatings/:categoryId', [authJwt.verifyToken], auth.getRatingCountsForMainCategory);
+        app.get('/api/v1/user/rating-mainAllCategoryRatings', [authJwt.verifyToken], auth.getRatingCountsForAllMainCategory);
         app.post('/api/v1/user/comment/:_id', [authJwt.verifyToken], auth.commentOnImage);
         app.put("/api/v1/user/orders/:orderId/status", [authJwt.verifyToken], auth.updateOrderStatus);
 
