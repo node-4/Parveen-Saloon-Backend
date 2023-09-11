@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 var userSchema = new schema(
     {
-        serviceCategoryId: [{ type: mongoose.Schema.ObjectId, ref: 'serviceCategory' }],
+        serviceCategoryId: [{ type: mongoose.Schema.ObjectId, ref: 'mainCategory' }],
         categoryId: { type: mongoose.Schema.ObjectId, ref: 'Category' },
         vendorId: { type: schema.Types.ObjectId, ref: "user" },
         subscriptionId: { type: mongoose.Schema.ObjectId, ref: "subscription", },

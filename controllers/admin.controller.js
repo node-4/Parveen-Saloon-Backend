@@ -1071,12 +1071,19 @@ exports.createService = async (req, res) => {
                 }
             }
             if (req.body.type == "Service") {
+                // const descriptions = req.body.description || [];
+                // const descriptionObjects = descriptions.map((description, index) => ({
+                //     _id: index + 1,
+                //     text: description,
+                // }));
+                // console.log("Description:", descriptionObjects);
+
                 const data = {
                     mainCategoryId: findMainCategory._id,
                     categoryId: findCategory._id,
                     subCategoryId: findSubCategory._id,
                     title: req.body.title,
-                    description: req.body.description,
+                    description: req.body.description /*descriptionObjects*/,
                     originalPrice: req.body.originalPrice,
                     discountActive: req.body.discountActive,
                     discount: req.body.discount,
