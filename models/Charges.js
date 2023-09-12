@@ -4,6 +4,9 @@ const couponSchema = new mongoose.Schema({
         name: {
                 type: String,
         },
+        image: {
+                type: String,
+        },
         charge: {
                 type: Number,
                 default: 0

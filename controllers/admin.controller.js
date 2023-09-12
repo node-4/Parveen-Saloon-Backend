@@ -286,22 +286,29 @@ exports.createCharge = async (req, res) => {
     try {
         let findCharges = await Charges.findOne({ name: req.body.name });
         if (findCharges) {
-            return res.status(409).json({ message: "Charges already exit.", status: 404, data: {} });
-        } else {
-            const data = {
-                name: req.body.name,
-                charge: req.body.charge,
-                cancelation: req.body.cancelation,
-                discountCharge: req.body.discountCharge,
-                discount: req.body.discount
-            };
-            const findCharge = await Charges.create(data);
-            return res.status(200).json({ message: "Charges add successfully.", status: 200, data: findCharge });
+            return res.status(409).json({ message: "Charges already exist.", status: 409, data: {} });
         }
+
+        let fileUrl;
+        if (req.file) {
+            fileUrl = req.file.path;
+        }
+
+        const data = {
+            name: req.body.name,
+            image: fileUrl,
+            charge: req.body.charge,
+            cancelation: req.body.cancelation,
+            discountCharge: req.body.discountCharge,
+            discount: req.body.discount,
+        };
+        const findCharge = await Charges.create(data);
+        return res.status(200).json({ message: "Charges added successfully.", status: 200, data: findCharge });
     } catch (error) {
-        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
+
 exports.getCharges = async (req, res) => {
     const findCharge = await Charges.find({});
     return res.status(201).json({ message: "Charges Found", status: 200, data: findCharge, });

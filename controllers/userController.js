@@ -21,6 +21,7 @@ const Testimonial = require("../models/testimonial");
 const Order = require('../models/orderModel')
 const Category = require("../models/category/Category");
 const MainCategory = require("../models/category/mainCategory");
+const SubCategory = require("../models/category/subCategory");
 const transactionModel = require("../models/transactionModel");
 
 
@@ -338,7 +339,7 @@ exports.getCart = async (req, res) => {
                 if (!userData) {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
-                        let findCart = await Cart.findOne({ userId: userData._id }).populate("coupanId services.serviceId Charges.chargeId").populate({ path: 'freeService.freeServiceId', populate: { path: 'serviceId', model: 'services', select: "name" }, })
+                        let findCart = await Cart.findOne({ userId: userData._id }).populate("coupanId services.serviceId Charges.chargeId").populate({ path: 'freeService.freeServiceId', populate: { path: 'serviceId', model: 'services', select: "title originalPrice" }, })
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
@@ -571,6 +572,9 @@ exports.addToCart = async (req, res) => {
                                                 if (findService.packageType == "Edit") {
                                                         console.log(findService);
                                                         let categoryServices = []
+                                                        if (!req.body.servicePackageId) {
+                                                                return res.status(400).json({ status: 400, message: "Package Service not edit." })
+                                                        }
                                                         let findServicePackage = await servicePackage.findById({ _id: req.body.servicePackageId })
                                                         if (findServicePackage) {
                                                                 let packageServices = []; for (let i = 0; i < req.body.packageServices.length; i++) {
@@ -643,7 +647,6 @@ exports.addToCart = async (req, res) => {
                                                                 additionalFee: additionalFee,
                                                                 paidAmount: paidAmount,
                                                                 totalItem: 1,
-                                                                packageServices: packageServices,
                                                         }
                                                         const Data = await Cart.create(obj);
                                                         return res.status(200).json({ status: 200, message: "Service successfully add to cart. ", data: Data })
@@ -676,7 +679,6 @@ exports.addToCart = async (req, res) => {
                                                                         additionalFee: additionalFee,
                                                                         paidAmount: paidAmount,
                                                                         totalItem: 1,
-                                                                        packageServices: packageServices,
                                                                 }
                                                                 const Data = await Cart.create(obj1);
                                                                 return res.status(200).json({ status: 200, message: "Service successfully add to cart. ", data: Data })
@@ -896,6 +898,10 @@ exports.addToCart = async (req, res) => {
 //         }
 // };
 
+//
+
+
+//
 exports.addServiceToCart = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
@@ -929,57 +935,6 @@ exports.addServiceToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-
-const addToCart = async (cart, findService, quantity, price) => {
-        const existingService = cart.services.find(service => service.serviceId.equals(findService._id));
-
-        if (existingService) {
-                existingService.quantity += quantity;
-                existingService.total = price * existingService.quantity;
-
-                cart.totalAmount += price * quantity;
-                cart.paidAmount += price * quantity;
-
-                await cart.save();
-
-                return {
-                        status: 200,
-                        data: {
-                                status: 200,
-                                message: "Service quantity updated in the cart.",
-                                data: cart,
-                        },
-                };
-        } else {
-                const newService = {
-                        serviceId: findService._id,
-                        price: price,
-                        quantity: quantity,
-                        total: price * quantity,
-                        type: "Service",
-                };
-
-                cart.services.push(newService);
-
-                cart.totalAmount += newService.total;
-                cart.paidAmount += newService.total;
-                cart.totalItem++;
-
-                await cart.save();
-
-                return {
-                        status: 200,
-                        data: {
-                                status: 200,
-                                message: "Service added to the cart.",
-                                data: cart,
-                        },
-                };
-        }
-};
-
-//
-
 const createCart = async (userData) => {
         let Charged = [], paidAmount = 0, totalAmount = 0, additionalFee = 0;
         const findCharge = await Charges.find({});
@@ -1032,7 +987,6 @@ const createCart = async (userData) => {
         const Data = await Cart.create(obj);
         return Data;
 };
-
 exports.updateServiceQuantityInCart = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
@@ -1067,7 +1021,6 @@ exports.updateServiceQuantityInCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-
 const updateQuantityInCart = async (cart, findService, quantity, price) => {
         const existingService = cart.services.find(service => service.serviceId.equals(findService._id));
 
@@ -1111,8 +1064,7 @@ const updateQuantityInCart = async (cart, findService, quantity, price) => {
                 },
         };
 };
-
-//
+// add servicetocart  new create
 
 exports.provideTip = async (req, res) => {
         try {
@@ -1327,37 +1279,130 @@ exports.applyWallet = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+// exports.addFreeServiceToCart = async (req, res) => {
+//         try {
+//                 let userData = await User.findOne({ _id: req.user._id });
+//                 if (!userData) {
+//                         return res.status(404).send({ status: 404, message: "User not found" });
+//                 } else {
+//                         let findCart = await Cart.findOne({ userId: userData._id });
+//                         if (findCart) {
+//                                 if (findCart.services.length == 0) {
+//                                         return res.status(404).json({ status: 404, message: "First add service in your cart.", data: {} });
+//                                 } else {
+//                                         const findFreeService = await freeService.findOne({ _id: req.body.freeServiceId, userId: req.user._id })
+//                                         if (findFreeService) {
+//                                                 let obj = {
+//                                                         freeServiceId: findFreeService._id
+//                                                 }
+//                                                 let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { freeServiceUsed: true, freeServiceCount: findCart.freeServiceCount + 1 }, $push: { freeService: obj } }, { new: true });
+//                                                 return res.status(200).json({ status: 200, message: "Free service add to cart Successfully.", data: update1 })
+//                                         } else {
+//                                                 return res.status(404).send({ status: 404, message: "Free service not found" });
+//                                         }
+//                                 }
+//                         } else {
+//                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+//                         }
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
+//         }
+// };
+
+
+// exports.addFreeServiceToCart = async (req, res) => {
+//         try {
+//                 const userId = req.user._id;
+//                 const freeServiceId = req.body.freeServiceId;
+
+//                 const userData = await User.findOne({ _id: userId });
+//                 if (!userData) {
+//                         return res.status(404).json({ status: 404, message: "User not found" });
+//                 }
+
+//                 const findCart = await Cart.findOne({ userId });
+//                 if (!findCart) {
+//                         return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+//                 }
+
+//                 const findFreeService = await freeService.findOne({ _id: freeServiceId, userId });
+//                 if (!findFreeService) {
+//                         return res.status(404).json({ status: 404, message: "Free service not found" });
+//                 }
+
+//                 const isServiceInCart = findCart.freeService.some((service) => service.freeServiceId.equals(freeServiceId));
+
+//                 if (isServiceInCart) {
+//                         return res.status(200).json({ status: 200, message: "Free service is already in the cart.", data: findCart });
+//                 }
+
+//                 findCart.totalAmount = 0;
+//                 findCart.additionalFee = 0;
+//                 findCart.paidAmount = 0;
+//                 findCart.totalItem = 0;
+//                 findCart.services = [];
+//                 findCart.freeServiceUsed = true;
+//                 findCart.freeServiceCount += 1;
+//                 findCart.freeService.push({ freeServiceId: findFreeService._id });
+
+//                 const update1 = await findCart.save();
+
+//                 return res
+//                         .status(200)
+//                         .json({ status: 200, message: "Free service added to cart successfully.", data: update1 });
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ status: 500, message: "Server error: " + error.message });
+//         }
+// };
+
 exports.addFreeServiceToCart = async (req, res) => {
         try {
-                let userData = await User.findOne({ _id: req.user._id });
+                const userId = req.user._id;
+                const freeServiceId = req.body.freeServiceId;
+
+                const userData = await User.findOne({ _id: userId });
                 if (!userData) {
-                        return res.status(404).send({ status: 404, message: "User not found" });
-                } else {
-                        let findCart = await Cart.findOne({ userId: userData._id });
-                        if (findCart) {
-                                if (findCart.services.length == 0) {
-                                        return res.status(404).json({ status: 404, message: "First add service in your cart.", data: {} });
-                                } else {
-                                        const findFreeService = await freeService.findOne({ _id: req.body.freeServiceId, userId: req.user._id })
-                                        if (findFreeService) {
-                                                let obj = {
-                                                        freeServiceId: findFreeService._id
-                                                }
-                                                let update1 = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { freeServiceUsed: true, freeServiceCount: findCart.freeServiceCount + 1 }, $push: { freeService: obj } }, { new: true });
-                                                return res.status(200).json({ status: 200, message: "Free service add to cart Successfully.", data: update1 })
-                                        } else {
-                                                return res.status(404).send({ status: 404, message: "Free service not found" });
-                                        }
-                                }
-                        } else {
-                                return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
-                        }
+                        return res.status(404).json({ status: 404, message: "User not found" });
                 }
+
+                const findCart = await Cart.findOne({ userId });
+                if (!findCart) {
+                        return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+                }
+
+                const findFreeService = await freeService.findOne({ _id: freeServiceId, userId });
+                if (!findFreeService) {
+                        return res.status(404).json({ status: 404, message: "Free service not found" });
+                }
+
+                const isServiceInCart = findCart.freeService.some(service => service.freeServiceId.equals(freeServiceId));
+
+                if (isServiceInCart) {
+                        return res.status(200).json({ status: 200, message: "Free service is already in the cart.", data: findCart });
+                }
+
+                const obj = {
+                        freeServiceId: findFreeService._id
+                };
+                const update1 = await Cart.findByIdAndUpdate(
+                        { _id: findCart._id },
+                        {
+                                $set: { freeServiceUsed: true, freeServiceCount: findCart.freeServiceCount + 1 },
+                                $push: { freeService: obj }
+                        },
+                        { new: true }
+                );
+
+                return res.status(200).json({ status: 200, message: "Free service added to cart successfully.", data: update1 });
         } catch (error) {
                 console.error(error);
-                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).json({ status: 500, message: "Server error: " + error.message });
         }
 };
+
 exports.addSuggestionToCart = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
@@ -1717,37 +1762,6 @@ exports.getWallet = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
-// exports.allTransactionUser = async (req, res) => {
-//         try {
-
-//                 if ((req.query.month != (null || undefined)) && (req.query.type == (null || undefined))) {
-//                         const data = await transactionModel.find({ user: req.user._id, month: req.query.month }).populate("user").select('fullName') ;
-//                         if (data.length > 0) {
-//                                 return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
-//                         } else {
-//                                 return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
-//                         }
-//                 } else if ((req.query.month == (null || undefined)) && (req.query.type != (null || undefined))) {
-//                         const data = await transactionModel.find({ user: req.user._id, type: req.query.type }).populate("user").select('fullName');
-//                         if (data.length > 0) {
-//                                 return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
-//                         } else {
-//                                 return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
-//                         }
-//                 } else {
-//                         const data = await transactionModel.find({ user: req.user._id })
-//                                 .populate("user").select('fullName');
-//                         if (data.length > 0) {
-//                                 return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
-//                         } else {
-//                                 return res.status(404).json({ status: 404, message: "Data not found.", data: {} });
-//                         }
-//                 }
-//         } catch (err) {
-//                 return res.status(400).json({ message: err.message });
-//         }
-// };
-
 exports.allTransactionUser = async (req, res) => {
         try {
                 if ((req.query.month != null && req.query.month !== undefined) && (req.query.type == null || req.query.type === undefined)) {
@@ -1785,7 +1799,6 @@ exports.allTransactionUser = async (req, res) => {
                 return res.status(400).json({ message: err.message });
         }
 };
-
 exports.allcreditTransactionUser = async (req, res) => {
         try {
                 const data = await transactionModel.find({ user: req.user._id, type: "Credit" });
@@ -1810,7 +1823,6 @@ exports.allDebitTransactionUser = async (req, res) => {
                 return res.status(400).json({ message: err.message });
         }
 };
-
 exports.createTestimonial = async (req, res) => {
         try {
                 if (!req.file) {
@@ -2016,94 +2028,6 @@ exports.getUserRatingsWithOrders = async (req, res) => {
                 res.status(500).json({ error: 'Failed to fetch user ratings' });
         }
 };
-
-// exports.giveMaincategoryRating = async (req, res) => {
-//         try {
-//                 const userId = req.user._id;
-
-//                 const {
-//                         categoryId,
-//                         partnerId,
-//                         ratingValue,
-//                         comment,
-//                         date,
-//                         type,
-//                 } = req.body;
-
-//                 if (!categoryId || !ratingValue || !date) {
-//                         return res.status(400).json({ error: 'Incomplete data for rating creation' });
-//                 }
-
-//                 const user = await User.findOne({ _id: userId });
-//                 const category = await MainCategory.findOne({ _id: categoryId });
-
-//                 if (!user || !category) {
-//                         return res.status(404).json({ error: 'User, or category not found' });
-//                 }
-
-//                 let rating = await Rating.findOne({
-//                         userId: user._id,
-//                         partnerId: partnerId,
-//                         categoryId: category._id,
-//                 });
-
-//                 if (!rating) {
-//                         rating = new Rating({
-//                                 userId: user._id,
-//                                 partnerId: partnerId,
-//                                 categoryId: category._id,
-//                                 type: "mainCategory",
-//                                 rating: [{
-//                                         userId: user._id,
-//                                         rating: ratingValue,
-//                                         comment,
-//                                         date,
-//                                 }],
-//                         });
-//                 } else {
-//                         rating.rating.push({
-//                                 userId: user._id,
-//                                 rating: ratingValue,
-//                                 comment,
-//                                 date,
-//                         });
-//                 }
-
-//                 switch (ratingValue) {
-//                         case 1:
-//                                 rating.rating1++;
-//                                 break;
-//                         case 2:
-//                                 rating.rating2++;
-//                                 break;
-//                         case 3:
-//                                 rating.rating3++;
-//                                 break;
-//                         case 4:
-//                                 rating.rating4++;
-//                                 break;
-//                         case 5:
-//                                 rating.rating5++;
-//                                 break;
-//                         default:
-//                                 break;
-//                 }
-
-//                 rating.totalRating = rating.rating1 + rating.rating2 + rating.rating3 + rating.rating4 + rating.rating5;
-
-//                 const totalRatings = rating.totalRating;
-//                 const sumRatings = rating.rating1 + rating.rating2 * 2 + rating.rating3 * 3 + rating.rating4 * 4 + rating.rating5 * 5;
-//                 rating.averageRating = totalRatings === 0 ? 0 : sumRatings / totalRatings;
-
-//                 const savedRating = await rating.save();
-
-//                 res.status(201).json({ message: 'Rating created successfully', data: savedRating });
-//         } catch (error) {
-//                 console.error(error);
-//                 res.status(500).json({ error: 'Failed to create rating' });
-//         }
-// };
-
 exports.giveMaincategoryRating = async (req, res) => {
         try {
                 const userId = req.user._id;
@@ -2180,7 +2104,6 @@ exports.giveMaincategoryRating = async (req, res) => {
                 res.status(500).json({ error: 'Failed to create rating' });
         }
 };
-
 exports.getAllRatingsForMainCategory = async (req, res) => {
         try {
                 const mainCategory = req.params.mainCategory
@@ -2281,7 +2204,6 @@ exports.getRatingCountsForAllMainCategory = async (req, res) => {
                 res.status(500).json({ status: 500, message: "Server error", data: {} });
         }
 };
-
 exports.getRatingCountsForMainCategory = async (req, res) => {
         try {
                 const mainCategory = new mongoose.Types.ObjectId(req.params.categoryId);
@@ -2320,9 +2242,6 @@ exports.getRatingCountsForMainCategory = async (req, res) => {
                 res.status(500).json({ status: 500, message: "Server error", data: {} });
         }
 };
-
-
-
 exports.commentOnImage = async (req, res) => {
         try {
                 const userId = req.user?._id;
@@ -2357,8 +2276,6 @@ exports.commentOnImage = async (req, res) => {
                 return res.status(500).json({ status: 500, message: "Not found" });
         }
 };
-
-
 exports.updateOrderStatus = async (req, res) => {
         try {
                 const { orderId } = req.params;
@@ -2386,6 +2303,67 @@ exports.updateOrderStatus = async (req, res) => {
                 res.status(200).json({ message: "Order status updated successfully", data: updatedOrder });
         } catch (error) {
                 res.status(500).json({ error: error.message });
+        }
+};
+exports.getCategoriesServices = async (req, res) => {
+        try {
+                const categories = await Category.find();
+
+                if (categories.length === 0) {
+                        return res.status(404).json({ message: "No categories found", status: 404, data: [] });
+                }
+
+                const categoryData = [];
+
+                for (const category of categories) {
+                        const services = await service.find({ categoryId: category._id });
+
+                        categoryData.push({
+                                category: category,
+                                services: services,
+                        });
+                }
+
+                return res.status(200).json({ message: "Categories found", status: 200, data: categoryData });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Server error", status: 500, data: {} });
+        }
+};
+exports.getCategories = async (req, res) => {
+        try {
+                const categories = await Category.find().populate("categoryId");
+
+                if (categories.length === 0) {
+                        return res.status(404).json({ message: "No categories found", status: 404, data: [] });
+                }
+
+                const categoryData = {};
+
+                for (const category of categories) {
+                        if (!categoryData[category.categoryId._id]) {
+                                categoryData[category.categoryId._id] = {
+                                        category: category.categoryId,
+                                        subCategories: [],
+                                };
+                        }
+
+                        categoryData[category.categoryId._id].subCategories.push({
+                                _id: category._id,
+                                name: category.name,
+                                image: category.image,
+                                status: category.status,
+                                createdAt: category.createdAt,
+                                updatedAt: category.updatedAt,
+                        });
+                }
+
+                const groupedCategories = Object.values(categoryData);
+
+                return res.status(200).json({ message: "Categories found", status: 200, data: groupedCategories });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Server error", status: 500, data: {} });
         }
 };
 

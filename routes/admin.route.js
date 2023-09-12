@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges } = require('../middlewares/imageUpload')
 module.exports = (app) => {
         app.post("/api/v1/admin/registration", auth.registration);
         app.post("/api/v1/admin/login", auth.signin);
@@ -19,7 +19,8 @@ module.exports = (app) => {
         app.get("/api/v1/admin/Brand/allBrand", auth.getBrands);
         app.put("/api/v1/admin/Brand/updateBrand/:id", [authJwt.verifyToken], BrandUpload.single('image'), auth.updateBrand);
         app.delete("/api/v1/admin/Brand/deleteBrand/:id", [authJwt.verifyToken], auth.removeBrand);
-        app.post("/api/v1/admin/Charges/addCharges", [authJwt.verifyToken], auth.createCharge);
+        // app.post("/api/v1/admin/Charges/addCharges", [authJwt.verifyToken], auth.createCharge);
+        app.post("/api/v1/admin/Charges/addCharges", [authJwt.verifyToken], charges.single('image'), auth.createCharge);
         app.get("/api/v1/admin/Charges/allCharges", auth.getCharges);
         app.put("/api/v1/admin/Charges/updateCharges/:id", [authJwt.verifyToken], auth.updateCharge);
         app.delete("/api/v1/admin/Charges/deleteCharges/:id", [authJwt.verifyToken], auth.removeCharge);

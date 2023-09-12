@@ -67,6 +67,9 @@ module.exports = (app) => {
         app.get('/api/v1/user/rating-mainAllCategoryRatings', [authJwt.verifyToken], auth.getRatingCountsForAllMainCategory);
         app.post('/api/v1/user/comment/:_id', [authJwt.verifyToken], auth.commentOnImage);
         app.put("/api/v1/user/orders/:orderId/status", [authJwt.verifyToken], auth.updateOrderStatus);
+        app.get("/api/v1/user/Category/allServices", auth.getCategoriesServices);
+        app.get("/api/v1/user/Category/allCategory", auth.getCategories);
+
 
 
 }
