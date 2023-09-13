@@ -179,7 +179,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/ravikhanna/dev/1694526634153-2023-09-12T13:50:34.153Z/ravikhanna.zip"
+                "S3Key": "serverless/ravikhanna/dev/1694612621285-2023-09-13T13:43:41.285Z/ravikhanna.zip"
               },
               "Handler": "server.handler",
               "Runtime": "nodejs18.x",
@@ -197,14 +197,14 @@
               "AppLogGroup"
             ]
           },
-          "AppLambdaVersionSYUxosKAOCAeEzYOmh2T3imPNYnNHc2Gk1NDXCtWKU": {
+          "AppLambdaVersionWwJZvbtQL1PoZ83XI8K5AIsA2sUKT00jOCwGZAu7mC0": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AppLambdaFunction"
               },
-              "CodeSha256": "fBzi5RH5oNFGjMRO8J7TKCrpDrFULekLSmCKFb6usow="
+              "CodeSha256": "Y7pTmCenPl0vjLFDuhiT3H/7FSAvEujECu99jT07Ub0="
             }
           },
           "ApiGatewayRestApi": {
@@ -425,7 +425,7 @@
               "AppLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1694526609207": {
+          "ApiGatewayDeployment1694612588908": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -490,7 +490,7 @@
           "AppLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AppLambdaVersionSYUxosKAOCAeEzYOmh2T3imPNYnNHc2Gk1NDXCtWKU"
+              "Ref": "AppLambdaVersionWwJZvbtQL1PoZ83XI8K5AIsA2sUKT00jOCwGZAu7mC0"
             },
             "Export": {
               "Name": "sls-ravikhanna-dev-AppLambdaFunctionQualifiedArn"
@@ -671,7 +671,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "AppLambdaVersionSYUxosKAOCAeEzYOmh2T3imPNYnNHc2Gk1NDXCtWKU"
+        "versionLogicalId": "AppLambdaVersionWwJZvbtQL1PoZ83XI8K5AIsA2sUKT00jOCwGZAu7mC0"
       }
     },
     "configValidationMode": "warn",
@@ -693,7 +693,7 @@
     "artifact": "C:\\Users\\Dev\\Downloads\\parveenSaloonNode4\\Parveen-Saloon-Backend\\.serverless\\ravikhanna.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/ravikhanna/dev/1694526634153-2023-09-12T13:50:34.153Z",
+    "artifactDirectoryName": "serverless/ravikhanna/dev/1694612621285-2023-09-13T13:43:41.285Z",
     "artifact": "ravikhanna.zip"
   }
 }

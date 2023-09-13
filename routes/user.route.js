@@ -69,6 +69,10 @@ module.exports = (app) => {
         app.put("/api/v1/user/orders/:orderId/status", [authJwt.verifyToken], auth.updateOrderStatus);
         app.get("/api/v1/user/Category/allServices", auth.getCategoriesServices);
         app.get("/api/v1/user/Category/allCategory", auth.getCategories);
+        app.get('/api/v1/user/Category/search', [authJwt.verifyToken], auth.listServiceforSearch);
+        app.get('/api/v1/user/frequently-added-services', [authJwt.verifyToken], auth.getFrequentlyAddedServices);
+
+
 
 
 
