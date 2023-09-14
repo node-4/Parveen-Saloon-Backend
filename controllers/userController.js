@@ -2366,124 +2366,58 @@ exports.getCategories = async (req, res) => {
                 return res.status(500).json({ message: "Server error", status: 500, data: {} });
         }
 };
-
-// exports.listServiceforSearch = async (req, res, next) => {
-//         try {
-//                 const productsCount = await service.count();
-//                 if (req.query.search != (null || undefined)) {
-//                         let data1 = [
-//                                 {
-//                                         $lookup: { from: "users", localField: "vendorId", foreignField: "_id", as: "vendorId" },
-//                                 },
-//                                 { $unwind: "$vendorId" },
-//                                 {
-//                                         $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategoryId", },
-//                                 },
-//                                 { $unwind: "$serviceCategoryId" },
-//                                 {
-//                                         $match: {
-//                                                 $or: [
-//                                                         { "vendorId.fullName": { $regex: req.query.search, $options: "i" }, },
-//                                                         { "vendorId.firstName": { $regex: req.query.search, $options: "i" }, },
-//                                                         { "vendorId.lastName": { $regex: req.query.search, $options: "i" }, },
-//                                                         { "serviceCategoryId.name": { $regex: req.query.search, $options: "i" }, },
-//                                                         { "name": { $regex: req.query.search, $options: "i" }, },
-//                                                 ]
-//                                         }
-//                                 },
-//                         ]
-//                         let apiFeature = await service.aggregate(data1);
-//                         await service.populate(apiFeature, [{ path: 'vendorId', select: 'address1 address2 servieImages likeUser Monday Tuesday Wednesday Thursday Friday Saturday Sunday serviceName' }])
-//                         return res.status(200).json({ status: 200, message: "Product data found.", data: apiFeature, count: productsCount });
-//                 } else {
-//                         let apiFeature = await service.aggregate([
-//                                 { $lookup: { from: "users", localField: "vendorId", foreignField: "_id", as: "vendorId" } },
-//                                 { $unwind: "$vendorId" },
-//                                 { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategoryId", }, },
-//                                 { $unwind: "$serviceCategoryId" },
-//                         ]);
-//                         await service.populate(apiFeature, [{ path: 'vendorId', select: 'address1 address2 servieImages likeUser Monday Tuesday Wednesday Thursday Friday Saturday Sunday serviceName' }])
-//                         return res.status(200).json({ status: 200, message: "Product data found.", data: apiFeature, count: productsCount });
-//                 }
-//         } catch (err) {
-//                 console.log(err);
-//                 return res.status(500).send({ message: "Internal server error while creating Product", });
-//         }
-// };
-
-
-
-exports.listServiceforSearch = async (req, res) => {
+exports.listServiceforSearch = async (req, res, next) => {
         try {
-                const { search } = req.query;
-
-                const pipeline = [
-                        {
-                                $match: {
-                                        $or: [
-                                                { "title": { $regex: search, $options: "i" } }
-                                        ]
-                                }
-                        },
-                        {
-                                $lookup: {
-                                        from: "mainCategory",
-                                        localField: "mainCategoryId",
-                                        foreignField: "_id",
-                                        as: "mainCategory"
-                                }
-                        },
-                        {
-                                $unwind: "$mainCategory"
-                        },
-                        {
-                                $lookup: {
-                                        from: "Category",
-                                        localField: "categoryId",
-                                        foreignField: "_id",
-                                        as: "Category"
-                                }
-                        },
-                        {
-                                $unwind: "$Category"
-                        },
-                        {
-                                $lookup: {
-                                        from: "subCategory",
-                                        localField: "subCategoryId",
-                                        foreignField: "_id",
-                                        as: "subCategory"
-                                }
-                        },
-                        {
-                                $unwind: "$subCategory"
-                        },
-                        {
-                                $lookup: {
-                                        from: "servicePackage",
-                                        localField: "servicePackageId",
-                                        foreignField: "_id",
-                                        as: "servicePackage"
-                                }
-                        },
-                        {
-                                $unwind: "$servicePackage"
-                        }
-                ];
-
-                const searchResult = await service.aggregate(pipeline);
-
-                if (searchResult.length > 0) {
-                        return res.status(200).json({ message: "Services Found", status: 200, data: searchResult });
+                const productsCount = await service.count();
+                if (req.query.search != (null || undefined)) {
+                        let data1 = [
+                                {
+                                        $lookup: { from: "maincategories", localField: "mainCategoryId", foreignField: "_id", as: "mainCategoryId" },
+                                },
+                                { $unwind: "$mainCategoryId" },
+                                {
+                                        $lookup: { from: "categories", localField: "categoryId", foreignField: "_id", as: "categoryId", },
+                                },
+                                { $unwind: "$categoryId" },
+                                {
+                                        $lookup: { from: "subcategories", localField: "subCategoryId", foreignField: "_id", as: "subCategoryId", },
+                                },
+                                { $unwind: "$subCategoryId" },
+                                {
+                                        $match: {
+                                                $or: [
+                                                        { "mainCategoryId.name": { $regex: req.query.search, $options: "i" }, },
+                                                        { "categoryId.name": { $regex: req.query.search, $options: "i" }, },
+                                                        { "subCategoryId.name": { $regex: req.query.search, $options: "i" }, },
+                                                        { "title": { $regex: req.query.search, $options: "i" }, },
+                                                ]
+                                        }
+                                },
+                        ]
+                        let apiFeature = await service.aggregate(data1);
+                        return res.status(200).json({ status: 200, message: "Product data found.", data: apiFeature, count: productsCount });
                 } else {
-                        return res.status(404).json({ message: "No services found for the given search query.", status: 404, data: {} });
+                        let apiFeature = await service.aggregate([
+                                {
+                                        $lookup: { from: "maincategories", localField: "mainCategoryId", foreignField: "_id", as: "mainCategoryId" },
+                                },
+                                { $unwind: "$mainCategoryId" },
+                                {
+                                        $lookup: { from: "categories", localField: "categoryId", foreignField: "_id", as: "categoryId", },
+                                },
+                                { $unwind: "$categoryId" },
+                                {
+                                        $lookup: { from: "subcategories", localField: "subCategoryId", foreignField: "_id", as: "subCategoryId", },
+                                },
+                                { $unwind: "$subCategoryId" },
+                        ]);
+                        return res.status(200).json({ status: 200, message: "Product data found.", data: apiFeature, count: productsCount });
                 }
-        } catch (error) {
-                return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
+        } catch (err) {
+                console.log(err);
+                return res.status(500).send({ message: "Internal server error while creating Product", });
         }
 };
-
-
 exports.getFrequentlyAddedServices = async (req, res) => {
         try {
                 const limit = req.query.limit || 10;
