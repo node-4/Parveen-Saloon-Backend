@@ -1004,7 +1004,6 @@ exports.updateServiceQuantityInCart = async (req, res) => {
                         findCart = await createCart(userData);
                 }
 
-                // Ensure that quantity is a valid number
                 const quantity = parseInt(req.body.quantity);
 
                 if (isNaN(quantity) || quantity <= 0) {
@@ -1034,7 +1033,6 @@ const updateQuantityInCart = async (cart, findService, quantity, price) => {
                 };
         }
 
-        // Ensure that quantity is a positive integer
         if (isNaN(quantity) || quantity <= 0) {
                 return {
                         status: 400,
@@ -1045,11 +1043,9 @@ const updateQuantityInCart = async (cart, findService, quantity, price) => {
                 };
         }
 
-        // Update quantity and recalculate total
         existingService.quantity = quantity;
         existingService.total = price * quantity;
 
-        // Recalculate cart totals
         cart.totalAmount = cart.services.reduce((total, service) => total + service.total, 0);
         cart.paidAmount = cart.totalAmount;
 
