@@ -1546,6 +1546,22 @@ exports.placeOrder = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+exports.deleteOrder = async (req, res) => {
+        try {
+                const orderId = req.params.orderId;
+
+                const deletedOrder = await orderModel.findOneAndDelete({ orderId });
+
+                if (deletedOrder) {
+                        return res.status(200).json({ message: 'Order deleted successfully', status: 200, data: deletedOrder });
+                } else {
+                        return res.status(404).json({ message: 'Order not found', data: {} });
+                }
+        } catch (error) {
+                return res.status(500).json({ status: 500, message: 'Server error', data: {} });
+        }
+};
+
 exports.cancelOrder = async (req, res) => {
         try {
                 let findUserOrder = await orderModel.findOne({ orderId: req.params.orderId });

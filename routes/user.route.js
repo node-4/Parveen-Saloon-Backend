@@ -40,6 +40,7 @@ module.exports = (app) => {
         app.put("/api/v1/user/Cart/addDateAndTimeToCart", [authJwt.verifyToken], auth.addDateAndTimeToCart);
         app.post("/api/v1/user/Cart/checkout", [authJwt.verifyToken], auth.checkout);
         app.post("/api/v1/user/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
+        app.delete('/api/v1/user/Cart/orders/:orderId', [authJwt.verifyToken], auth.deleteOrder);
         app.post("/api/v1/user/Cart/cancelOrder/:orderId", [authJwt.verifyToken], auth.cancelOrder);
         app.get('/api/v1/user/getOngoingOrders', [authJwt.verifyToken], auth.getOngoingOrders);
         app.get('/api/v1/user/getCompleteOrders', [authJwt.verifyToken], auth.getCompleteOrders);
