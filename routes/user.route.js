@@ -26,6 +26,7 @@ module.exports = (app) => {
         app.get('/api/v1/user/ticket/:id', auth.getTicketbyId);
         app.put('/api/v1/user/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
         app.post("/api/v1/user/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
+        app.post('/api/v1/user/Cart/remove-from-cart', [authJwt.verifyToken], auth.removeFromCart);
         //
         app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
         app.put('/api/v1/user/Cart/update-quantity', [authJwt.verifyToken], auth.updateServiceQuantityInCart);

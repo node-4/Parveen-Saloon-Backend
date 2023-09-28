@@ -697,6 +697,39 @@ exports.addToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.removeFromCart = async (req, res) => {
+        try {
+                const userData = await User.findOne({ _id: req.user._id });
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        const findCart = await Cart.findOne({ userId: userData._id });
+                        if (!findCart) {
+                                return res.status(404).send({ status: 404, message: "Cart not found" });
+                        }
+
+                        const serviceIdToRemove = req.body.serviceId;
+
+                        const serviceIndex = findCart.services.findIndex(service => service.serviceId.equals(serviceIdToRemove));
+
+                        if (serviceIndex !== -1) {
+                                const removedService = findCart.services.splice(serviceIndex, 1)[0];
+                                findCart.totalAmount -= removedService.total;
+                                findCart.paidAmount -= removedService.total;
+                                findCart.totalItem--;
+
+                                await findCart.save();
+
+                                return res.status(200).json({ status: 200, message: "Service removed from the cart.", data: findCart });
+                        } else {
+                                return res.status(404).send({ status: 404, message: "Service not found in the cart" });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
 
 // exports.addToCart = async (req, res) => {
 //         try {
@@ -1575,9 +1608,42 @@ exports.cancelOrder = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+// exports.getOngoingOrders = async (req, res) => {
+//         try {
+//                 const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Pending" });
+//                 if (data.length > 0) {
+//                         return res.status(200).json({ message: "All orders", data: data });
+//                 } else {
+//                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
+//                 }
+//         } catch (error) {
+//                 console.log(error);
+//                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+//         }
+// };
+
 exports.getOngoingOrders = async (req, res) => {
         try {
-                const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Pending" });
+                const data = await orderModel
+                        .find({ userId: req.user._id, serviceStatus: "Pending" })
+                        .populate({
+                                path: "freeService.freeServiceId"
+                        })
+                        .populate({
+                                path: "services.serviceId"
+                        })
+                        .populate({
+                                path: "Charges.chargeId",
+                        })
+                        .populate({
+                                path: "services.serviceId",
+                                populate: [
+                                        {
+                                                path: "mainCategoryId categoryId subCategoryId",
+                                        },
+                                ],
+                        })
+
                 if (data.length > 0) {
                         return res.status(200).json({ message: "All orders", data: data });
                 } else {
@@ -1585,9 +1651,10 @@ exports.getOngoingOrders = async (req, res) => {
                 }
         } catch (error) {
                 console.log(error);
-                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+                return res.status(501).send({ status: 501, message: "server error.", data: {} });
         }
 };
+
 exports.getCompleteOrders = async (req, res) => {
         try {
                 const data = await orderModel.find({ userId: req.user._id, serviceStatus: "Complete" });
