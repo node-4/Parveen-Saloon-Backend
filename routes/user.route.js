@@ -25,7 +25,7 @@ module.exports = (app) => {
         app.get("/api/v1/user/ticket/listTicket", [authJwt.verifyToken], auth.listTicket);
         app.get('/api/v1/user/ticket/:id', auth.getTicketbyId);
         app.put('/api/v1/user/replyOnTicket/:id', [authJwt.verifyToken], auth.replyOnTicket);
-        app.post("/api/v1/user/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
+        // app.post("/api/v1/user/Cart/addToCart", [authJwt.verifyToken], auth.addToCart);
         app.post('/api/v1/user/Cart/remove-from-cart', [authJwt.verifyToken], auth.removeFromCart);
         //
         app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
@@ -77,5 +77,8 @@ module.exports = (app) => {
 
 
 
-
+        app.post("/api/v1/user/Cart/addToCartSingleService", [authJwt.verifyToken], auth.addToCartSingleService);
+        app.post("/api/v1/user/Cart/addToCartPackageNormal", [authJwt.verifyToken], auth.addToCartPackageNormal);
+        app.post("/api/v1/user/Cart/addToCartPackageCustomise", [authJwt.verifyToken], auth.addToCartPackageCustomise);
+        app.post("/api/v1/user/Cart/addToCartPackageEdit", [authJwt.verifyToken], auth.addToCartPackageEdit);
 }

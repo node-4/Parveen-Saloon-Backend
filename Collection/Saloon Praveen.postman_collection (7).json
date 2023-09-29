@@ -2302,7 +2302,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"otp\": \"0074\"\r\n}",
+									"raw": "{\r\n    \"otp\": \"7637\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2754,7 +2754,7 @@
 								"auth": {
 									"type": "bearer",
 									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5Mjc3MzE2MywiZXhwIjoxNjkzMDMyMzYzfQ.3T35s16AeTSnTZPm5l1aOmnGCOo3gAbOndKENZvRAVY"
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
 									}
 								},
 								"method": "POST",
@@ -2769,7 +2769,7 @@
 								"auth": {
 									"type": "bearer",
 									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5Mjc3MzE2MywiZXhwIjoxNjkzMDMyMzYzfQ.3T35s16AeTSnTZPm5l1aOmnGCOo3gAbOndKENZvRAVY"
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
 									}
 								},
 								"method": "POST",
@@ -2783,22 +2783,7 @@
 										}
 									}
 								},
-								"url": "localhost:8889/api/v1/user/Cart/placeOrder/VEQ4PSLY2"
-							},
-							"response": []
-						},
-						{
-							"name": "getCart",
-							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5MDgwOTE3MCwiZXhwIjoxNjkxMDY4MzcwfQ.w6pTBBRA8ymVgQ0_8_3Gv6-YmNNr_p1rOvapQI1E4D8"
-									}
-								},
-								"method": "GET",
-								"header": [],
-								"url": "localhost:8889/api/v1/user/getCart"
+								"url": "localhost:8889/api/v1/user/Cart/placeOrder/CLMQRDHOJ"
 							},
 							"response": []
 						},
@@ -3102,12 +3087,12 @@
 								"auth": {
 									"type": "bearer",
 									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0Y2EyMjZkYzdlOTkwYTkxNTRkOThmMSIsImlhdCI6MTY5MTA1OTQ5MSwiZXhwIjoxNjkxMzE4NjkxfQ.sTvnQhMOGaVWcL8KQjq7lyHBPQirEyqpnISFzpvZ0-E"
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
 									}
 								},
 								"method": "POST",
 								"header": [],
-								"url": "localhost:8888/api/v1/user/FavouriteBooking/addFavouriteBooking/orderId"
+								"url": "localhost:8889/api/v1/user/FavouriteBooking/addFavouriteBooking/6516be35988b5d11fd0195a1"
 							},
 							"response": []
 						},
@@ -3117,16 +3102,127 @@
 								"auth": {
 									"type": "bearer",
 									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0Y2EyMjZkYzdlOTkwYTkxNTRkOThmMSIsImlhdCI6MTY5MTA1OTQ5MSwiZXhwIjoxNjkxMzE4NjkxfQ.sTvnQhMOGaVWcL8KQjq7lyHBPQirEyqpnISFzpvZ0-E"
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
 									}
 								},
 								"method": "GET",
 								"header": [],
-								"url": "localhost:8888/api/v1/user/FavouriteBooking/listFavouriteBooking"
+								"url": "localhost:8889/api/v1/user/FavouriteBooking/listFavouriteBooking"
 							},
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "getCart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "localhost:8889/api/v1/user/getCart"
+					},
+					"response": []
+				},
+				{
+					"name": "addToCartSingleService",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"_id\": \"64df4cb127f215130174f994\",\r\n    \"quantity\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8889/api/v1/user/Cart/addToCartSingleService"
+					},
+					"response": []
+				},
+				{
+					"name": "addToCartPackageNormal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"_id\": \"64df513dd09888666427b771\",\r\n    \"quantity\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8889/api/v1/user/Cart/addToCartPackageNormal"
+					},
+					"response": []
+				},
+				{
+					"name": "addToCartPackageCustomise",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"_id\": \"64df4fd96e62b5d44f617671\",\r\n    \"quantity\": 1,\r\n    \"packageServices\": [\r\n        \"64df4cb127f215130174f994\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8889/api/v1/user/Cart/addToCartPackageCustomise"
+					},
+					"response": []
+				},
+				{
+					"name": "addToCartPackageEdit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzdiMzNiZjE0OTc0MTZhYTdhZTVhOSIsImlhdCI6MTY5NTk4ODA2MSwiZXhwIjoxNzI3NTI0MDYxfQ.apuBPafpgh3ULjwlDr9cXiOXy53TwSlw5-AYiqPi-uo"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"_id\": \"64df74c026e9a942e612468a\",\r\n    \"quantity\": 1,\r\n    \"servicePackageId\": \"64df74c026e9a942e61246aa\",\r\n    \"packageServices\": [\r\n        \"64df4cb127f215130174f994\",\r\n        \"64df4dc75a3be2adb46a800a\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8889/api/v1/user/Cart/addToCartPackageEdit"
+					},
+					"response": []
 				}
 			]
 		},

@@ -129,10 +129,6 @@ const DocumentSchema = schema({
                                 default: 0
                         },
                 }],
-                packageServices: [{
-                        type: schema.Types.ObjectId,
-                        ref: "services"
-                }],
                 price: {
                         type: Number
                 },
