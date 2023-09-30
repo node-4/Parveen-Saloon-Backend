@@ -1012,6 +1012,7 @@ exports.addToCartPackageCustomise = async (req, res) => {
                                                         }
                                                 }
                                         }
+
                                 } else {
                                         return res.status(404).send({ status: 404, message: "Service not found" });
                                 }
@@ -1109,7 +1110,7 @@ exports.addToCartPackageEdit = async (req, res) => {
                                                                                 price = findService.originalPrice;
                                                                         }
                                                                         let obj = {
-                                                                                service: findService1._id,
+                                                                                service: findService1,
                                                                                 price: price,
                                                                                 quantity: 1,
                                                                                 total: price,
@@ -2094,14 +2095,14 @@ exports.getOngoingOrders = async (req, res) => {
                         .populate({
                                 path: "Charges.chargeId",
                         })
-                        .populate({
-                                path: "services.serviceId",
-                                populate: [
-                                        {
-                                                path: "mainCategoryId categoryId subCategoryId",
-                                        },
-                                ],
-                        })
+                // .populate({
+                //         path: "services.serviceId",
+                //         populate: [
+                //                 {
+                //                         path: "mainCategoryId categoryId subCategoryId",
+                //                 },
+                //         ],
+                // })
 
                 if (data.length > 0) {
                         return res.status(200).json({ message: "All orders", data: data });

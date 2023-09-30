@@ -997,228 +997,406 @@ exports.removeItem = async (req, res) => {
         return res.status(200).json({ message: "Item Deleted Successfully !" });
     }
 };
+// exports.createService = async (req, res) => {
+//     try {
+//         const findMainCategory = await mainCategory.findById({ _id: req.body.mainCategoryId });
+//         if (!findMainCategory) {
+//             return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
+//         } else {
+//             let findCategory, findSubCategory;
+//             if (req.body.categoryId != (null || undefined)) {
+//                 findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.body.categoryId });
+//                 if (!findCategory) {
+//                     return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+//                 }
+//             } else {
+//                 let findService = await service.findOne({ title: req.body.title, mainCategoryId: findMainCategory._id, type: req.body.type, packageType: req.body.packageType });
+//                 if (findService) {
+//                     return res.status(409).json({ message: "Service already exit.", status: 409, data: {} });
+//                 }
+//             }
+//             if (req.body.subCategoryId != (null || undefined)) {
+//                 findSubCategory = await subCategory.findOne({ _id: req.body.subCategoryId, mainCategoryId: findMainCategory._id, categoryId: findCategory._id, })
+//                 if (!findSubCategory) {
+//                     return res.status(404).json({ message: "sub category Not Found", status: 404, data: {} });
+//                 }
+//                 let findService = await service.findOne({ title: req.body.title, mainCategoryId: findMainCategory._id, type: req.body.type, packageType: req.body.packageType, categoryId: findCategory._id, subCategoryId: findSubCategory._id, });
+//                 if (findService) {
+//                     return res.status(409).json({ message: "Service already exit.", status: 409, data: {} });
+//                 }
+//             }
+//             let discountPrice = 0, discount = 0, totalTime;
+//             if (req.body.timeInMin > 60) {
+//                 const hours = Math.floor(req.body.timeInMin / 60);
+//                 const minutes = req.body.timeInMin % 60;
+//                 totalTime = `${hours} hr ${minutes} min`
+//             } else {
+//                 const minutes = req.body.timeInMin % 60;
+//                 totalTime = `00 hr ${minutes} min`
+//             }
+//             if (req.body.discountActive == "true") {
+//                 discountPrice = Number((req.body.originalPrice) - ((Number(req.body.originalPrice) * Number(req.body.discount)) / 100)).toFixed();
+//                 discount = req.body.discount;
+//             } else {
+//                 discountPrice = discountPrice;
+//                 discount = discount;
+//             }
+//             let images = [];
+//             if (req.files) {
+//                 for (let j = 0; j < req.files.length; j++) {
+//                     let obj = {
+//                         img: req.files[j].path
+//                     }
+//                     images.push(obj)
+//                 }
+//             }
+//             let items = [], services = [];
+//             if (req.body.services != (null || undefined)) {
+//                 for (let i = 0; i < req.body.services.length; i++) {
+//                     let findItem = await service.findById({ _id: req.body.services[i] });
+//                     if (findItem) {
+//                         let item1 = {
+//                             service: findItem._id
+//                         }
+//                         services.push(item1);
+//                     } else {
+//                         return res.status(404).json({ message: `service Not Found`, status: 404, data: {} });
+//                     }
+//                 }
+//             }
+//             if (req.body.items != (null || undefined)) {
+//                 for (let i = 0; i < req.body.items.length; i++) {
+//                     let findItem = await item.findById({ _id: req.body.items[i] });
+//                     if (findItem) {
+//                         let item1 = {
+//                             item: findItem._id
+//                         }
+//                         items.push(item1);
+//                     } else {
+//                         return res.status(404).json({ message: `item Not Found`, status: 404, data: {} });
+//                     }
+//                 }
+//             }
+//             if (req.body.type == "Service") {
+//                 // const descriptions = req.body.description || [];
+//                 // const descriptionObjects = descriptions.map((description, index) => ({
+//                 //     _id: index + 1,
+//                 //     text: description,
+//                 // }));
+//                 // console.log("Description:", descriptionObjects);
+
+//                 const data = {
+//                     mainCategoryId: findMainCategory._id,
+//                     categoryId: findCategory._id,
+//                     subCategoryId: findSubCategory._id,
+//                     title: req.body.title,
+//                     description: req.body.description /*descriptionObjects*/,
+//                     originalPrice: req.body.originalPrice,
+//                     discountActive: req.body.discountActive,
+//                     discount: req.body.discount,
+//                     discountPrice: discountPrice,
+//                     totalTime: totalTime,
+//                     timeInMin: req.body.timeInMin,
+//                     images: images,
+//                     E4uSafety: req.body.E4uSafety,
+//                     thingsToKnow: req.body.thingsToKnow,
+//                     E4uSuggestion: req.body.E4uSuggestion,
+//                     type: req.body.type,
+//                     items: items
+//                 };
+//                 const category = await service.create(data);
+//                 return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
+//             }
+//             if (req.body.type == "Package") {
+//                 if (req.body.packageType == "Customise") {
+//                     const data = {
+//                         mainCategoryId: findMainCategory._id,
+//                         categoryId: findCategory._id,
+//                         subCategoryId: findSubCategory._id,
+//                         title: req.body.title,
+//                         description: req.body.description,
+//                         originalPrice: req.body.originalPrice,
+//                         discountActive: req.body.discountActive,
+//                         discount: req.body.discount,
+//                         discountPrice: discountPrice,
+//                         totalTime: totalTime,
+//                         timeInMin: req.body.timeInMin,
+//                         images: images,
+//                         E4uSafety: req.body.E4uSafety,
+//                         thingsToKnow: req.body.thingsToKnow,
+//                         E4uSuggestion: req.body.E4uSuggestion,
+//                         type: "Package",
+//                         packageType: "Customise",
+//                         selected: true,
+//                         selectedCount: req.body.selectedCount,
+//                         services: services,
+//                         items: items
+//                     };
+//                     const category = await service.create(data);
+//                     return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
+//                 }
+//                 if (req.body.packageType == "Normal") {
+//                     const data = {
+//                         mainCategoryId: findMainCategory._id,
+//                         categoryId: findCategory._id,
+//                         subCategoryId: findSubCategory._id,
+//                         title: req.body.title,
+//                         description: req.body.description,
+//                         originalPrice: req.body.originalPrice,
+//                         discountActive: req.body.discountActive,
+//                         discount: req.body.discount,
+//                         discountPrice: discountPrice,
+//                         totalTime: totalTime,
+//                         timeInMin: req.body.timeInMin,
+//                         images: images,
+//                         E4uSafety: req.body.E4uSafety,
+//                         thingsToKnow: req.body.thingsToKnow,
+//                         E4uSuggestion: req.body.E4uSuggestion,
+//                         type: "Package",
+//                         packageType: "Normal",
+//                         selected: false,
+//                         selectedCount: 0,
+//                         services: services,
+//                         items: items
+//                     };
+//                     const category = await service.create(data);
+//                     return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
+//                 }
+//                 if (req.body.packageType == "Edit") {
+//                     const data = {
+//                         mainCategoryId: findMainCategory._id,
+//                         categoryId: findCategory._id,
+//                         subCategoryId: findSubCategory._id,
+//                         title: req.body.title,
+//                         description: req.body.description,
+//                         originalPrice: req.body.originalPrice,
+//                         discountActive: req.body.discountActive,
+//                         discount: req.body.discount,
+//                         discountPrice: discountPrice,
+//                         totalTime: totalTime,
+//                         timeInMin: req.body.timeInMin,
+//                         images: images,
+//                         E4uSafety: req.body.E4uSafety,
+//                         thingsToKnow: req.body.thingsToKnow,
+//                         E4uSuggestion: req.body.E4uSuggestion,
+//                         type: "Package",
+//                         packageType: "Edit",
+//                     };
+//                     let findCategories = await Category.find({ mainCategoryId: findMainCategory._id });
+//                     if (findCategories.length == 0) {
+//                         return res.status(404).json({ message: "first add Category in this main category", status: 404, data: {} });
+//                     }
+//                     const saveService = await service.create(data);
+//                     if (saveService) {
+//                         for (let i = 0; i < findCategories.length; i++) {
+//                             let findServices = await service.find({ categoryId: findCategories[i]._id });
+//                             if (findServices.length == 0) {
+//                                 return res.status(404).json({ message: "first add Services in categories", status: 404, data: {} });
+//                             }
+//                             let services = [];
+//                             for (let j = 0; j < findServices.length; j++) {
+//                                 let obj = {
+//                                     service: findServices[j]._id,
+//                                 }
+//                                 services.push(obj)
+//                             }
+//                             let obj1 = {
+//                                 serviceId: saveService._id,
+//                                 categoryId: findCategories[i]._id,
+//                                 services: services,
+//                             }
+//                             let savePackage = await servicePackage.create(obj1);
+//                             if (savePackage) {
+//                                 await service.findByIdAndUpdate({ _id: saveService._id }, { $push: { servicePackageId: savePackage._id } }, { new: true })
+//                             }
+//                         }
+//                         let x = await service.findById({ _id: saveService._id })
+//                         return res.status(200).json({ message: "Service add successfully.", status: 200, data: x });
+//                     }
+//                 }
+//             }
+
+//         }
+//     } catch (error) {
+//         return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+//     }
+// };
+
 exports.createService = async (req, res) => {
     try {
-        const findMainCategory = await mainCategory.findById({ _id: req.body.mainCategoryId });
+        const findMainCategory = await mainCategory.findById(req.body.mainCategoryId);
+
         if (!findMainCategory) {
             return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
-        } else {
-            let findCategory, findSubCategory;
-            if (req.body.categoryId != (null || undefined)) {
-                findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.body.categoryId });
-                if (!findCategory) {
-                    return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
-                }
-            } else {
-                let findService = await service.findOne({ title: req.body.title, mainCategoryId: findMainCategory._id, type: req.body.type, packageType: req.body.packageType });
-                if (findService) {
-                    return res.status(409).json({ message: "Service already exit.", status: 409, data: {} });
-                }
-            }
-            if (req.body.subCategoryId != (null || undefined)) {
-                findSubCategory = await subCategory.findOne({ _id: req.body.subCategoryId, mainCategoryId: findMainCategory._id, categoryId: findCategory._id, })
-                if (!findSubCategory) {
-                    return res.status(404).json({ message: "sub category Not Found", status: 404, data: {} });
-                }
-                let findService = await service.findOne({ title: req.body.title, mainCategoryId: findMainCategory._id, type: req.body.type, packageType: req.body.packageType, categoryId: findCategory._id, subCategoryId: findSubCategory._id, });
-                if (findService) {
-                    return res.status(409).json({ message: "Service already exit.", status: 409, data: {} });
-                }
-            }
-            let discountPrice = 0, discount = 0, totalTime;
-            if (req.body.timeInMin > 60) {
-                const hours = Math.floor(req.body.timeInMin / 60);
-                const minutes = req.body.timeInMin % 60;
-                totalTime = `${hours} hr ${minutes} min`
-            } else {
-                const minutes = req.body.timeInMin % 60;
-                totalTime = `00 hr ${minutes} min`
-            }
-            if (req.body.discountActive == "true") {
-                discountPrice = Number((req.body.originalPrice) - ((Number(req.body.originalPrice) * Number(req.body.discount)) / 100)).toFixed();
-                discount = req.body.discount;
-            } else {
-                discountPrice = discountPrice;
-                discount = discount;
-            }
-            let images = [];
-            if (req.files) {
-                for (let j = 0; j < req.files.length; j++) {
-                    let obj = {
-                        img: req.files[j].path
-                    }
-                    images.push(obj)
-                }
-            }
-            let items = [], services = [];
-            if (req.body.services != (null || undefined)) {
-                for (let i = 0; i < req.body.services.length; i++) {
-                    let findItem = await service.findById({ _id: req.body.services[i] });
-                    if (findItem) {
-                        let item1 = {
-                            service: findItem._id
-                        }
-                        services.push(item1);
-                    } else {
-                        return res.status(404).json({ message: `service Not Found`, status: 404, data: {} });
-                    }
-                }
-            }
-            if (req.body.items != (null || undefined)) {
-                for (let i = 0; i < req.body.items.length; i++) {
-                    let findItem = await item.findById({ _id: req.body.items[i] });
-                    if (findItem) {
-                        let item1 = {
-                            item: findItem._id
-                        }
-                        items.push(item1);
-                    } else {
-                        return res.status(404).json({ message: `item Not Found`, status: 404, data: {} });
-                    }
-                }
-            }
-            if (req.body.type == "Service") {
-                // const descriptions = req.body.description || [];
-                // const descriptionObjects = descriptions.map((description, index) => ({
-                //     _id: index + 1,
-                //     text: description,
-                // }));
-                // console.log("Description:", descriptionObjects);
-
-                const data = {
-                    mainCategoryId: findMainCategory._id,
-                    categoryId: findCategory._id,
-                    subCategoryId: findSubCategory._id,
-                    title: req.body.title,
-                    description: req.body.description /*descriptionObjects*/,
-                    originalPrice: req.body.originalPrice,
-                    discountActive: req.body.discountActive,
-                    discount: req.body.discount,
-                    discountPrice: discountPrice,
-                    totalTime: totalTime,
-                    timeInMin: req.body.timeInMin,
-                    images: images,
-                    E4uSafety: req.body.E4uSafety,
-                    thingsToKnow: req.body.thingsToKnow,
-                    E4uSuggestion: req.body.E4uSuggestion,
-                    type: req.body.type,
-                    items: items
-                };
-                const category = await service.create(data);
-                return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
-            }
-            if (req.body.type == "Package") {
-                if (req.body.packageType == "Customise") {
-                    const data = {
-                        mainCategoryId: findMainCategory._id,
-                        categoryId: findCategory._id,
-                        subCategoryId: findSubCategory._id,
-                        title: req.body.title,
-                        description: req.body.description,
-                        originalPrice: req.body.originalPrice,
-                        discountActive: req.body.discountActive,
-                        discount: req.body.discount,
-                        discountPrice: discountPrice,
-                        totalTime: totalTime,
-                        timeInMin: req.body.timeInMin,
-                        images: images,
-                        E4uSafety: req.body.E4uSafety,
-                        thingsToKnow: req.body.thingsToKnow,
-                        E4uSuggestion: req.body.E4uSuggestion,
-                        type: "Package",
-                        packageType: "Customise",
-                        selected: true,
-                        selectedCount: req.body.selectedCount,
-                        services: services,
-                        items: items
-                    };
-                    const category = await service.create(data);
-                    return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
-                }
-                if (req.body.packageType == "Normal") {
-                    const data = {
-                        mainCategoryId: findMainCategory._id,
-                        categoryId: findCategory._id,
-                        subCategoryId: findSubCategory._id,
-                        title: req.body.title,
-                        description: req.body.description,
-                        originalPrice: req.body.originalPrice,
-                        discountActive: req.body.discountActive,
-                        discount: req.body.discount,
-                        discountPrice: discountPrice,
-                        totalTime: totalTime,
-                        timeInMin: req.body.timeInMin,
-                        images: images,
-                        E4uSafety: req.body.E4uSafety,
-                        thingsToKnow: req.body.thingsToKnow,
-                        E4uSuggestion: req.body.E4uSuggestion,
-                        type: "Package",
-                        packageType: "Normal",
-                        selected: false,
-                        selectedCount: 0,
-                        services: services,
-                        items: items
-                    };
-                    const category = await service.create(data);
-                    return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
-                }
-                if (req.body.packageType == "Edit") {
-                    const data = {
-                        mainCategoryId: findMainCategory._id,
-                        title: req.body.title,
-                        description: req.body.description,
-                        originalPrice: req.body.originalPrice,
-                        discountActive: req.body.discountActive,
-                        discount: req.body.discount,
-                        discountPrice: discountPrice,
-                        totalTime: totalTime,
-                        timeInMin: req.body.timeInMin,
-                        images: images,
-                        E4uSafety: req.body.E4uSafety,
-                        thingsToKnow: req.body.thingsToKnow,
-                        E4uSuggestion: req.body.E4uSuggestion,
-                        type: "Package",
-                        packageType: "Edit",
-                    };
-                    let findCategories = await Category.find({ mainCategoryId: findMainCategory._id });
-                    if (findCategories.length == 0) {
-                        return res.status(404).json({ message: "first add Category in this main category", status: 404, data: {} });
-                    }
-                    const saveService = await service.create(data);
-                    if (saveService) {
-                        for (let i = 0; i < findCategories.length; i++) {
-                            let findServices = await service.find({ categoryId: findCategories[i]._id });
-                            if (findServices.length == 0) {
-                                return res.status(404).json({ message: "first add Services in categories", status: 404, data: {} });
-                            }
-                            let services = [];
-                            for (let j = 0; j < findServices.length; j++) {
-                                let obj = {
-                                    service: findServices[j]._id,
-                                }
-                                services.push(obj)
-                            }
-                            let obj1 = {
-                                serviceId: saveService._id,
-                                categoryId: findCategories[i]._id,
-                                services: services,
-                            }
-                            let savePackage = await servicePackage.create(obj1);
-                            if (savePackage) {
-                                await service.findByIdAndUpdate({ _id: saveService._id }, { $push: { servicePackageId: savePackage._id } }, { new: true })
-                            }
-                        }
-                        let x = await service.findById({ _id: saveService._id })
-                        return res.status(200).json({ message: "Service add successfully.", status: 200, data: x });
-                    }
-                }
-            }
-
         }
+
+        let findCategory, findSubCategory;
+
+        if (req.body.categoryId) {
+            findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.body.categoryId });
+
+            if (!findCategory) {
+                return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+            }
+        } else {
+            const existingService = await service.findOne({
+                title: req.body.title,
+                mainCategoryId: findMainCategory._id,
+                type: req.body.type,
+                packageType: req.body.packageType,
+            });
+
+            if (existingService) {
+                return res.status(409).json({ message: "Service already exists.", status: 409, data: {} });
+            }
+        }
+
+        if (req.body.subCategoryId) {
+            findSubCategory = await subCategory.findOne({
+                _id: req.body.subCategoryId,
+                mainCategoryId: findMainCategory._id,
+                categoryId: findCategory._id,
+            });
+
+            if (!findSubCategory) {
+                return res.status(404).json({ message: "Subcategory Not Found", status: 404, data: {} });
+            }
+
+            const existingService = await service.findOne({
+                title: req.body.title,
+                mainCategoryId: findMainCategory._id,
+                type: req.body.type,
+                packageType: req.body.packageType,
+                categoryId: findCategory._id,
+                subCategoryId: findSubCategory._id,
+            });
+
+            if (existingService) {
+                return res.status(409).json({ message: "Service already exists.", status: 409, data: {} });
+            }
+        }
+
+        let discountPrice = 0, discount = 0, totalTime;
+
+        if (req.body.timeInMin > 60) {
+            const hours = Math.floor(req.body.timeInMin / 60);
+            const minutes = req.body.timeInMin % 60;
+            totalTime = `${hours} hr ${minutes} min`;
+        } else {
+            const minutes = req.body.timeInMin % 60;
+            totalTime = `00 hr ${minutes} min`;
+        }
+
+        if (req.body.discountActive === "true") {
+            discountPrice = Number(req.body.originalPrice - (req.body.originalPrice * req.body.discount) / 100).toFixed();
+            discount = req.body.discount;
+        }
+
+        let images = [];
+
+        if (req.files) {
+            for (let j = 0; j < req.files.length; j++) {
+                let obj = {
+                    img: req.files[j].path,
+                };
+                images.push(obj);
+            }
+        }
+
+        let items = [], services = [];
+
+        if (req.body.services) {
+            for (let i = 0; i < req.body.services.length; i++) {
+                let findItem = await service.findById(req.body.services[i]);
+
+                if (!findItem) {
+                    return res.status(404).json({ message: `Service Not Found`, status: 404, data: {} });
+                }
+
+                let item1 = {
+                    service: findItem._id,
+                };
+                services.push(item1);
+            }
+        }
+
+        if (req.body.items) {
+            for (let i = 0; i < req.body.items.length; i++) {
+                let findItem = await item.findById(req.body.items[i]);
+
+                if (!findItem) {
+                    return res.status(404).json({ message: `Item Not Found`, status: 404, data: {} });
+                }
+
+                let item1 = {
+                    item: findItem._id,
+                };
+                items.push(item1);
+            }
+        }
+
+        if (req.body.type === "Service") {
+            const data = {
+                mainCategoryId: findMainCategory._id,
+                categoryId: findCategory._id,
+                subCategoryId: findSubCategory ? findSubCategory._id : null,
+                title: req.body.title,
+                description: req.body.description,
+                originalPrice: req.body.originalPrice,
+                discountActive: req.body.discountActive,
+                discount: discount,
+                discountPrice: discountPrice,
+                totalTime: totalTime,
+                timeInMin: req.body.timeInMin,
+                images: images,
+                E4uSafety: req.body.E4uSafety,
+                thingsToKnow: req.body.thingsToKnow,
+                E4uSuggestion: req.body.E4uSuggestion,
+                type: req.body.type,
+                items: items,
+            };
+
+            const category = await service.create(data);
+
+            return res.status(200).json({ message: "Service added successfully.", status: 200, data: category });
+        }
+
+        if (req.body.type === "Package") {
+            const packageData = {
+                mainCategoryId: findMainCategory._id,
+                categoryId: findCategory._id,
+                subCategoryId: findSubCategory ? findSubCategory._id : null,
+                title: req.body.title,
+                description: req.body.description,
+                originalPrice: req.body.originalPrice,
+                discountActive: req.body.discountActive,
+                discount: discount,
+                discountPrice: discountPrice,
+                totalTime: totalTime,
+                timeInMin: req.body.timeInMin,
+                images: images,
+                E4uSafety: req.body.E4uSafety,
+                thingsToKnow: req.body.thingsToKnow,
+                E4uSuggestion: req.body.E4uSuggestion,
+                type: req.body.type,
+                packageType: req.body.packageType,
+                selected: req.body.packageType === "Normal" ? false : true,
+                selectedCount: req.body.selectedCount || 0,
+                services: services,
+                items: items,
+            };
+
+            const category = await service.create(packageData);
+
+            return res.status(200).json({ message: "Package added to the cart.", status: 200, data: category });
+        }
+
     } catch (error) {
-        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+        console.error(error);
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
+
 exports.getService = async (req, res) => {
     try {
         const findMainCategory = await mainCategory.findById({ _id: req.params.mainCategoryId });
