@@ -43,6 +43,7 @@ module.exports = (app) => {
         app.put("/api/v1/user/Cart/addSuggestionToCart", [authJwt.verifyToken], auth.addSuggestionToCart);
         app.put("/api/v1/user/Cart/addAdressToCart/:id", [authJwt.verifyToken], auth.addAdressToCart);
         app.put("/api/v1/user/Cart/addDateAndTimeToCart", [authJwt.verifyToken], auth.addDateAndTimeToCart);
+        app.put("/api/v1/user/Cart/updateDateAndTimeByOrderId", [authJwt.verifyToken], auth.updateDateAndTimeByOrderId);
         app.post("/api/v1/user/Cart/checkout", [authJwt.verifyToken], auth.checkout);
         app.post("/api/v1/user/Cart/placeOrder/:orderId", [authJwt.verifyToken], auth.placeOrder);
         app.delete('/api/v1/user/Cart/orders/:orderId', [authJwt.verifyToken], auth.deleteOrder);
@@ -77,6 +78,9 @@ module.exports = (app) => {
         app.get("/api/v1/user/Category/allCategory", auth.getCategories);
         app.get('/api/v1/user/Category/search', [authJwt.verifyToken], auth.listServiceforSearch);
         app.get('/api/v1/user/frequently-added-services', [authJwt.verifyToken], auth.getFrequentlyAddedServices);
+        app.post('/api/v1/user/orders/:orderId/reportIssue', [authJwt.verifyToken], auth.reportIssue);
+        app.get('/api/v1/user/orders/:orderId/reportIssue', [authJwt.verifyToken], auth.getIssueReports);
+
 
 
 

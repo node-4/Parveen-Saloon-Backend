@@ -19,6 +19,7 @@ const favouriteBooking = require('../models/favouriteBooking');
 const servicePackage = require('../models/servicePackage');
 const Testimonial = require("../models/testimonial");
 const Order = require('../models/orderModel')
+const IssueReport = require('../models/reportIssueModel');
 const Category = require("../models/category/Category");
 const MainCategory = require("../models/category/mainCategory");
 const SubCategory = require("../models/category/subCategory");
@@ -1970,6 +1971,47 @@ exports.addDateAndTimeToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+exports.updateDateAndTimeByOrderId = async (req, res) => {
+        try {
+                const orderId = req.body.orderId;
+                const newDate = req.body.date;
+                const newTime = req.body.time;
+
+                if (!orderId || !newDate || !newTime) {
+                        return res.status(400).send({ status: 400, message: "Invalid request data." });
+                }
+
+                let userData = await User.findOne({ _id: req.user._id });
+                console.log(userData);
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found." });
+                }
+
+                const findOrder = await Order.findOne({ userId: userData._id, _id: orderId });
+
+                if (!findOrder) {
+                        return res.status(404).send({ status: 404, message: "Order not found for the provided orderId." });
+                }
+
+                const d = new Date(newDate);
+                const text = d.toISOString();
+
+                const update = await Order.findByIdAndUpdate(
+                        { _id: findOrder._id },
+                        { $set: { Date: text, time: newTime } },
+                        { new: true }
+                );
+
+                if (update) {
+                        return res.status(200).send({ status: 200, message: "Date and time updated successfully.", data: update });
+                } else {
+                        return res.status(500).send({ status: 500, message: "Failed to update date and time." });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error: " + error.message });
+        }
+};
 exports.checkout = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
@@ -2189,7 +2231,25 @@ exports.listFavouriteBooking = async (req, res) => {
                 if (!findUser) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 } else {
-                        let findTicket = await favouriteBooking.find({ userId: findUser._id });
+                        let findTicket = await favouriteBooking.find({ userId: findUser._id })
+                                .populate({
+                                        path: 'services.serviceId',
+                                        model: 'services'
+
+                                })
+                                .populate({
+                                        path: 'services.categoryId',
+                                        model: 'Category',
+                                        select: 'name image'
+                                })
+                                .populate({
+                                        path: 'services',
+                                        populate: {
+                                                path: 'services.service',
+                                                model: 'services',
+                                                select: 'title images'
+                                        }
+                                });
                         if (findTicket.length == 0) {
                                 return res.status(404).send({ status: 404, message: "Data not found" });
                         } else {
@@ -2975,5 +3035,48 @@ exports.getFrequentlyAddedServices = async (req, res) => {
                         message: 'Internal server error',
                         data: error.message,
                 });
+        }
+};
+
+//helper function
+const generateTicketID = () => {
+        const timestamp = Date.now();
+        const uniqueID = Math.floor(Math.random() * 10000);
+        return `${timestamp}-${uniqueID}`;
+};
+
+exports.reportIssue = async (req, res) => {
+        const { issueType, description } = req.body;
+
+        try {
+                const order = await Order.findById(req.params.orderId);
+                if (!order) {
+                        return res.status(404).json({ status: 404, message: 'Order not found' });
+                }
+                const ticketID = generateTicketID();
+
+                const issueReport = new IssueReport({
+                        order: order._id,
+                        userId: req.user._id,
+                        issueType,
+                        description,
+                        ticketID
+                });
+
+                await issueReport.save();
+
+                return res.status(201).json({ status: 201, message: 'Issue reported successfully', data: issueReport });
+        } catch (error) {
+                return res.status(500).json({ error: 'Error reporting issue' });
+        }
+};
+
+exports.getIssueReports = async (req, res) => {
+        try {
+                const issueReports = await IssueReport.find();
+
+                return res.status(200).json(issueReports);
+        } catch (error) {
+                return res.status(500).json({ error: 'Error fetching issue reports' });
         }
 };
