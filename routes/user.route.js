@@ -33,7 +33,7 @@ module.exports = (app) => {
         app.post('/api/v1/user/Cart/remove-from-cart', [authJwt.verifyToken], auth.removeFromCart);
         //
         app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
-        app.put('/api/v1/user/Cart/update-quantity', [authJwt.verifyToken], auth.updateServiceQuantityInCart);
+        app.put('/api/v1/user/Cart/updateQuantity/:serviceId', [authJwt.verifyToken], auth.updateServiceQuantity);
         //
         app.put("/api/v1/user/Cart/provideTip", [authJwt.verifyToken], auth.provideTip);
         app.get("/api/v1/user/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);

@@ -1158,6 +1158,40 @@ exports.addToCartPackageEdit = async (req, res) => {
         }
 };
 
+// exports.removeFromCart1 = async (req, res) => {
+//         try {
+//                 const userData = await User.findOne({ _id: req.user._id });
+//                 if (!userData) {
+//                         return res.status(404).send({ status: 404, message: "User not found" });
+//                 } else {
+//                         const findCart = await Cart.findOne({ userId: userData._id });
+//                         if (!findCart) {
+//                                 return res.status(404).send({ status: 404, message: "Cart not found" });
+//                         }
+
+//                         const serviceIdToRemove = req.body.serviceId;
+
+//                         const serviceIndex = findCart.services.findIndex(service => service.serviceId.equals(serviceIdToRemove));
+
+//                         if (serviceIndex !== -1) {
+//                                 const removedService = findCart.services.splice(serviceIndex, 1)[0];
+//                                 findCart.totalAmount -= removedService.total;
+//                                 findCart.paidAmount -= removedService.total;
+//                                 findCart.totalItem--;
+
+//                                 await findCart.save();
+
+//                                 return res.status(200).json({ status: 200, message: "Service removed from the cart.", data: findCart });
+//                         } else {
+//                                 return res.status(404).send({ status: 404, message: "Service not found in the cart" });
+//                         }
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
+//         }
+// };
+
 exports.removeFromCart = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
@@ -1171,26 +1205,48 @@ exports.removeFromCart = async (req, res) => {
 
                         const serviceIdToRemove = req.body.serviceId;
 
-                        const serviceIndex = findCart.services.findIndex(service => service.serviceId.equals(serviceIdToRemove));
+                        let serviceIndex =
+                                findCart.services &&
+                                findCart.services.findIndex((service) =>
+                                        service.serviceId.equals(serviceIdToRemove)
+                                );
+
+                        let freeServiceIndex =
+                                findCart.freeService &&
+                                findCart.freeService.findIndex((freeService) =>
+                                        freeService.freeServiceId.toString() === serviceIdToRemove
+                                );
 
                         if (serviceIndex !== -1) {
                                 const removedService = findCart.services.splice(serviceIndex, 1)[0];
-                                findCart.totalAmount -= removedService.total;
-                                findCart.paidAmount -= removedService.total;
+                                findCart.totalAmount -= removedService.total || 0;
+                                findCart.paidAmount -= removedService.total || 0;
                                 findCart.totalItem--;
-
-                                await findCart.save();
-
-                                return res.status(200).json({ status: 200, message: "Service removed from the cart.", data: findCart });
+                        } else if (freeServiceIndex !== -1) {
+                                findCart.freeService.splice(freeServiceIndex, 1);
+                                findCart.freeServiceCount = (findCart.freeServiceCount || 0) - 1;
                         } else {
-                                return res.status(404).send({ status: 404, message: "Service not found in the cart" });
+                                return res
+                                        .status(404)
+                                        .send({ status: 404, message: "Service not found in the cart" });
                         }
+
+                        await findCart.save();
+
+                        return res.status(200).json({
+                                status: 200,
+                                message: "Service removed from the cart.",
+                                data: findCart,
+                        });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res
+                        .status(500)
+                        .send({ status: 500, message: "Server error" + error.message });
         }
 };
+
 
 // exports.addToCart = async (req, res) => {
 //         try {
@@ -1429,132 +1485,78 @@ exports.addServiceToCart = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-const createCart = async (userData) => {
-        let Charged = [], paidAmount = 0, totalAmount = 0, additionalFee = 0;
-        const findCharge = await Charges.find({});
-        if (findCharge.length > 0) {
-                for (let i = 0; i < findCharge.length; i++) {
-                        let obj1 = {
-                                chargeId: findCharge[i]._id,
-                                charge: findCharge[i].charge,
-                                discountCharge: findCharge[i].discountCharge,
-                                discount: findCharge[i].discount,
-                                cancelation: findCharge[i].cancelation,
-                        };
-                        if (findCharge[i].cancelation == false) {
-                                if (findCharge[i].discount == true) {
-                                        additionalFee = additionalFee + findCharge[i].discountCharge;
-                                } else {
-                                        additionalFee = additionalFee + findCharge[i].charge;
-                                }
-                        }
-                        Charged.push(obj1);
-                }
-        }
 
-        let price = 0;
-        if (findService.discountActive == true) {
-                price = findService.discountPrice;
-        } else {
-                price = findService.originalPrice;
-        }
-        totalAmount = Number(price * req.body.quantity).toFixed(2);
-        paidAmount = Number((price * req.body.quantity).toFixed(2)) + Number(additionalFee);
+// exports.updateServiceQuantity = async (req, res) => {
+//         try {
+//           const { serviceId } = req.params;
+//           const { quantity } = req.body;
 
-        let obj = {
-                userId: userData._id,
-                Charges: Charged,
-                services: [
-                        {
-                                serviceId: findService._id,
-                                price: price,
-                                quantity: req.body.quantity,
-                                total: price * req.body.quantity,
-                                type: "Service",
-                        },
-                ],
-                totalAmount: totalAmount,
-                additionalFee: additionalFee,
-                paidAmount: paidAmount,
-                totalItem: 1,
-        };
-        const Data = await Cart.create(obj);
-        return Data;
-};
-exports.updateServiceQuantityInCart = async (req, res) => {
+//           const userData = await User.findOne({ _id: req.user._id });
+//           if (!userData) {
+//             return res.status(404).send({ status: 404, message: "User not found" });
+//           }
+
+//           const findCart = await Cart.findOne({ userId: userData._id });
+//           if (!findCart) {
+//             return res.status(404).send({ status: 404, message: "Cart not found" });
+//           }
+
+//           const existingService = findCart.services.find(service => service.serviceId.equals(serviceId));
+//           if (!existingService) {
+//             return res.status(404).send({ status: 404, message: "Service not found in the cart" });
+//           }
+
+//           existingService.quantity = quantity;
+//           existingService.total = existingService.price * quantity;
+
+//           findCart.totalAmount = findCart.services.reduce((total, service) => total + service.total, 0);
+//           findCart.paidAmount = findCart.totalAmount;
+
+//           await findCart.save();
+
+//           return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
+//         } catch (error) {
+//           console.error(error);
+//           return res.status(500).send({ status: 500, message: "Server error" + error.message });
+//         }
+//       };
+
+exports.updateServiceQuantity = async (req, res) => {
         try {
+                const { serviceId } = req.params;
+                const { quantity } = req.body;
+
                 const userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
                 }
 
-                const findService = await service.findById({ _id: req.body._id });
-                if (!findService) {
-                        return res.status(404).send({ status: 404, message: "Service not found" });
-                }
-
-                let findCart = await Cart.findOne({ userId: userData._id });
+                const findCart = await Cart.findOne({ userId: userData._id });
                 if (!findCart) {
-                        findCart = await createCart(userData);
+                        return res.status(404).send({ status: 404, message: "Cart not found" });
                 }
 
-                const quantity = parseInt(req.body.quantity);
-
-                if (isNaN(quantity) || quantity <= 0) {
-                        return res.status(400).json({ status: 400, message: "Invalid quantity" });
+                const existingService = findCart.services.find(service => service.serviceId.equals(serviceId));
+                if (!existingService) {
+                        return res.status(404).send({ status: 404, message: "Service not found in the cart" });
                 }
 
-                const price = parseFloat(findService.discountActive ? findService.discountPrice : findService.originalPrice);
+                const oldQuantity = existingService.quantity;
+                existingService.quantity = quantity;
+                existingService.total = existingService.price * quantity;
 
-                const result = await updateQuantityInCart(findCart, findService, quantity, price);
+                findCart.totalAmount = findCart.services.reduce((total, service) => total + service.total, 0);
+                findCart.paidAmount += (existingService.price * (quantity - oldQuantity));
 
-                return res.status(result.status).json(result.data);
+                await findCart.save();
+
+                return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
         } catch (error) {
                 console.error(error);
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-const updateQuantityInCart = async (cart, findService, quantity, price) => {
-        const existingService = cart.services.find(service => service.serviceId.equals(findService._id));
 
-        if (!existingService) {
-                return {
-                        status: 404,
-                        data: {
-                                status: 404,
-                                message: "Service not found in the cart.",
-                        },
-                };
-        }
-
-        if (isNaN(quantity) || quantity <= 0) {
-                return {
-                        status: 400,
-                        data: {
-                                status: 400,
-                                message: "Invalid quantity",
-                        },
-                };
-        }
-
-        existingService.quantity = quantity;
-        existingService.total = price * quantity;
-
-        cart.totalAmount = cart.services.reduce((total, service) => total + service.total, 0);
-        cart.paidAmount = cart.totalAmount;
-
-        await cart.save();
-
-        return {
-                status: 200,
-                data: {
-                        status: 200,
-                        message: "Service quantity updated in the cart.",
-                        data: cart,
-                },
-        };
-};
-// add servicetocart  new create
 
 exports.provideTip = async (req, res) => {
         try {
