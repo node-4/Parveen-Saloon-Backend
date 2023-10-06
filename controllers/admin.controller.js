@@ -33,6 +33,7 @@ const TransportationCharge = require('../models/transportationModel');
 const Referral = require('../models/refferalModel');
 const ConsentForm = require('../models/consentFormModel');
 const offer = require('../models/offer');
+const Cart = require('../models/cartModel');
 
 
 
@@ -1397,33 +1398,92 @@ exports.createService = async (req, res) => {
     }
 };
 
+// exports.getService = async (req, res) => {
+//     try {
+//         const findMainCategory = await mainCategory.findById({ _id: req.params.mainCategoryId });
+//         if (!findMainCategory) {
+//             return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
+//         } else {
+//             let findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.params.categoryId });
+//             if (!findCategory) {
+//                 return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+//             } else {
+//                 let findSubCategory = await subCategory.findOne({ _id: req.params.subCategoryId, mainCategoryId: findMainCategory._id, categoryId: findCategory._id, })
+//                 if (!findSubCategory) {
+//                     return res.status(404).json({ message: "sub category Not Found", status: 404, data: {} });
+//                 } else {
+//                     let findService = await service.find({ mainCategoryId: findMainCategory._id, categoryId: findCategory._id, subCategoryId: findSubCategory._id, });
+//                     if (findService.length > 0) {
+//                         return res.status(201).json({ message: "Service Found", status: 200, data: findService, });
+//                     } else {
+//                         return res.status(404).json({ message: "Service not found.", status: 404, data: {} });
+//                     }
+//                 }
+//             }
+//         }
+//     } catch (error) {
+//         return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+//     }
+// };
+
 exports.getService = async (req, res) => {
     try {
         const findMainCategory = await mainCategory.findById({ _id: req.params.mainCategoryId });
         if (!findMainCategory) {
             return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
+        }
+
+        const findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.params.categoryId });
+        if (!findCategory) {
+            return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+        }
+
+        const findSubCategory = await subCategory.findOne({
+            _id: req.params.subCategoryId, mainCategoryId: findMainCategory._id, categoryId: findCategory._id,
+        });
+
+        if (!findSubCategory) {
+            return res.status(404).json({ message: "Subcategory Not Found", status: 404, data: {} });
+        }
+
+        const userCart = await Cart.findOne({ userId: req.user.id });
+
+        const findService = await service.find({
+            mainCategoryId: findMainCategory._id,
+            categoryId: findCategory._id,
+            subCategoryId: findSubCategory._id,
+        });
+
+        let servicesWithCartInfo = [];
+
+        if (findService.length > 0 && userCart) {
+            servicesWithCartInfo = findService.map((product) => {
+                const cartItem = userCart.services.find((item) => item.serviceId.equals(product._id));
+                return {
+                    ...product.toObject(),
+                    isInCart: cartItem ? true : false,
+                    quantityInCart: cartItem ? cartItem.quantity : 0,
+                };
+            });
+        } else if (findService.length > 0) {
+            servicesWithCartInfo = findService.map((product) => ({
+                ...product.toObject(),
+                isInCart: false,
+                quantityInCart: 0,
+            }));
+        }
+
+        if (findService.length > 0) {
+            return res.status(200).json({ message: "Services Found", status: 200, data: servicesWithCartInfo });
         } else {
-            let findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.params.categoryId });
-            if (!findCategory) {
-                return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
-            } else {
-                let findSubCategory = await subCategory.findOne({ _id: req.params.subCategoryId, mainCategoryId: findMainCategory._id, categoryId: findCategory._id, })
-                if (!findSubCategory) {
-                    return res.status(404).json({ message: "sub category Not Found", status: 404, data: {} });
-                } else {
-                    let findService = await service.find({ mainCategoryId: findMainCategory._id, categoryId: findCategory._id, subCategoryId: findSubCategory._id, });
-                    if (findService.length > 0) {
-                        return res.status(201).json({ message: "Service Found", status: 200, data: findService, });
-                    } else {
-                        return res.status(404).json({ message: "Service not found.", status: 404, data: {} });
-                    }
-                }
-            }
+            return res.status(404).json({ message: "Services not found.", status: 404, data: {} });
         }
     } catch (error) {
-        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+        console.log(error);
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
+
 exports.removeService = async (req, res) => {
     const { id } = req.params;
     const category = await service.findById(id);

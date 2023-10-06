@@ -1231,13 +1231,20 @@ exports.removeFromCart = async (req, res) => {
                                         .send({ status: 404, message: "Service not found in the cart" });
                         }
 
-                        await findCart.save();
-
-                        return res.status(200).json({
-                                status: 200,
-                                message: "Service removed from the cart.",
-                                data: findCart,
-                        });
+                        if (findCart.services.length === 0) {
+                                await Cart.findByIdAndDelete({ _id: findCart._id });
+                                return res.status(200).json({
+                                        status: 200,
+                                        message: "Cart permanently deleted as it is empty.",
+                                });
+                        } else {
+                                await findCart.save();
+                                return res.status(200).json({
+                                        status: 200,
+                                        message: "Service removed from the cart.",
+                                        data: findCart,
+                                });
+                        }
                 }
         } catch (error) {
                 console.error(error);
@@ -1246,7 +1253,6 @@ exports.removeFromCart = async (req, res) => {
                         .send({ status: 500, message: "Server error" + error.message });
         }
 };
-
 
 // exports.addToCart = async (req, res) => {
 //         try {
