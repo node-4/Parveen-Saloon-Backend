@@ -344,7 +344,19 @@ exports.getCart = async (req, res) => {
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
-                                return res.status(200).json({ message: "cart data found.", status: 200, data: findCart });
+                                let totalOriginalPrice = 0;
+                                for (const cartItem of findCart.services) {
+                                        if (cartItem.serviceId.originalPrice) {
+                                                totalOriginalPrice += cartItem.serviceId.originalPrice * cartItem.quantity;
+                                        }
+                                }
+                                console.log('Total Original Price:', totalOriginalPrice);
+
+                                if (findCart.totalAmount <= 500) {
+                                        return res.status(400).json({ message: "Cart total amount must be greater than 500.", status: 400, data: {} });
+                                }
+
+                                return res.status(200).json({ message: "cart data found.", status: 200, data: { ...findCart.toObject(), totalOriginalPrice } });
                         }
                 }
         } catch (error) {
@@ -3503,6 +3515,26 @@ exports.getFrequentlyAddedServices = async (req, res) => {
                 const frequentlyAddedServices = await service.find()
                         .sort({ createdAt: -1 })
                         .limit(limit);
+
+                const userId = req.user.id;
+                console.log("user", userId);
+
+                if (userId) {
+                        const userCart = await Cart.findOne({ userId: userId });
+                        console.log("userCart", userCart);
+
+                        if (userCart) {
+                                frequentlyAddedServices.forEach((service, index) => {
+                                        const isInCart = userCart.services.some(cartService =>
+                                                cartService.serviceId.equals(service._id)
+                                        );
+                                        frequentlyAddedServices[index] = {
+                                                ...service.toObject(),
+                                                cartAdded: isInCart,
+                                        };
+                                });
+                        }
+                }
 
                 return res.status(200).json({
                         status: 200,
