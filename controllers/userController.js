@@ -24,6 +24,8 @@ const Category = require("../models/category/Category");
 const MainCategory = require("../models/category/mainCategory");
 const SubCategory = require("../models/category/subCategory");
 const transactionModel = require("../models/transactionModel");
+const DateAndTimeSlot = require('../models/date&TimeSlotModel');
+
 
 
 
@@ -353,7 +355,7 @@ exports.getCart = async (req, res) => {
                                 console.log('Total Original Price:', totalOriginalPrice);
 
                                 if (findCart.totalAmount <= 500) {
-                                        return res.status(400).json({ message: "Cart total amount must be greater than 500.", status: 400, data: {} });
+                                        return res.status(400).json({ status: 400, message: "500", data: { "minimumAmount": 500 } });
                                 }
 
                                 return res.status(200).json({ message: "cart data found.", status: 200, data: { ...findCart.toObject(), totalOriginalPrice } });
@@ -3590,5 +3592,74 @@ exports.getIssueReports = async (req, res) => {
                 return res.status(200).json(issueReports);
         } catch (error) {
                 return res.status(500).json({ error: 'Error fetching issue reports' });
+        }
+};
+
+exports.createDateAndTimeSlot = async (req, res) => {
+        try {
+                const { startTime, endTime, isAvailable } = req.body;
+                const newSlot = new DateAndTimeSlot({ startTime, endTime, isAvailable });
+                const savedSlot = await newSlot.save();
+                res.status(201).json({ status: 201, data: savedSlot });
+        } catch (error) {
+                console.log(error);
+                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+        }
+};
+
+exports.getAllDateAndTimeSlots = async (req, res) => {
+        try {
+                const slots = await DateAndTimeSlot.find();
+                res.status(200).json({ status: 200, data: slots });
+        } catch (error) {
+                console.log(error);
+                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+        }
+};
+
+exports.getDateAndTimeSlotById = async (req, res) => {
+        try {
+                const slot = await DateAndTimeSlot.findById(req.params.id);
+                if (!slot) {
+                        res.status(404).json({ status: 404, error: 'Slot not found' });
+                } else {
+                        res.status(200).json({ status: 200, data: slot });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+        }
+};
+
+exports.updateDateAndTimeSlotById = async (req, res) => {
+        try {
+                const { startTime, endTime, isAvailable } = req.body;
+                const updatedSlot = await DateAndTimeSlot.findByIdAndUpdate(
+                        req.params.id,
+                        { startTime, endTime, isAvailable },
+                        { new: true }
+                );
+                if (!updatedSlot) {
+                        res.status(404).json({ status: 404, error: 'Slot not found' });
+                } else {
+                        res.status(200).json({ status: 200, data: updatedSlot });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+        }
+};
+
+exports.deleteDateAndTimeSlotById = async (req, res) => {
+        try {
+                const deletedSlot = await DateAndTimeSlot.findByIdAndRemove(req.params.id);
+                if (!deletedSlot) {
+                        res.status(404).json({ status: 404, error: 'Slot not found' });
+                } else {
+                        res.status(204).send({ status: 204, message: "deleted sucessfully" });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(500).json({ status: 500, error: 'Internal Server Error' });
         }
 };

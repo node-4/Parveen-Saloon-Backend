@@ -80,10 +80,11 @@ module.exports = (app) => {
         app.get('/api/v1/user/frequently-added-services', [authJwt.verifyToken], auth.getFrequentlyAddedServices);
         app.post('/api/v1/user/orders/:orderId/reportIssue', [authJwt.verifyToken], auth.reportIssue);
         app.get('/api/v1/user/orders/:orderId/reportIssue', [authJwt.verifyToken], auth.getIssueReports);
-
-
-
-
+        app.post('/api/v1/user/cart/dateAndTime', [authJwt.verifyToken], auth.createDateAndTimeSlot);
+        app.get('/api/v1/user/cart/dateAndTime', [authJwt.verifyToken], auth.getAllDateAndTimeSlots);
+        app.get('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.getDateAndTimeSlotById);
+        app.put('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.updateDateAndTimeSlotById);
+        app.delete('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.deleteDateAndTimeSlotById);
 
 
 }
