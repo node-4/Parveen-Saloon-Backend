@@ -25,6 +25,7 @@ const MainCategory = require("../models/category/mainCategory");
 const SubCategory = require("../models/category/subCategory");
 const transactionModel = require("../models/transactionModel");
 const DateAndTimeSlot = require('../models/date&TimeSlotModel');
+const MinimumCart = require('../models/miniumCartAmountModel');
 
 
 
@@ -336,6 +337,38 @@ exports.getFreeServices = async (req, res) => {
         const findFreeService = await freeService.find({ userId: req.user._id }).populate([{ path: 'userId', select: 'fullName firstName lastName' }, { path: 'serviceId' }]);
         return res.status(201).json({ message: "Free Service Found", status: 200, data: findFreeService, });
 };
+// exports.getCart = async (req, res) => {
+//         try {
+//                 let userData = await User.findOne({ _id: req.user._id });
+//                 if (!userData) {
+//                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
+//                 } else {
+//                         let findCart = await Cart.findOne({ userId: userData._id }).populate("coupanId services.serviceId Charges.chargeId").populate({ path: 'freeService.freeServiceId', populate: { path: 'serviceId', model: 'services', select: "title originalPrice totalTime discount discountActive timeInMin" }, })
+//                         if (!findCart) {
+//                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+//                         } else {
+//                                 let totalOriginalPrice = 0;
+//                                 for (const cartItem of findCart.services) {
+//                                         if (cartItem.serviceId.originalPrice) {
+//                                                 totalOriginalPrice += cartItem.serviceId.originalPrice * cartItem.quantity;
+//                                         }
+//                                 }
+//                                 console.log('Total Original Price:', totalOriginalPrice);
+
+//                                 // const isMinimumCartAmount = findCart.totalAmount >= findCart.minimumCartAmount;
+//                                 // if (!isMinimumCartAmount) {
+//                                 //         return res.status(400).json({ status: 400, data: { "Please add more data to placed order minimumAmount": 500, "isMinimumCartAmount": true } });
+//                                 // }
+
+//                                 return res.status(200).json({ message: "cart data found.", status: 200, data: { ...findCart.toObject(), totalOriginalPrice, /*"isMinimumCartAmount": false*/ } });
+//                         }
+//                 }
+//         } catch (error) {
+//                 console.log(error);
+//                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+//         }
+// };
+
 exports.getCart = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
@@ -343,6 +376,9 @@ exports.getCart = async (req, res) => {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
                         let findCart = await Cart.findOne({ userId: userData._id }).populate("coupanId services.serviceId Charges.chargeId").populate({ path: 'freeService.freeServiceId', populate: { path: 'serviceId', model: 'services', select: "title originalPrice totalTime discount discountActive timeInMin" }, })
+
+                        const minimumCart = await MinimumCart.findOne();
+
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
@@ -352,20 +388,55 @@ exports.getCart = async (req, res) => {
                                                 totalOriginalPrice += cartItem.serviceId.originalPrice * cartItem.quantity;
                                         }
                                 }
-                                console.log('Total Original Price:', totalOriginalPrice);
 
-                                if (findCart.totalAmount <= 500) {
-                                        return res.status(400).json({ status: 400, message: "500", data: { "minimumAmount": 500 } });
+                                let totalDiscountActive = 0;
+                                let totalDiscount = 0;
+                                let totalDiscountPrice = 0;
+                                let totalQuantityInCart = 0;
+                                let totalIsInCart = 0;
+
+                                for (const cartItem of findCart.services) {
+                                        if (cartItem.serviceId.discountActive) {
+                                                totalDiscountActive++;
+                                        }
+
+                                        totalDiscount += cartItem.serviceId.discount ? cartItem.serviceId.discount * cartItem.quantity : 0;
+
+                                        if (cartItem.serviceId.discountActive && cartItem.serviceId.discountPrice) {
+                                                totalDiscountPrice += cartItem.serviceId.discountPrice * cartItem.quantity;
+                                        }
+
+                                        totalQuantityInCart += cartItem.quantity;
+                                        totalIsInCart++;
                                 }
 
-                                return res.status(200).json({ message: "cart data found.", status: 200, data: { ...findCart.toObject(), totalOriginalPrice } });
+                                if (findCart.totalAmount <= findCart.minimumCartAmount) {
+                                        return res.status(400).json({ status: 400, data: { "Please add more data to place an order minimumAmount": findCart.minimumCartAmount } });
+                                }
+
+                                return res.status(200).json({
+                                        message: "Cart data found.",
+                                        status: 200,
+                                        data: {
+                                                ...findCart.toObject(),
+                                                totalOriginalPrice,
+                                                totalDiscountActive,
+                                                totalDiscount,
+                                                totalDiscountPrice,
+                                                totalQuantityInCart,
+                                                totalIsInCart,
+                                                minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0
+
+                                        },
+                                });
                         }
                 }
         } catch (error) {
                 console.log(error);
-                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+                return res.status(501).send({ status: 501, message: "Server error.", data: {} });
         }
 };
+
 exports.listOffer = async (req, res) => {
         try {
                 let vendorData = await User.findOne({ _id: req.user._id });

@@ -110,6 +110,7 @@ module.exports = (app) => {
         app.get('/api/v1/admin/referrals/:id', [authJwt.verifyToken], auth.getReferralById);
         app.get('/api/v1/admin/consent-forms', [authJwt.verifyToken], auth.getAllConsentForms);
         app.get('/api/v1/admin/consent-forms/:id', [authJwt.verifyToken], auth.getConsentFormById);
+        app.put('/api/v1/admin/update-minimum-cart-amount', [authJwt.verifyToken], auth.updateMinimumCartAmount);
 
 
 

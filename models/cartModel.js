@@ -167,6 +167,6 @@ const DocumentSchema = schema({
         },
         totalItem: {
                 type: Number
-        },
+        }
 }, { timestamps: true })
 module.exports = mongoose.model("cart", DocumentSchema);

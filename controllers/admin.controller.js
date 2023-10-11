@@ -34,6 +34,7 @@ const Referral = require('../models/refferalModel');
 const ConsentForm = require('../models/consentFormModel');
 const offer = require('../models/offer');
 const Cart = require('../models/cartModel');
+const MinimumCart = require('../models/miniumCartAmountModel');
 
 
 
@@ -2306,4 +2307,46 @@ exports.getConsentFormById = async (req, res) => {
         return res.status(500).json({ error: 'Failed to get consent form' });
     }
 };
+
+
+exports.updateMinimumCartAmount = async (req, res) => {
+    const { newMinimumCartAmount } = req.body;
+
+    try {
+        const updatedCart = await MinimumCart.findOneAndUpdate(
+            {},
+            { minimumCartAmount: newMinimumCartAmount },
+            { new: true, upsert: true }
+        );
+
+        if (!updatedCart) {
+            return res.status(404).json({
+                status: 404,
+                message: "No documents were found for updating.",
+                data: {}
+            });
+        }
+
+        return res.status(200).json({
+            status: 200,
+            message: "Minimum cart amount updated successfully",
+            data: updatedCart
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+            data: {}
+        });
+    }
+};
+
+
+
+
+
+
+
+
 
