@@ -394,6 +394,28 @@ exports.getCart = async (req, res) => {
                                 let totalDiscountPrice = 0;
                                 let totalQuantityInCart = 0;
                                 let totalIsInCart = 0;
+                                let totalHours = 0;
+                                let totalMinutes = 0;
+
+                                const timeSlotsFromCart = {
+                                        startTime: findCart.startTime,
+                                        endTime: findCart.endTime,
+                                };
+                                console.log(timeSlotsFromCart);
+
+                                const matchingTimeSlots = await DateAndTimeSlot.find({
+                                        $and: [
+                                                { isSlotPrice: true },
+                                                timeSlotsFromCart,
+                                        ],
+                                });
+
+                                let totalIsSlotPrice = 0;
+                                for (const slot of matchingTimeSlots) {
+                                        totalIsSlotPrice += slot.slotPrice;
+                                }
+                                findCart.paidAmount += totalIsSlotPrice;
+
 
                                 for (const cartItem of findCart.services) {
                                         if (cartItem.serviceId.discountActive) {
@@ -408,7 +430,20 @@ exports.getCart = async (req, res) => {
 
                                         totalQuantityInCart += cartItem.quantity;
                                         totalIsInCart++;
+
+                                        const timeParts = cartItem.serviceId.totalTime.split(" ");
+                                        const hours = parseInt(timeParts[0]) || 0;
+                                        const minutes = parseInt(timeParts[2]) || 0;
+
+                                        totalHours += hours;
+                                        totalMinutes += minutes;
                                 }
+
+                                const totalHoursString = totalHours > 0 ? `${totalHours} hr` : "";
+                                const totalMinutesString = totalMinutes > 0 ? ` ${totalMinutes} min` : "";
+
+                                const totalTimeTaken = totalHoursString + totalMinutesString;
+
 
                                 if (findCart.totalAmount <= findCart.minimumCartAmount) {
                                         return res.status(400).json({ status: 400, data: { "Please add more data to place an order minimumAmount": findCart.minimumCartAmount } });
@@ -425,8 +460,9 @@ exports.getCart = async (req, res) => {
                                                 totalDiscountPrice,
                                                 totalQuantityInCart,
                                                 totalIsInCart,
-                                                minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0
-
+                                                minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0,
+                                                totalTimeTaken,
+                                                totalIsSlotPrice
                                         },
                                 });
                         }
@@ -2509,40 +2545,128 @@ exports.addAdressToCart = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+// exports.addDateAndTimeToCart = async (req, res) => {
+//         try {
+//                 let userData = await User.findOne({ _id: req.user._id });
+//                 if (!userData) {
+//                         return res.status(404).send({ status: 404, message: "User not found" });
+//                 } else {
+//                         let findCart = await Cart.findOne({ userId: userData._id });
+//                         if (findCart) {
+//                                 if (findCart.services.length == 0) {
+//                                         return res.status(404).send({ status: 404, message: "Your cart have no service found." });
+//                                 } else {
+//                                         const d = new Date(req.body.date);
+//                                         let text = d.toISOString();
+//                                         let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: text, startTime: req.body.startTime, endTime: req.body.endTime } }, { new: true });
+//                                         if (update) {
+//                                                 return res.status(200).send({ status: 200, message: "Date And Time add to Cart successfully.", data: update });
+//                                         }
+//                                 }
+//                         } else {
+//                                 return res.status(404).send({ status: 404, message: "Your cart is not found." });
+//                         }
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
+//         }
+// };
+
 exports.addDateAndTimeToCart = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
+
                 if (!userData) {
                         return res.status(404).send({ status: 404, message: "User not found" });
-                } else {
-                        let findCart = await Cart.findOne({ userId: userData._id });
-                        if (findCart) {
-                                if (findCart.services.length == 0) {
-                                        return res.status(404).send({ status: 404, message: "Your cart have no service found." });
-                                } else {
-                                        const d = new Date(req.body.date);
-                                        let text = d.toISOString();
-                                        let update = await Cart.findByIdAndUpdate({ _id: findCart._id }, { $set: { Date: text, time: req.body.time } }, { new: true });
-                                        if (update) {
-                                                return res.status(200).send({ status: 200, message: "Date And Time add to Cart successfully.", data: update });
-                                        }
-                                }
-                        } else {
-                                return res.status(404).send({ status: 404, message: "Your cart is not found." });
+                }
+
+                let findCart = await Cart.findOne({ userId: userData._id });
+
+                if (findCart) {
+                        if (findCart.services.length === 0) {
+                                return res.status(404).send({ status: 404, message: "Your cart has no services found." });
                         }
+
+                        const d = new Date(req.body.date);
+                        let text = d.toISOString();
+
+                        const isStartTimeValid = await DateAndTimeSlot.findOne({ startTime: req.body.startTime, isAvailable: true });
+                        const isEndTimeValid = await DateAndTimeSlot.findOne({ endTime: req.body.endTime, isAvailable: true });
+
+                        if (!isStartTimeValid || !isEndTimeValid) {
+                                return res.status(400).send({ status: 400, message: "Invalid startTime or endTime. Please select an available time slot." });
+                        }
+
+                        let update = await Cart.findByIdAndUpdate(
+                                { _id: findCart._id },
+                                { $set: { Date: text, startTime: req.body.startTime, endTime: req.body.endTime } },
+                                { new: true }
+                        );
+
+                        if (update) {
+                                return res.status(200).send({ status: 200, message: "Date and Time added to the cart successfully.", data: update });
+                        }
+                } else {
+                        return res.status(404).send({ status: 404, message: "Your cart is not found." });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+                return res.status(500).send({ status: 500, message: "Server error: " + error.message });
         }
 };
+
+// exports.updateDateAndTimeByOrderId = async (req, res) => {
+//         try {
+//                 const orderId = req.body.orderId;
+//                 const newDate = req.body.date;
+//                 const startTime = req.body.startTime;
+//                 const endTime = req.body.endTime;
+
+//                 if (!orderId || !newDate || !startTime || !endTime) {
+//                         return res.status(400).send({ status: 400, message: "Invalid request data." });
+//                 }
+
+//                 let userData = await User.findOne({ _id: req.user._id });
+//                 console.log(userData);
+//                 if (!userData) {
+//                         return res.status(404).send({ status: 404, message: "User not found." });
+//                 }
+
+//                 const findOrder = await Order.findOne({ userId: userData._id, _id: orderId });
+
+//                 if (!findOrder) {
+//                         return res.status(404).send({ status: 404, message: "Order not found for the provided orderId." });
+//                 }
+
+//                 const d = new Date(newDate);
+//                 const text = d.toISOString();
+
+//                 const update = await Order.findByIdAndUpdate(
+//                         { _id: findOrder._id },
+//                         { $set: { Date: text, startTime: startTime, endTime: endTime } },
+//                         { new: true }
+//                 );
+
+//                 if (update) {
+//                         return res.status(200).send({ status: 200, message: "Date and time updated successfully.", data: update });
+//                 } else {
+//                         return res.status(500).send({ status: 500, message: "Failed to update date and time." });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).send({ status: 500, message: "Server error: " + error.message });
+//         }
+// };
+
 exports.updateDateAndTimeByOrderId = async (req, res) => {
         try {
                 const orderId = req.body.orderId;
                 const newDate = req.body.date;
-                const newTime = req.body.time;
+                const startTime = req.body.startTime;
+                const endTime = req.body.endTime;
 
-                if (!orderId || !newDate || !newTime) {
+                if (!orderId || !newDate || !startTime || !endTime) {
                         return res.status(400).send({ status: 400, message: "Invalid request data." });
                 }
 
@@ -2558,12 +2682,19 @@ exports.updateDateAndTimeByOrderId = async (req, res) => {
                         return res.status(404).send({ status: 404, message: "Order not found for the provided orderId." });
                 }
 
+                const isStartTimeValid = await DateAndTimeSlot.findOne({ startTime, isAvailable: true });
+                const isEndTimeValid = await DateAndTimeSlot.findOne({ endTime, isAvailable: true });
+
+                if (!isStartTimeValid || !isEndTimeValid) {
+                        return res.status(400).send({ status: 400, message: "Please select an available time slot." });
+                }
+
                 const d = new Date(newDate);
                 const text = d.toISOString();
 
                 const update = await Order.findByIdAndUpdate(
                         { _id: findOrder._id },
-                        { $set: { Date: text, time: newTime } },
+                        { $set: { Date: text, startTime: startTime, endTime: endTime } },
                         { new: true }
                 );
 
@@ -2577,6 +2708,8 @@ exports.updateDateAndTimeByOrderId = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error: " + error.message });
         }
 };
+
+
 exports.checkout = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
@@ -2587,6 +2720,21 @@ exports.checkout = async (req, res) => {
                         if (!findCart) {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
+                                const matchingTimeSlots = await DateAndTimeSlot.find({
+                                        $and: [
+                                                { isSlotPrice: true },
+                                                { startTime: findCart.startTime, endTime: findCart.endTime },
+                                        ],
+                                });
+
+                                let totalIsSlotPrice = 0;
+                                for (const slot of matchingTimeSlots) {
+                                        totalIsSlotPrice += slot.slotPrice;
+                                }
+
+                                findCart.paidAmount += totalIsSlotPrice;
+
+
                                 let orderId = await reffralCode()
                                 let obj = {
                                         orderId: orderId,
@@ -2610,7 +2758,8 @@ exports.checkout = async (req, res) => {
                                         landMark: findCart.landMark,
                                         street: findCart.street,
                                         Date: findCart.Date,
-                                        time: findCart.time,
+                                        startTime: findCart.startTime,
+                                        endTime: findCart.endTime,
                                         services: findCart.services,
                                         totalAmount: findCart.totalAmount,
                                         additionalFee: findCart.additionalFee,
@@ -3666,25 +3815,32 @@ exports.getIssueReports = async (req, res) => {
         }
 };
 
-exports.createDateAndTimeSlot = async (req, res) => {
+
+exports.createDateTimeSlot = async (req, res) => {
         try {
-                const { startTime, endTime, isAvailable } = req.body;
-                const newSlot = new DateAndTimeSlot({ startTime, endTime, isAvailable });
-                const savedSlot = await newSlot.save();
-                res.status(201).json({ status: 201, data: savedSlot });
+                const { startTime, endTime, slotPrice, isSlotPrice, isAvailable } = req.body;
+                const dateTimeSlot = new DateAndTimeSlot({
+                        startTime,
+                        endTime,
+                        slotPrice,
+                        isSlotPrice,
+                        isAvailable,
+                });
+                await dateTimeSlot.save();
+                res.status(201).json(dateTimeSlot);
         } catch (error) {
-                console.log(error);
-                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+                console.error(error);
+                res.status(500).json({ error: 'Failed to create date and time slot.' });
         }
 };
 
-exports.getAllDateAndTimeSlots = async (req, res) => {
+exports.getAllDateTimeSlots = async (req, res) => {
         try {
-                const slots = await DateAndTimeSlot.find();
-                res.status(200).json({ status: 200, data: slots });
+                const dateAndTimeSlots = await DateAndTimeSlot.find();
+                res.json(dateAndTimeSlots);
         } catch (error) {
-                console.log(error);
-                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+                console.error(error);
+                res.status(500).json({ error: 'Failed to fetch date and time slots.' });
         }
 };
 
@@ -3702,35 +3858,39 @@ exports.getDateAndTimeSlotById = async (req, res) => {
         }
 };
 
-exports.updateDateAndTimeSlotById = async (req, res) => {
+exports.updateDateTimeSlot = async (req, res) => {
         try {
-                const { startTime, endTime, isAvailable } = req.body;
-                const updatedSlot = await DateAndTimeSlot.findByIdAndUpdate(
+                const { startTime, endTime, slotPrice, isSlotPrice, isAvailable } = req.body;
+                const updatedDateTimeSlot = await DateAndTimeSlot.findByIdAndUpdate(
                         req.params.id,
-                        { startTime, endTime, isAvailable },
+                        {
+                                startTime,
+                                endTime,
+                                slotPrice,
+                                isSlotPrice,
+                                isAvailable,
+                        },
                         { new: true }
                 );
-                if (!updatedSlot) {
-                        res.status(404).json({ status: 404, error: 'Slot not found' });
-                } else {
-                        res.status(200).json({ status: 200, data: updatedSlot });
+                if (!updatedDateTimeSlot) {
+                        return res.status(404).json({ error: 'Date and time slot not found.' });
                 }
+                res.json(updatedDateTimeSlot);
         } catch (error) {
-                console.log(error);
-                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+                console.error(error);
+                res.status(500).json({ error: 'Failed to update date and time slot.' });
         }
 };
 
-exports.deleteDateAndTimeSlotById = async (req, res) => {
+exports.deleteDateTimeSlot = async (req, res) => {
         try {
-                const deletedSlot = await DateAndTimeSlot.findByIdAndRemove(req.params.id);
-                if (!deletedSlot) {
-                        res.status(404).json({ status: 404, error: 'Slot not found' });
-                } else {
-                        res.status(204).send({ status: 204, message: "deleted sucessfully" });
+                const deletedDateTimeSlot = await DateAndTimeSlot.findByIdAndRemove(req.params.id);
+                if (!deletedDateTimeSlot) {
+                        return res.status(404).json({ error: 'Date and time slot not found.' });
                 }
+                res.json({ message: 'Date and time slot deleted successfully.' });
         } catch (error) {
-                console.log(error);
-                res.status(500).json({ status: 500, error: 'Internal Server Error' });
+                console.error(error);
+                res.status(500).json({ error: 'Failed to delete date and time slot.' });
         }
 };

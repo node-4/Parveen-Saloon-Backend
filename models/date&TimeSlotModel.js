@@ -13,6 +13,14 @@ const dateAndTimeSlotSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    slotPrice: {
+        type: Number,
+        default: 0,
+    },
+    isSlotPrice: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
 const DateAndTimeSlot = mongoose.model('DateAndTimeSlot', dateAndTimeSlotSchema);

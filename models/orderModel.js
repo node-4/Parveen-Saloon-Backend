@@ -117,7 +117,10 @@ const DocumentSchema = schema({
         Date: {
                 type: Date
         },
-        time: {
+        startTime: {
+                type: String
+        },
+        endTime: {
                 type: String
         },
         services: [{
