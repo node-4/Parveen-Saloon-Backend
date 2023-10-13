@@ -2781,11 +2781,14 @@ exports.placeOrder = async (req, res) => {
         try {
                 let findUserOrder = await orderModel.findOne({ orderId: req.params.orderId });
                 if (findUserOrder) {
-                        if (req.body.paymentStatus == "paid") {
-                                let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "confirmed", status: "confirmed", paymentStatus: "paid" } }, { new: true });
+                        if (req.body.paymentStatus == "Paid") {
+                                let update = await orderModel.findByIdAndUpdate({ _id: findUserOrder._id }, { $set: { orderStatus: "confirmed", status: "confirmed", paymentStatus: "Paid" } }, { new: true });
+
+                                await Cart.deleteOne({ userId: findUserOrder.userId });
+
                                 return res.status(200).json({ message: "Payment success.", status: 200, data: update });
                         }
-                        if (req.body.paymentStatus == "failed") {
+                        if (req.body.paymentStatus == "Failed") {
                                 return res.status(201).json({ message: "Payment failed.", status: 201, orderId: orderId });
                         }
                 } else {
