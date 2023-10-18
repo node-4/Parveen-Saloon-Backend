@@ -50,10 +50,12 @@ module.exports = (app) => {
         app.delete("/api/v1/admin/mainCategory/deleteCategory/:id", [authJwt.verifyToken], auth.removeMainCategory);
         app.post("/api/v1/admin/Category/createCategory", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.createCategory);
         app.get("/api/v1/admin/Category/allCategory/:categoryId", auth.getCategories);
+        app.get("/api/v1/admin/Category/getAllCategory", auth.getAllCategories);
         app.put("/api/v1/admin/Category/update/:id", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.updateCategory);
         app.delete("/api/v1/admin/Category/delete/:id", [authJwt.verifyToken], auth.removeCategory);
         app.post("/api/v1/admin/SubCategory/createCategory", [authJwt.verifyToken], auth.createSubCategory);
         app.get("/api/v1/admin/SubCategory/:categoryId/:subCategoryId", auth.getSubCategories);
+        app.get("/api/v1/admin/getAllSubCategories", auth.getAllSubCategories);
         app.put("/api/v1/admin/SubCategory/update/:id", [authJwt.verifyToken], auth.updateSubCategory);
         app.delete("/api/v1/admin/SubCategory/delete/:id", [authJwt.verifyToken], auth.removeSubCategory);
         app.post("/api/v1/admin/ItemSubCategory/createCategory", [authJwt.verifyToken], auth.createItemSubCategory);
@@ -66,6 +68,7 @@ module.exports = (app) => {
         app.delete("/api/v1/admin/Item/delete/:id", [authJwt.verifyToken], auth.removeItem);
         app.post("/api/v1/admin/Service/addService", [authJwt.verifyToken], serviceUpload.array('image'), auth.createService);
         app.get("/api/v1/admin/Service/:mainCategoryId/:categoryId/:subCategoryId", [authJwt.verifyToken], auth.getService);
+        app.get("/api/v1/admin/Service/getAllService", [authJwt.verifyToken], auth.getAllService);
         app.delete("/api/v1/admin/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
         app.post("/api/v1/admin/Offer/addOffer", [authJwt.verifyToken], offerUpload.single('image'), auth.addOffer);
         app.get("/api/v1/admin/Offer/listOffer", [authJwt.verifyToken], auth.listOffer);

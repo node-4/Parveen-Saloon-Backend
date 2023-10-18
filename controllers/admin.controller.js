@@ -668,7 +668,7 @@ exports.createMainCategory = async (req, res) => {
             if (req.file) {
                 fileUrl = req.file ? req.file.path : "";
             }
-            const data = { name: req.body.name, image: fileUrl };
+            const data = { name: req.body.name, image: fileUrl, status: req.body.status, notice: req.body.notice, };
             const category = await mainCategory.create(data);
             return res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
         }
@@ -692,6 +692,8 @@ exports.updateMainCategory = async (req, res) => {
     }
     category.image = fileUrl || category.image;
     category.name = req.body.name || category.name;
+    category.status = req.body.status || category.status;
+    category.notice = req.body.notice || category.notice;
     let update = await category.save();
     return res.status(200).json({ message: "Updated Successfully", data: update });
 };
@@ -719,7 +721,7 @@ exports.createCategory = async (req, res) => {
                 if (req.file) {
                     fileUrl = req.file ? req.file.path : "";
                 }
-                const data = { name: req.body.name, categoryId: findCategory._id, image: fileUrl };
+                const data = { name: req.body.name, categoryId: findCategory._id, status: req.body.status, notice: req.body.notice, image: fileUrl };
                 const category = await Category.create(data);
                 return res.status(200).json({ message: "Service Category add successfully.", status: 200, data: category });
             }
@@ -734,7 +736,7 @@ exports.getCategories = async (req, res) => {
     if (!findCategory) {
         return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
     } else {
-        let findSubCategory = await Category.find({ categoryId: findCategory._id })
+        let findSubCategory = await Category.find({ categoryId: findCategory._id }).populate('categoryId', 'name')
         if (findSubCategory.length > 0) {
             return res.status(200).json({ message: "Sub Category Found", status: 200, data: findSubCategory, });
         } else {
@@ -742,6 +744,14 @@ exports.getCategories = async (req, res) => {
         }
     }
 };
+exports.getAllCategories = async (req, res) => {
+    let findSubCategory = await Category.find().populate('categoryId', 'name')
+    if (findSubCategory.length > 0) {
+        return res.status(200).json({ message: "Sub Category Found", status: 200, data: findSubCategory, });
+    } else {
+        return res.status(201).json({ message: "Sub Category not Found", status: 404, data: {}, });
+    }
+}
 exports.updateCategory = async (req, res) => {
     const { id } = req.params;
     const findSubCategory = await Category.findById(id);
@@ -761,7 +771,9 @@ exports.updateCategory = async (req, res) => {
     let obj = {
         name: req.body.name || findSubCategory.name,
         categoryId: req.body.categoryId || findSubCategory.categoryId,
-        image: fileUrl || findSubCategory.image
+        image: fileUrl || findSubCategory.image,
+        status: req.body.status || findSubCategory.status,
+        notice: req.body.notice || findSubCategory.notice
     }
     let update = await Category.findByIdAndUpdate({ _id: findSubCategory._id }, { $set: obj }, { new: true });
     return res.status(200).json({ message: "Updated Successfully", data: update });
@@ -790,7 +802,7 @@ exports.createSubCategory = async (req, res) => {
                 if (findSubCategory) {
                     return res.status(409).json({ message: "Sub Category already exit.", status: 404, data: {} });
                 } else {
-                    const data = { mainCategoryId: findMainCategory._id, categoryId: findCategory._id, name: req.body.name };
+                    const data = { mainCategoryId: findMainCategory._id, categoryId: findCategory._id, name: req.body.name, status: req.body.status };
                     const category = await subCategory.create(data);
                     return res.status(200).json({ message: "Sub Category add successfully.", status: 200, data: category });
                 }
@@ -809,13 +821,21 @@ exports.getSubCategories = async (req, res) => {
         if (!findCategory) {
             return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
         } else {
-            let findSubCategory = await subCategory.find({ mainCategoryId: findMainCategory._id, categoryId: findCategory._id, })
+            let findSubCategory = await subCategory.find({ mainCategoryId: findMainCategory._id, categoryId: findCategory._id, }).populate('mainCategoryId', 'name').populate('categoryId', 'name')
             if (findSubCategory.length > 0) {
                 return res.status(200).json({ message: "Sub Category Found", status: 200, data: findSubCategory, });
             } else {
                 return res.status(201).json({ message: "Sub Category not Found", status: 404, data: {}, });
             }
         }
+    }
+};
+exports.getAllSubCategories = async (req, res) => {
+    let findSubCategory = await subCategory.find().populate('mainCategoryId', 'name').populate('categoryId', 'name')
+    if (findSubCategory.length > 0) {
+        return res.status(200).json({ message: "Sub Category Found", status: 200, data: findSubCategory, });
+    } else {
+        return res.status(201).json({ message: "Sub Category not Found", status: 404, data: {}, });
     }
 };
 exports.updateSubCategory = async (req, res) => {
@@ -840,6 +860,7 @@ exports.updateSubCategory = async (req, res) => {
         name: req.body.name || findSubCategory.name,
         mainCategoryId: req.body.mainCategoryId || findSubCategory.mainCategoryId,
         categoryId: req.body.categoryId || findSubCategory.categoryId,
+        status: req.body.status || findSubCategory.status,
     }
     let update = await subCategory.findByIdAndUpdate({ _id: findSubCategory._id }, { $set: obj }, { new: true });
     return res.status(200).json({ message: "Updated Successfully", data: update });
@@ -1537,7 +1558,24 @@ exports.getService = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
+exports.getAllService = async (req, res) => {
+    try {
+        const findService = await service.find().populate('mainCategoryId', 'name').populate('categoryId', 'name').populate('subCategoryId', 'name');
 
+        if (findService.length > 0) {
+            return res.status(200).json({
+                message: "Services found.",
+                status: 200,
+                data: findService,
+            });
+        } else {
+            return res.status(44).json({ message: "Services not found.", status: 404, data: {} });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
+    }
+};
 exports.removeService = async (req, res) => {
     const { id } = req.params;
     const category = await service.findById(id);

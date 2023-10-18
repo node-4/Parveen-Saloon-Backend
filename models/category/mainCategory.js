@@ -20,6 +20,9 @@ const categorySchema = schema({
         type: Boolean,
         default: true
     },
+    notice: {
+        type: String
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model("mainCategory", categorySchema);
