@@ -19,6 +19,10 @@ var storeSchema = new schema({
                 type: schema.Types.ObjectId,
                 ref: "servicePackage"
         }],
+        serviceTypes: [{
+                type: schema.Types.ObjectId,
+                ref: "ServiceTypeRef"
+        }],
         title: {
                 type: String
         },

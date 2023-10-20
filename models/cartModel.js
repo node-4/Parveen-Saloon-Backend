@@ -111,6 +111,10 @@ const DocumentSchema = schema({
                         type: schema.Types.ObjectId,
                         ref: "services"
                 },
+                serviceType: {
+                        type: schema.Types.ObjectId,
+                        ref: "ServiceType"
+                },
                 categoryId: {
                         type: schema.Types.ObjectId,
                         ref: "Category"
@@ -119,6 +123,10 @@ const DocumentSchema = schema({
                         service: {
                                 type: schema.Types.ObjectId,
                                 ref: "services"
+                        },
+                        serviceType: {
+                                type: schema.Types.ObjectId,
+                                ref: "ServiceType"
                         },
                         price: {
                                 type: Number

@@ -1291,6 +1291,9 @@ exports.addToCartSingleService = async (req, res) => {
                                 if (req.body.quantity <= 0) {
                                         return res.status(400).json({ status: 400, message: "Quantity must be a greater than 0 number." });
                                 }
+
+                                const serviceTypeId = req.body.serviceTypeId;
+
                                 if (existingService) {
                                         existingService.quantity += req.body.quantity;
                                         existingService.total = existingService.price * existingService.quantity;
@@ -1308,6 +1311,8 @@ exports.addToCartSingleService = async (req, res) => {
                                                 // type: "Service"
                                                 type: findService.type,
                                                 packageType: findService.packageType,
+                                                serviceTypeId: serviceTypeId,
+
                                         };
                                         findCart.services.push(newService);
                                         findCart.totalAmount += newService.total;

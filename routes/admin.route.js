@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType } = require('../middlewares/imageUpload')
 module.exports = (app) => {
         app.post("/api/v1/admin/registration", auth.registration);
         app.post("/api/v1/admin/login", auth.signin);
@@ -114,6 +114,12 @@ module.exports = (app) => {
         app.get('/api/v1/admin/consent-forms', [authJwt.verifyToken], auth.getAllConsentForms);
         app.get('/api/v1/admin/consent-forms/:id', [authJwt.verifyToken], auth.getConsentFormById);
         app.put('/api/v1/admin/update-minimum-cart-amount', [authJwt.verifyToken], auth.updateMinimumCartAmount);
+        app.post("/api/v1/admin/serviceTypes", [authJwt.verifyToken], serviceType.single('image'), auth.createServiceType);
+        app.get("/api/v1/admin/serviceTypes", [authJwt.verifyToken], auth.getAllServiceTypes);
+        app.get("/api/v1/admin/serviceTypes/:serviceTypeId", [authJwt.verifyToken], auth.getServiceTypeById);
+        app.put("/api/v1/admin/serviceTypes/:serviceTypeId", [authJwt.verifyToken], serviceType.single('image'), auth.updateServiceType);
+        app.delete("/api/v1/admin/serviceTypes/:serviceTypeId", [authJwt.verifyToken], auth.deleteServiceType);
+
 
 
 
