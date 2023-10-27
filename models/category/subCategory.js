@@ -13,6 +13,15 @@ const categorySchema = schema({
     name: {
         type: String
     },
+    image: {
+        type: String
+    },
+    colourPicker: {
+        type: String
+    },
+    description: {
+        type: String
+    },
     status: {
         type: Boolean,
         default: true

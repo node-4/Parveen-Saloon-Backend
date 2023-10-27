@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType, subCategory } = require('../middlewares/imageUpload')
 module.exports = (app) => {
         app.post("/api/v1/admin/registration", auth.registration);
         app.post("/api/v1/admin/login", auth.signin);
@@ -53,10 +53,10 @@ module.exports = (app) => {
         app.get("/api/v1/admin/Category/getAllCategory", auth.getAllCategories);
         app.put("/api/v1/admin/Category/update/:id", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.updateCategory);
         app.delete("/api/v1/admin/Category/delete/:id", [authJwt.verifyToken], auth.removeCategory);
-        app.post("/api/v1/admin/SubCategory/createCategory", [authJwt.verifyToken], auth.createSubCategory);
+        app.post("/api/v1/admin/SubCategory/createCategory", [authJwt.verifyToken], subCategory.single('image'), auth.createSubCategory);
         app.get("/api/v1/admin/SubCategory/:categoryId/:subCategoryId", auth.getSubCategories);
         app.get("/api/v1/admin/getAllSubCategories", auth.getAllSubCategories);
-        app.put("/api/v1/admin/SubCategory/update/:id", [authJwt.verifyToken], auth.updateSubCategory);
+        app.put("/api/v1/admin/SubCategory/update/:id", [authJwt.verifyToken], subCategory.single('image'), auth.updateSubCategory);
         app.delete("/api/v1/admin/SubCategory/delete/:id", [authJwt.verifyToken], auth.removeSubCategory);
         app.post("/api/v1/admin/ItemSubCategory/createCategory", [authJwt.verifyToken], auth.createItemSubCategory);
         app.get("/api/v1/admin/ItemSubCategory/:categoryId", auth.getItemSubCategories);

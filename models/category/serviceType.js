@@ -2,7 +2,10 @@ const mongoose = require("mongoose");
 
 const schema = mongoose.Schema;
 const serviceTypeSchema = schema({
-    
+    mainCategoryId: {
+        type: schema.Types.ObjectId,
+        ref: "mainCategory"
+    },
     name: {
         type: String
     },
@@ -12,9 +15,6 @@ const serviceTypeSchema = schema({
     status: {
         type: Boolean,
         default: true
-    },
-    notice: {
-        type: String
     },
 }, { timestamps: true });
 

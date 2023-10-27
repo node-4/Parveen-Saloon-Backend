@@ -805,7 +805,11 @@ exports.createSubCategory = async (req, res) => {
                 if (findSubCategory) {
                     return res.status(409).json({ message: "Sub Category already exit.", status: 404, data: {} });
                 } else {
-                    const data = { mainCategoryId: findMainCategory._id, categoryId: findCategory._id, name: req.body.name, status: req.body.status };
+                    let fileUrl;
+                    if (req.file) {
+                        fileUrl = req.file ? req.file.path : "";
+                    }
+                    const data = { mainCategoryId: findMainCategory._id, categoryId: findCategory._id, name: req.body.name, image: fileUrl, description: req.body.description, colourPicker: req.body.colourPicker, status: req.body.status };
                     const category = await subCategory.create(data);
                     return res.status(200).json({ message: "Sub Category add successfully.", status: 200, data: category });
                 }
@@ -859,11 +863,19 @@ exports.updateSubCategory = async (req, res) => {
             return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
         }
     }
+    let fileUrl;
+    if (req.file) {
+        fileUrl = req.file ? req.file.path : "";
+    }
     let obj = {
         name: req.body.name || findSubCategory.name,
         mainCategoryId: req.body.mainCategoryId || findSubCategory.mainCategoryId,
         categoryId: req.body.categoryId || findSubCategory.categoryId,
         status: req.body.status || findSubCategory.status,
+        colourPicker: req.body.colourPicker || findSubCategory.colourPicker,
+        description: req.body.description || findSubCategory.description,
+        image: fileUrl || findSubCategory.image, 
+   
     }
     let update = await subCategory.findByIdAndUpdate({ _id: findSubCategory._id }, { $set: obj }, { new: true });
     return res.status(200).json({ message: "Updated Successfully", data: update });
@@ -1473,7 +1485,7 @@ exports.createService = async (req, res) => {
                 return res.status(409).json({ message: "Service already exists.", status: 409, data: {} });
             }
         }
-        let discountPrice = 0, discount = 0, totalTime;
+        let discountPrice, originalPrice, discount = 0, totalTime;
         if (req.body.timeInMin > 60) {
             const hours = Math.floor(req.body.timeInMin / 60);
             const minutes = req.body.timeInMin % 60;
@@ -1482,9 +1494,19 @@ exports.createService = async (req, res) => {
             const minutes = req.body.timeInMin % 60;
             totalTime = `00 hr ${minutes} min`;
         }
+        // if (req.body.discountActive === "true") {
+        //     discount  = Number(req.body.originalPrice - (req.body.discountPrice * req.body.originalPrice) * 100).toFixed();
+        //     discount = Math.max(discount, 0);
+        // }
         if (req.body.discountActive === "true") {
-            discountPrice = Number(req.body.originalPrice - (req.body.originalPrice * req.body.discount) / 100).toFixed();
-            discount = req.body.discount;
+            originalPrice = req.body.originalPrice;
+            discountPrice = req.body.discountPrice;
+
+            if (originalPrice && discountPrice) {
+                discount = ((originalPrice - discountPrice) / originalPrice) * 100;
+                discount = Math.max(discount, 0);
+                discount = Math.round(discount);
+            }
         }
         let images = [];
         if (req.files) {
@@ -2579,13 +2601,22 @@ exports.updateMinimumCartAmount = async (req, res) => {
 
 exports.createServiceType = async (req, res) => {
     try {
-        const { name, status, notice } = req.body;
+        const { mainCategoryId, name, status } = req.body;
         let fileUrl;
         if (req.file) {
             fileUrl = req.file ? req.file.path : "";
         }
 
-        const serviceType = new ServiceType({ name, status, image: fileUrl, notice });
+        const checkMainCategory = await mainCategory.findById(mainCategoryId);
+        if (!checkMainCategory) {
+            return res.status(404).json({
+                status: 404,
+                message: "Main Category not found",
+                data: {},
+            });
+        }
+
+        const serviceType = new ServiceType({ mainCategoryId, name, status, image: fileUrl });
         const result = await serviceType.save();
 
         if (!result) {
@@ -2676,16 +2707,27 @@ exports.updateServiceType = async (req, res) => {
         fileUrl = req.file ? req.file.path : "";
     }
 
+    const { name, status, mainCategoryId } = req.body;
+
+    const findMainCategory = await mainCategory.findById(mainCategoryId);
+    if (!findMainCategory) {
+        return res.status(404).json({
+            status: 404,
+            message: "Main Category Not Found",
+            data: {},
+        });
+    }
+
     let obj = {
-        name: req.body.name || findServiceType.name,
+        mainCategoryId: findMainCategory._id,
+        name: name || findServiceType.name,
         image: fileUrl || findServiceType.image,
-        status: req.body.status || findServiceType.status,
-        notice: req.body.notice || findServiceType.notice,
+        status: status || findServiceType.status,
     };
 
     try {
         const result = await ServiceType.findByIdAndUpdate(
-            serviceTypeId,
+            { _id: serviceTypeId },
             { $set: obj },
             { new: true }
         );
