@@ -11,18 +11,18 @@ var storeSchema = new schema({
                 type: schema.Types.ObjectId,
                 ref: "Category"
         },
-        subCategoryId: {
+        subCategoryId: [{
                 type: schema.Types.ObjectId,
                 ref: "subCategory"
-        },
+        }],
         servicePackageId: [{
                 type: schema.Types.ObjectId,
                 ref: "servicePackage"
         }],
-        serviceTypes: [{
+        serviceTypes: {
                 type: schema.Types.ObjectId,
                 ref: "ServiceTypeRef"
-        }],
+        },
         title: {
                 type: String
         },
