@@ -37,6 +37,8 @@ const Cart = require('../models/cartModel');
 const MinimumCart = require('../models/miniumCartAmountModel');
 const ServiceType = require("../models/category/serviceType");
 const ServiceTypeRef = require("../models/servicetypeRef");
+const City = require('../models/cityModel');
+const Area = require('../models/areaModel');
 
 
 
@@ -168,35 +170,85 @@ exports.removeBrand = async (req, res) => {
         return res.status(200).json({ message: "Brand Deleted Successfully !" });
     }
 };
+// exports.AddBanner = async (req, res) => {
+//     try {
+//         let fileUrl;
+//         if (req.file) {
+//             fileUrl = req.file ? req.file.path : "";
+//         }
+//         req.body.categoryId = req.body.categoryId;
+//         req.body.image = fileUrl;
+//         req.body.desc = req.body.desc;
+//         req.body.position = req.body.position;
+//         const Data = await banner.create(req.body);
+//         return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
+//     } catch (err) {
+//         console.log(err);
+//         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+//     }
+// };
+
 exports.AddBanner = async (req, res) => {
     try {
         let fileUrl;
         if (req.file) {
-            fileUrl = req.file ? req.file.path : "";
+            fileUrl = req.file.path;
         }
-        req.body.categoryId = req.body.categoryId;
-        req.body.image = fileUrl;
-        req.body.desc = req.body.desc;
-        req.body.position = req.body.position;
-        const Data = await banner.create(req.body);
-        return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
+
+        const position = req.body.position;
+
+        const existingBanners = await banner.find({ position });
+        const order = existingBanners.length + 1;
+
+        const Data = await banner.create({
+            mainCategoryId: req.body.mainCategoryId,
+            categoryId: req.body.categoryId,
+            subCategoryId: req.body.subCategoryId,
+            servicesId: req.body.servicesId,
+            image: fileUrl,
+            colour: req.body.colour,
+            position: position,
+            type: req.body.type,
+            desc: req.body.desc,
+            status: req.body.status,
+        });
+
+        return res.status(200).json({ status: 200, message: "Banner is Added", data: order, Data });
     } catch (err) {
         console.log(err);
-        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        return res.status(501).send({ status: 501, message: "Server error.", data: {} });
     }
 };
+
+// exports.getBanner = async (req, res) => {
+//     try {
+//         const Banner = await banner.find();
+//         if (Banner.length == 0) {
+//             return res.status(404).json({ status: 404, message: "No data found", data: {} });
+//         }
+//         return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
+//     } catch (err) {
+//         console.log(err);
+//         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+//     }
+// };
+
 exports.getBanner = async (req, res) => {
     try {
-        const Banner = await banner.find();
-        if (Banner.length == 0) {
-            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        const banners = await banner.find().sort({ position: 1 });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
         }
-        return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
     } catch (err) {
-        console.log(err);
-        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
     }
 };
+
+
 exports.getBannerByPosition = async (req, res) => {
     try {
         const position = req.query.position;
@@ -2976,6 +3028,270 @@ exports.deleteServiceType = async (req, res) => {
             message: "Internal server error",
             data: {},
         });
+    }
+};
+
+
+exports.createCity = async (req, res) => {
+    try {
+        const { name, status } = req.body;
+
+        const existingCity = await City.findOne({ name });
+
+        if (existingCity) {
+            return res.status(400).json({
+                status: 400,
+                message: 'City with the same name already exists',
+            });
+        }
+
+        const newCity = new City({ name, status });
+
+        const savedCity = await newCity.save();
+
+        res.status(201).json({
+            status: 201,
+            message: 'City created successfully',
+            data: savedCity,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getAllCities = async (req, res) => {
+    try {
+        const cities = await City.find();
+
+        res.status(200).json({
+            status: 200,
+            message: 'Cities retrieved successfully',
+            data: cities,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getCityById = async (req, res) => {
+    try {
+        const city = await City.findById(req.params.id);
+
+        if (!city) {
+            return res.status(404).json({ message: 'City not found' });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: 'City retrieved successfully',
+            data: city,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateCityById = async (req, res) => {
+    try {
+        const { name, status } = req.body;
+        const cityId = req.params.id;
+
+        const existingCity = await City.findById(cityId);
+
+        if (!existingCity) {
+            return res.status(404).json({
+                status: 404,
+                message: 'City not found',
+            });
+        }
+
+        if (name && name !== existingCity.name) {
+            const duplicateCity = await City.findOne({ name });
+
+            if (duplicateCity) {
+                return res.status(400).json({
+                    status: 400,
+                    message: 'City with the updated name already exists',
+                });
+            }
+        }
+
+        existingCity.name = name || existingCity.name;
+
+        if (req.body.status !== undefined) {
+            existingCity.status = status;
+        }
+
+        const updatedCity = await existingCity.save();
+
+        res.status(200).json({
+            status: 200,
+            message: 'City updated successfully',
+            data: updatedCity,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.deleteCityById = async (req, res) => {
+    try {
+        const deletedCity = await City.findByIdAndDelete(req.params.id);
+
+        if (!deletedCity) {
+            return res.status(404).json({ message: 'City not found' });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: 'City deleted successfully',
+            data: deletedCity,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.createArea = async (req, res) => {
+    try {
+        const { name, status, cityId } = req.body;
+
+        const existingCity = await City.findById(cityId);
+
+        if (!existingCity) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid city ID',
+            });
+        }
+
+        const existingArea = await Area.findOne({ name, city: cityId });
+
+        if (existingArea) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Area with the same name already exists in the specified city',
+            });
+        }
+
+        const newArea = new Area({
+            name,
+            city: cityId,
+            status
+        });
+
+        const savedArea = await newArea.save();
+
+        res.status(201).json({
+            status: 201,
+            message: 'Area created successfully',
+            data: savedArea,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getAllAreas = async (req, res) => {
+    try {
+        const areas = await Area.find().populate('city');
+
+        res.status(200).json({
+            status: 200,
+            message: 'Areas retrieved successfully',
+            data: areas,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getAreaById = async (req, res) => {
+    try {
+        const area = await Area.findById(req.params.id).populate('city');
+
+        if (!area) {
+            return res.status(404).json({ message: 'Area not found' });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: 'Area retrieved successfully',
+            data: area,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateAreaById = async (req, res) => {
+    try {
+        const { name, cityId, status } = req.body;
+
+        const existingCity = await City.findById(cityId);
+
+        if (!existingCity) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid city ID',
+            });
+        }
+
+        const existingArea = await Area.findOne({ name, city: cityId });
+
+        if (existingArea) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Area with the same name already exists in the specified city',
+            });
+        }
+
+        const updatedArea = await Area.findByIdAndUpdate(
+            req.params.id,
+            { name, city: cityId, status },
+            { new: true }
+        );
+
+        if (!updatedArea) {
+            return res.status(404).json({ message: 'Area not found' });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: 'Area updated successfully',
+            data: updatedArea,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+exports.deleteAreaById = async (req, res) => {
+    try {
+        const deletedArea = await Area.findByIdAndDelete(req.params.id);
+
+        if (!deletedArea) {
+            return res.status(404).json({ message: 'Area not found' });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: 'Area deleted successfully',
+            data: deletedArea,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 

@@ -26,6 +26,10 @@ const SubCategory = require("../models/category/subCategory");
 const transactionModel = require("../models/transactionModel");
 const DateAndTimeSlot = require('../models/date&TimeSlotModel');
 const MinimumCart = require('../models/miniumCartAmountModel');
+const City = require('../models/cityModel');
+const Area = require('../models/areaModel');
+
+
 
 
 
@@ -36,7 +40,8 @@ exports.registration = async (req, res) => {
                 if (user) {
                         if (req.body.refferalCode == null || req.body.refferalCode == undefined) {
                                 req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-                                req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                // req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                req.body.otpExpiration = new Date(Date.now() + 30 * 1000);
                                 req.body.accountVerification = false;
                                 req.body.refferalCode = await reffralCode();
                                 req.body.completeProfile = true;
@@ -47,7 +52,8 @@ exports.registration = async (req, res) => {
                                 const findUser = await User.findOne({ refferalCode: req.body.refferalCode });
                                 if (findUser) {
                                         req.body.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-                                        req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                        // req.body.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                                        req.body.otpExpiration = new Date(Date.now() + 30 * 1000);
                                         req.body.accountVerification = false;
                                         req.body.userType = "USER";
                                         req.body.refferalCode = await reffralCode();
@@ -106,10 +112,16 @@ exports.socialLogin = async (req, res) => {
 exports.loginWithPhone = async (req, res) => {
         try {
                 const { phone } = req.body;
+
+                if (phone.replace(/\D/g, '').length !== 10) {
+                        return res.status(400).send({ status: 400, message: "Invalid phone number length" });
+                }
+
                 const user = await User.findOne({ phone: phone, userType: "USER" });
                 if (!user) {
                         let otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-                        let otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        // let otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        let otpExpiration = new Date(Date.now() + 30 * 1000);
                         let accountVerification = false;
                         const newUser = await User.create({ phone: phone, otp, otpExpiration, accountVerification, userType: "USER" });
                         let obj = { id: newUser._id, otp: newUser.otp, phone: newUser.phone }
@@ -117,7 +129,8 @@ exports.loginWithPhone = async (req, res) => {
                 } else {
                         const userObj = {};
                         userObj.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-                        userObj.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        // userObj.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                        let otpExpiration = new Date(Date.now() + 30 * 1000);
                         userObj.accountVerification = false;
                         const updated = await User.findOneAndUpdate({ phone: phone, userType: "USER" }, userObj, { new: true, });
                         let obj = { id: updated._id, otp: updated.otp, phone: updated.phone }
@@ -136,7 +149,8 @@ exports.verifyOtp = async (req, res) => {
                         return res.status(404).send({ message: "user not found" });
                 }
                 if (user.otp !== otp || user.otpExpiration < Date.now()) {
-                        return res.status(400).json({ message: "Invalid OTP" });
+                        return res.status(400).json({ message: "Invalid or expired OTP" });
+
                 }
                 const updated = await User.findByIdAndUpdate({ _id: user._id }, { accountVerification: true }, { new: true });
                 const accessToken = await jwt.sign({ id: user._id }, authConfig.secret, {
@@ -157,7 +171,7 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image refferalCode completeProfile');
+                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image refferalCode completeProfile city sector').populate('city sector');
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
@@ -3902,3 +3916,99 @@ exports.deleteDateTimeSlot = async (req, res) => {
                 res.status(500).json({ error: 'Failed to delete date and time slot.' });
         }
 };
+
+
+exports.getAllCities = async (req, res) => {
+        try {
+                const cities = await City.find();
+
+                res.status(200).json({
+                        status: 200,
+                        message: 'Cities retrieved successfully',
+                        data: cities,
+                });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Server error' });
+        }
+};
+
+exports.getCityById = async (req, res) => {
+        try {
+                const city = await City.findById(req.params.id);
+
+                if (!city) {
+                        return res.status(404).json({ message: 'City not found' });
+                }
+
+                res.status(200).json({
+                        status: 200,
+                        message: 'City retrieved successfully',
+                        data: city,
+                });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Server error' });
+        }
+};
+
+exports.getAllAreas = async (req, res) => {
+        try {
+                const areas = await Area.find();
+
+                res.status(200).json({
+                        status: 200,
+                        message: 'Areas retrieved successfully',
+                        data: areas,
+                });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Server error' });
+        }
+};
+
+exports.getAreaById = async (req, res) => {
+        try {
+                const area = await Area.findById(req.params.id);
+
+                if (!area) {
+                        return res.status(404).json({ message: 'Area not found' });
+                }
+
+                res.status(200).json({
+                        status: 200,
+                        message: 'Area retrieved successfully',
+                        data: area,
+                });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Server error' });
+        }
+};
+
+exports.getAreasByCityId = async (req, res) => {
+        try {
+                const cityId = req.params.cityId;
+
+                const existingCity = await City.findById(cityId);
+
+                if (!existingCity) {
+                        return res.status(400).json({
+                                status: 400,
+                                message: 'Invalid city ID',
+                        });
+                }
+
+                const areas = await Area.find({ city: cityId });
+
+                res.status(200).json({
+                        status: 200,
+                        message: 'Areas retrieved successfully',
+                        data: areas,
+                });
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Server error' });
+        }
+};
+

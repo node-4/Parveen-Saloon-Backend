@@ -1,21 +1,42 @@
 const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 const bannerSchema = mongoose.Schema({
-    categoryId: {
+    mainCategoryId: {
         type: schema.Types.ObjectId,
         ref: "mainCategory"
     },
+    categoryId: {
+        type: schema.Types.ObjectId,
+        ref: "Category"
+    },
+    subCategoryId: {
+        type: schema.Types.ObjectId,
+        ref: "subCategory"
+    },
+    servicesId: {
+        type: schema.Types.ObjectId,
+        ref: "services"
+    },
     image: {
         type: String,
-        require: true,
+    },
+    colour: {
+        type: String,
     },
     position: {
         type: String,
-        enum: ["TOP", "MID", "BOTTOM", "MB"],
+        // enum: ["TOP", "MID", "BOTTOM", "MB"],
+    },
+    type: {
+        type: String,
+        enum: ["HeroBanner", "Offer", "Static"],
     },
     desc: {
         type: String,
-        require: false,
+    },
+    status: {
+        type: Boolean,
+        default: true
     },
 }, { timestamps: true });
 const banner = mongoose.model("banner", bannerSchema);

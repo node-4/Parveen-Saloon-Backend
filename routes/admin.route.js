@@ -88,8 +88,6 @@ module.exports = (app) => {
 
 
 
-
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         app.post("/api/v1/admin/FacialType/addFacialType", [authJwt.verifyToken], auth.createFacialType);
         app.get("/api/v1/admin/FacialType/allFacialType", auth.getFacialTypes);
@@ -120,6 +118,16 @@ module.exports = (app) => {
         app.get("/api/v1/admin/serviceTypes/:serviceTypeId", [authJwt.verifyToken], auth.getServiceTypeById);
         app.put("/api/v1/admin/serviceTypes/:serviceTypeId", [authJwt.verifyToken], serviceType.single('image'), auth.updateServiceType);
         app.delete("/api/v1/admin/serviceTypes/:serviceTypeId", [authJwt.verifyToken], auth.deleteServiceType);
+        app.post("/api/v1/admin/city/cities", [authJwt.verifyToken], auth.createCity);
+        app.get("/api/v1/admin/city/cities", [authJwt.verifyToken], auth.getAllCities);
+        app.get("/api/v1/admin/city/cities/:id", [authJwt.verifyToken], auth.getCityById);
+        app.put("/api/v1/admin/city/cities/:id", [authJwt.verifyToken], auth.updateCityById);
+        app.delete("/api/v1/admin/city/cities/:id", [authJwt.verifyToken], auth.deleteCityById);
+        app.post('/api/v1/admin/area/areas', [authJwt.verifyToken], auth.createArea);
+        app.get('/api/v1/admin/area/areas', [authJwt.verifyToken], auth.getAllAreas);
+        app.get('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.getAreaById);
+        app.put('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.updateAreaById);
+        app.delete('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.deleteAreaById);
 
 
 

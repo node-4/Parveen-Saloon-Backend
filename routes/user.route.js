@@ -85,6 +85,10 @@ module.exports = (app) => {
         app.get('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.getDateAndTimeSlotById);
         app.put('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.updateDateTimeSlot);
         app.delete('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.deleteDateTimeSlot);
-
+        app.get('/api/v1/user/city/cities', [authJwt.verifyToken], auth.getAllCities);
+        app.get('/api/v1/user/city/cities/:id', [authJwt.verifyToken], auth.getCityById);
+        app.get('/api/v1/user/area/areas', [authJwt.verifyToken], auth.getAllAreas);
+        app.get('/api/v1/user/area/areas/:id', [authJwt.verifyToken], auth.getAreaById);
+        app.get('/api/v1/user/areas/city/:cityId', [authJwt.verifyToken], auth.getAreasByCityId);
 
 }

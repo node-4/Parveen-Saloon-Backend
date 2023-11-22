@@ -66,12 +66,8 @@ var userSchema = new schema(
             type: Boolean,
             default: false,
         },
-        city: {
-            type: String,
-        },
-        sector: {
-            type: String,
-        },
+        city: { type: mongoose.Schema.ObjectId, ref: 'City' },
+        sector:{ type: mongoose.Schema.ObjectId, ref: 'Area' },
         km: {
             type: Number,
             default: 0,
