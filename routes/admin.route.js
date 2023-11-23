@@ -4,15 +4,20 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType, subCategory } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType, subCategory, mainCategoryBannerUpload } = require('../middlewares/imageUpload')
 module.exports = (app) => {
         app.post("/api/v1/admin/registration", auth.registration);
         app.post("/api/v1/admin/login", auth.signin);
         app.put("/api/v1/admin/update", [authJwt.verifyToken], auth.update);
         app.post("/api/v1/admin/Banner/AddBanner", [authJwt.verifyToken], bannerUpload.single('image'), auth.AddBanner);
         app.get("/api/v1/admin/Banner/allBanner", auth.getBanner);
+        app.get("/api/v1/admin/Banner/all/heroBanner", auth.getHeroBanner);
+        app.get("/api/v1/admin/Banner/all/offerBanner", auth.getOfferBanner);
+        app.get("/api/v1/admin/Banner/all/staticBanner", auth.getStaticBanner);
         app.get("/api/v1/admin/Banner/bannerByPosition", auth.getBannerByPosition);
-        app.get("/api/v1/admin/Banner/getBannerForCategoryByPosition/:categoryId", auth.getBannerForCategoryByPosition);
+        app.get("/api/v1/admin/Banner/getBannerForCategoryByPosition/:mainCategoryId", auth.getBannerForMainCategoryByPosition);
+        app.get('/api/v1/admin/Banner/banners', auth.getBannersBySearch);
+        app.put('/api/v1/admin/banners/:id/update-position', auth.updateBannerPosition);
         app.get("/api/v1/admin/Banner/getBannerById/:id", auth.getBannerById);
         app.delete("/api/v1/admin/Banner/deleteBanner/:id", [authJwt.verifyToken], auth.DeleteBanner);
         app.post("/api/v1/admin/Brand/addBrand", [authJwt.verifyToken], BrandUpload.single('image'), auth.createBrands);
@@ -48,6 +53,14 @@ module.exports = (app) => {
         app.get("/api/v1/admin/mainCategory/allCategory", auth.getMainCategories);
         app.put("/api/v1/admin/mainCategory/updateCategory/:id", [authJwt.verifyToken], categoryUpload.single('image'), auth.updateMainCategory);
         app.delete("/api/v1/admin/mainCategory/deleteCategory/:id", [authJwt.verifyToken], auth.removeMainCategory);
+        app.post("/api/v1/admin/Banner/mainCategory/AddBanner", [authJwt.verifyToken], mainCategoryBannerUpload.single('image'), auth.addBannerforMainCategory);
+        app.get("/api/v1/admin/Banner/mainCategory/allBanner", auth.getBannerforMainCategory);
+        app.get("/api/v1/admin/Banner/mainCategoryBanner/bannerByPosition", auth.getBannerByPositionforMainCategory);
+        app.get("/api/v1/admin/Banner/getBannerForCategoryByPosition/mainCategory/:mainCategoryId", auth.getBannerforMainCategoryByPosition);
+        app.get("/api/v1/admin/Banner/getBannerById/mainCategory/:id", auth.getMainCategoryBannerById);
+        app.get('/api/v1/admin/Banner/mainCategory/banners', auth.getMainCategoryBannersBySearch);
+        app.delete("/api/v1/admin/Banner/deleteBanner/mainCategory/:id", [authJwt.verifyToken], auth.mainCategoryDeleteBanner);
+
         app.post("/api/v1/admin/Category/createCategory", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.createCategory);
         app.get("/api/v1/admin/Category/allCategory/:categoryId", auth.getCategories);
         app.get("/api/v1/admin/Category/getAllCategory", auth.getAllCategories);

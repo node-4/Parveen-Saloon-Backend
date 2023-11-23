@@ -193,8 +193,8 @@ exports.deletePrivacy = async (req, res) => {
 };
 exports.getAllFaqs = async (req, res) => {
         try {
-                if (req.params.categoryId != (null || undefined)) {
-                        const faqs = await Faq.find({ categoryId: req.params.categoryId }).lean();
+                if (req.params.mainCategoryId != (null || undefined)) {
+                        const faqs = await Faq.find({ mainCategoryId: req.params.mainCategoryId }).lean().populate('mainCategoryId');
                         if (faqs.length == 0) {
                                 return res.status(404).json({ status: 404, message: "No data found", data: {} });
                         }
@@ -226,21 +226,21 @@ exports.getFaqById = async (req, res) => {
         }
 };
 exports.createFaq = async (req, res) => {
-        const { question, answer, categoryId } = req.body;
+        const { question, answer, mainCategoryId } = req.body;
         try {
                 if (!question || !answer) {
                         return res.status(400).json({ message: "questions and answers cannot be blank " });
                 }
-                if (categoryId != (null || undefined)) {
-                        const findCategory = await Category.findById(categoryId);
+                if (mainCategoryId != (null || undefined)) {
+                        const findCategory = await Category.findById(mainCategoryId);
                         if (!findCategory) {
                                 return res.status(404).json({ message: "Service Category Not Found", status: 404, data: {} });
                         }
                         let obj = {
-                                categoryId: findCategory._id,
+                                mainCategoryId: findCategory._id,
                                 question: question,
                                 answer: answer,
-                                type: "Category"
+                                type: "MainCategory"
                         }
                         const faq = await Faq.create(obj);
                         return res.status(200).json({ status: 200, message: "FAQ Added Successfully ", data: faq });

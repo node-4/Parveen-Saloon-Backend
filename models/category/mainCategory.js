@@ -23,6 +23,7 @@ const categorySchema = schema({
     notice: {
         type: String
     },
+    
 }, { timestamps: true });
 
 module.exports = mongoose.model("mainCategory", categorySchema);

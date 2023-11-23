@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 const faqSchema = new mongoose.Schema(
     {
-        categoryId: {
+        mainCategoryId: {
             type: schema.Types.ObjectId,
-            ref: "Category"
+            ref: "mainCategory"
         },
         question: {
             type: String,
@@ -16,7 +16,7 @@ const faqSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["Category", "Support"],
+            enum: ["MainCategory", "Support"],
         },
     },
     { timestamps: true }

@@ -90,5 +90,7 @@ module.exports = (app) => {
         app.get('/api/v1/user/area/areas', [authJwt.verifyToken], auth.getAllAreas);
         app.get('/api/v1/user/area/areas/:id', [authJwt.verifyToken], auth.getAreaById);
         app.get('/api/v1/user/areas/city/:cityId', [authJwt.verifyToken], auth.getAreasByCityId);
+        app.get("/api/v1/user/Banner/all/staticBanner", [authJwt.verifyToken], auth.getStaticBanner);
+
 
 }

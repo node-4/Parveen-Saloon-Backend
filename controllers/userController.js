@@ -28,6 +28,8 @@ const DateAndTimeSlot = require('../models/date&TimeSlotModel');
 const MinimumCart = require('../models/miniumCartAmountModel');
 const City = require('../models/cityModel');
 const Area = require('../models/areaModel');
+const banner = require('../models/banner/banner')
+
 
 
 
@@ -4009,6 +4011,37 @@ exports.getAreasByCityId = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: 'Server error' });
+        }
+};
+
+
+exports.getStaticBanner = async (req, res) => {
+        try {
+                const userFullName = req.user.fullName;
+
+                const firstName = userFullName.split(' ')[0];
+
+                const banners = await banner.find({ type: "Static" }).sort({ position: 1 });
+
+                if (banners.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+                }
+
+                const modifiedBanners = banners.map(banner => {
+                        return {
+                                ...banner._doc,
+                                desc: banner.desc + firstName + "!",
+                        };
+                });
+
+                return res.status(200).json({
+                        status: 200,
+                        message: "Banners found successfully.",
+                        data: { banners: modifiedBanners, },
+                });
+        } catch (err) {
+                console.error(err);
+                return res.status(500).json({ status: 500, message: "Server error.", data: {} });
         }
 };
 

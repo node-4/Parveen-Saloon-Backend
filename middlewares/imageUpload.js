@@ -87,4 +87,13 @@ const storage17 = new CloudinaryStorage({
 });
 const subCategory = multer({ storage: storage17 });
 
-module.exports = { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, E4UUpload, userProfileUpload, BrandUpload, offerUpload, spAgreementUpload, transportationCharges, complaintSuggestion, testimonial, charges, serviceType, subCategory };
+const storage18 = new CloudinaryStorage({
+    cloudinary: cloudinary, params: {
+        folder: "parveenSalon/images/mainCategory/banner", allowed_formats: [
+            "jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF", "jiff", "JIFF", "jfif", "JFIF", "mp4", "MP4", "webm", "WEBM"],
+    },
+});
+const mainCategoryBannerUpload = multer({ storage: storage18 });
+
+
+module.exports = { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, E4UUpload, userProfileUpload, BrandUpload, offerUpload, spAgreementUpload, transportationCharges, complaintSuggestion, testimonial, charges, serviceType, subCategory, mainCategoryBannerUpload };

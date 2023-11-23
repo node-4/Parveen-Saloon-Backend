@@ -22,6 +22,6 @@ module.exports = (app) => {
         app.put("/api/v1/static/faq/:id", [authJwt.verifyToken], staticContent.updateFaq);
         app.delete("/api/v1/static/faq/:id", [authJwt.verifyToken], staticContent.deleteFaq);
         app.get("/api/v1/static/faq/All", staticContent.getAllFaqs);
-        app.get("/api/v1/static/faq/Allcategory/:categoryId", staticContent.getAllFaqs);
+        app.get("/api/v1/static/faq/Allcategory/:mainCategoryId", staticContent.getAllFaqs);
         app.get("/api/v1/static/faq/:id", staticContent.getFaqById);
 }

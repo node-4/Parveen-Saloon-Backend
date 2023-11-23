@@ -8,7 +8,7 @@ const Category = require("../models/category/Category");
 const subCategory = require("../models/category/subCategory");
 const itemSubCategory = require("../models/category/itemSubCategory");
 const item = require("../models/category/item");
-const banner = require('../models/banner')
+const banner = require('../models/banner/banner')
 const ContactDetail = require("../models/ContactDetail");
 // const subscription = require('../models/subscription');
 const service = require('../models/service');
@@ -39,6 +39,7 @@ const ServiceType = require("../models/category/serviceType");
 const ServiceTypeRef = require("../models/servicetypeRef");
 const City = require('../models/cityModel');
 const Area = require('../models/areaModel');
+const MainCategoryBanner = require('../models/banner/mainCategoryBanner');
 
 
 
@@ -170,24 +171,6 @@ exports.removeBrand = async (req, res) => {
         return res.status(200).json({ message: "Brand Deleted Successfully !" });
     }
 };
-// exports.AddBanner = async (req, res) => {
-//     try {
-//         let fileUrl;
-//         if (req.file) {
-//             fileUrl = req.file ? req.file.path : "";
-//         }
-//         req.body.categoryId = req.body.categoryId;
-//         req.body.image = fileUrl;
-//         req.body.desc = req.body.desc;
-//         req.body.position = req.body.position;
-//         const Data = await banner.create(req.body);
-//         return res.status(200).json({ status: 200, message: "Banner is Addded ", data: Data })
-//     } catch (err) {
-//         console.log(err);
-//         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
-//     }
-// };
-
 exports.AddBanner = async (req, res) => {
     try {
         let fileUrl;
@@ -197,8 +180,10 @@ exports.AddBanner = async (req, res) => {
 
         const position = req.body.position;
 
-        const existingBanners = await banner.find({ position });
-        const order = existingBanners.length + 1;
+        const existingBanners = await banner.findOne({ position: position, type: req.body.type });
+        if (existingBanners) {
+            return res.status(400).json({ status: 400, message: "Position already found", data: {} });
+        }
 
         const Data = await banner.create({
             mainCategoryId: req.body.mainCategoryId,
@@ -213,26 +198,12 @@ exports.AddBanner = async (req, res) => {
             status: req.body.status,
         });
 
-        return res.status(200).json({ status: 200, message: "Banner is Added", data: order, Data });
+        return res.status(200).json({ status: 200, message: "Banner is Added", data: Data });
     } catch (err) {
         console.log(err);
         return res.status(501).send({ status: 501, message: "Server error.", data: {} });
     }
 };
-
-// exports.getBanner = async (req, res) => {
-//     try {
-//         const Banner = await banner.find();
-//         if (Banner.length == 0) {
-//             return res.status(404).json({ status: 404, message: "No data found", data: {} });
-//         }
-//         return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
-//     } catch (err) {
-//         console.log(err);
-//         return res.status(501).send({ status: 501, message: "server error.", data: {}, });
-//     }
-// };
-
 exports.getBanner = async (req, res) => {
     try {
         const banners = await banner.find().sort({ position: 1 });
@@ -247,19 +218,67 @@ exports.getBanner = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Server error.", data: {} });
     }
 };
-
-
-exports.getBannerByPosition = async (req, res) => {
+exports.getHeroBanner = async (req, res) => {
     try {
-        const position = req.query.position;
-        if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
-            return res.status(400).json({ status: 400, message: "Invalid position" });
-        }
-        const banners = await banner.find({ position });
+        const banners = await banner.find({ type: "HeroBanner" }).sort({ position: 1 });
 
         if (banners.length === 0) {
             return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
         }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+exports.getOfferBanner = async (req, res) => {
+    try {
+        const banners = await banner.find({ type: "Offer" }).sort({ position: 1 });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+        }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+exports.getStaticBanner = async (req, res) => {
+    try {
+        const banners = await banner.find({ type: "Static" }).sort({ position: 1 });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+        }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+exports.getBannerByPosition = async (req, res) => {
+    try {
+        const position = req.query.position;
+        const type = req.query.type;
+
+        if (!/^(?:[1-9]|[1-9][0-9]|100)$/.test(position)) {
+            return res.status(400).json({ status: 400, message: "Invalid position" });
+        }
+
+        if (!["HeroBanner", "Offer", "Static"].includes(type)) {
+            return res.status(400).json({ status: 400, message: "Invalid Type" });
+        }
+
+        const banners = await banner.find({ position: parseInt(position), type: type });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+        }
+
         if (banners.length === 1) {
             return res.status(200).json({ status: 200, message: "Banner found successfully.", data: banners[0] });
         }
@@ -270,50 +289,199 @@ exports.getBannerByPosition = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Server error.", data: {} });
     }
 };
-// exports.getBannerForCategoryByPosition = async (req, res) => {
-//     try {
-//         const categoryId = req.params.categoryId
-//         const position = req.query.position;
-//         if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
-//             return res.status(400).json({ status: 400, message: "Invalid position" });
-//         }
-//         const banners = await banner.find({ position: position, categoryId: categoryId });
-
-//         if (banners.length === 0) {
-//             return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
-//         }
-//         if (banners.length === 1) {
-//             return res.status(200).json({ status: 200, message: "Banner found successfully.", data: banners[0] });
-//         }
-
-//         return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
-//     } catch (err) {
-//         console.error(err);
-//         return res.status(500).json({ status: 500, message: "Server error.", data: {} });
-//     }
-// };
-
-
-exports.getBannerForCategoryByPosition = async (req, res) => {
+exports.updateBannerPosition1 = async (req, res) => {
     try {
-        const categoryId = req.params.categoryId;
-        const position = req.query.position;
-        if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
+        const bannerId = req.params.id;
+        const newPosition = req.body.newPosition;
+        const bannerType = req.body.type;
+
+        const currentBanner = await banner.findOne({ _id: bannerId, type: bannerType });
+
+
+        const totalBannersCount = await banner.countDocuments({ type: bannerType });
+
+        if (parseInt(newPosition) > totalBannersCount || parseInt(newPosition) <= 0) {
             return res.status(400).json({ status: 400, message: "Invalid position" });
         }
-        const banners = await banner.find({ position: position, categoryId: categoryId });
 
-        if (banners.length === 0) {
-            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: [] });
+        const existingBanner = await banner.findOne({ position: newPosition, type: bannerType });
+
+        if (existingBanner) {
+            const tempPosition = currentBanner.position;
+            currentBanner.position = newPosition;
+            existingBanner.position = tempPosition;
+
+            await Promise.all([currentBanner.save(), existingBanner.save()]);
+        } else {
+            currentBanner.position = newPosition;
+            await currentBanner.save();
         }
 
-        return res.status(200).json({ status: 200, message: "Banners found successfully.", position: position, data: banners });
+        return res.status(200).json({ status: 200, message: "Banner position updated successfully" });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ status: 500, message: "Server error", data: {} });
+    }
+};
+exports.updateBannerPosition = async (req, res) => {
+    try {
+        const bannerId = req.params.id;
+        const newPosition = req.body.newPosition;
+        const bannerTypeFromBody = req.body.type;
+
+        const currentBanner = await banner.findOne({ _id: bannerId });
+
+        if (!currentBanner) {
+            return res.status(404).json({ status: 404, message: "Banner not found" });
+        }
+
+        if (bannerTypeFromBody !== currentBanner.type) {
+            return res.status(400).json({ status: 400, message: "Invalid banner type" });
+        }
+
+        const totalBannersCount = await banner.countDocuments({ type: currentBanner.type });
+
+        if (parseInt(newPosition) > totalBannersCount || parseInt(newPosition) <= 0) {
+            return res.status(400).json({ status: 400, message: "Invalid position" });
+        }
+
+        const existingBanner = await banner.findOne({ position: newPosition, type: currentBanner.type });
+
+        if (existingBanner) {
+            const tempPosition = currentBanner.position;
+            currentBanner.position = newPosition;
+            existingBanner.position = tempPosition;
+
+            await Promise.all([currentBanner.save(), existingBanner.save()]);
+        } else {
+            currentBanner.position = newPosition;
+            await currentBanner.save();
+        }
+
+        return res.status(200).json({ status: 200, message: "Banner position updated successfully" });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ status: 500, message: "Server error", data: {} });
+    }
+};
+exports.getBannerForMainCategoryByPosition = async (req, res) => {
+    try {
+        const mainCategoryId = req.params.mainCategoryId;
+        const position = req.query.position;
+
+        if (position) {
+            if (!/^(?:[1-9]|[1-9][0-9]|100)$/.test(position)) {
+                return res.status(400).json({ status: 400, message: "Invalid position" });
+            }
+            const banners = await banner.find({ position: position, mainCategoryId: mainCategoryId }).sort({ position: 1 });
+            if (banners.length === 0) {
+                return res.status(404).json({ status: 404, message: "No data found for the specified position", data: [] });
+            }
+            return res.status(200).json({ status: 200, message: "Banners found successfully.", position: position, data: banners });
+        } else {
+            const banners = await banner.find({ /*position: position,*/ mainCategoryId: mainCategoryId }).sort({ position: 1 });
+
+            if (banners.length === 0) {
+                return res.status(404).json({ status: 404, message: "No data found for the specified position", data: [] });
+            }
+            return res.status(200).json({ status: 200, message: "Banners found successfully.", position: position, data: banners });
+        }
+
     } catch (err) {
         console.error(err);
         return res.status(500).json({ status: 500, message: "Server error.", data: [] });
     }
 };
+exports.getBannersBySearch = async (req, res) => {
+    try {
+        const {
+            mainCategoryId,
+            categoryId,
+            subCategoryId,
+            servicesId,
+            position,
+            type,
+            status,
+            search,
+            fromDate,
+            toDate,
+            page,
+            limit,
+        } = req.query;
 
+        let query = {};
+
+        if (mainCategoryId) {
+            query.mainCategoryId = mainCategoryId;
+        }
+
+        if (categoryId) {
+            query.categoryId = categoryId;
+        }
+
+        if (subCategoryId) {
+            query.subCategoryId = subCategoryId;
+        }
+
+        if (servicesId) {
+            query.servicesId = servicesId;
+        }
+
+        if (position) {
+            query.position = position;
+        }
+
+        if (type) {
+            query.type = type;
+        }
+
+        if (status) {
+            query.status = status;
+        }
+
+        if (search) {
+            query.$or = [
+                { "colour": { $regex: search, $options: "i" } },
+                { "desc": { $regex: search, $options: "i" } },
+            ];
+        }
+
+        if (fromDate && !toDate) {
+            query.createdAt = { $gte: fromDate };
+        }
+
+        if (!fromDate && toDate) {
+            query.createdAt = { $lte: toDate };
+        }
+
+        if (fromDate && toDate) {
+            query.$and = [
+                { createdAt: { $gte: fromDate } },
+                { createdAt: { $lte: toDate } },
+            ];
+        }
+
+        let options = {
+            page: Number(page) || 1,
+            limit: Number(limit) || 15,
+            sort: { createdAt: -1 },
+            populate: ('mainCategoryId categoryId subCategoryId servicesId'),
+        };
+
+        let data = await banner.paginate(query, options);
+
+        return res.status(200).json({
+            status: 200,
+            message: "Banner data found.",
+            data: data,
+        });
+    } catch (err) {
+        return res.status(500).send({
+            msg: "Internal server error",
+            error: err.message,
+        });
+    }
+};
 exports.getBannerById = async (req, res) => {
     try {
         const Banner = await banner.findById({ _id: req.params.id });
@@ -762,6 +930,190 @@ exports.removeMainCategory = async (req, res) => {
         return res.status(200).json({ message: "Service Category Deleted Successfully !" });
     }
 };
+
+exports.addBannerforMainCategory = async (req, res) => {
+    try {
+        let fileUrl;
+        if (req.file) {
+            fileUrl = req.file ? req.file.path : "";
+        }
+
+        const data = {
+            mainCategoryId: req.body.mainCategoryId,
+            image: fileUrl,
+            colour: req.body.colour,
+            desc: req.body.desc,
+            status: req.body.status,
+            position: req.body.position,
+        };
+
+        const bannerData = await MainCategoryBanner.create(data);
+
+        return res.status(200).json({ status: 200, message: "Banner is Added", data: bannerData });
+    } catch (err) {
+        console.error(err);
+        return res.status(501).json({ status: 501, message: "Server error.", data: {} });
+    }
+};
+
+exports.getBannerforMainCategory = async (req, res) => {
+    try {
+        const Banner = await MainCategoryBanner.find();
+        if (Banner.length == 0) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(200).json({ status: 200, message: "All banner Data found successfully.", data: Banner })
+    } catch (err) {
+        console.log(err);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+
+exports.getBannerByPositionforMainCategory = async (req, res) => {
+    try {
+        const position = req.query.position;
+        if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
+            return res.status(400).json({ status: 400, message: "Invalid position" });
+        }
+        const banners = await MainCategoryBanner.find({ position });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: {} });
+        }
+        if (banners.length === 1) {
+            return res.status(200).json({ status: 200, message: "Banner found successfully.", data: banners[0] });
+        }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+
+exports.getBannerforMainCategoryByPosition = async (req, res) => {
+    try {
+        const mainCategoryId = req.params.mainCategoryId;
+        const position = req.query.position;
+        if (!["TOP", "MID", "BOTTOM", "MB"].includes(position)) {
+            return res.status(400).json({ status: 400, message: "Invalid position" });
+        }
+        const banners = await MainCategoryBanner.find({ position: position, mainCategoryId: mainCategoryId });
+
+        if (banners.length === 0) {
+            return res.status(404).json({ status: 404, message: "No data found for the specified position", data: [] });
+        }
+
+        return res.status(200).json({ status: 200, message: "Banners found successfully.", position: position, data: banners });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: [] });
+    }
+};
+
+exports.getMainCategoryBannerById = async (req, res) => {
+    try {
+        const Banner = await MainCategoryBanner.findById({ _id: req.params.id });
+        if (!Banner) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+        return res.status(200).json({ status: 200, message: "Data found successfully.", data: Banner })
+    } catch (err) {
+        console.log(err);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
+
+exports.getMainCategoryBannersBySearch = async (req, res) => {
+    try {
+        const {
+            mainCategoryId,
+            position,
+            status,
+            search,
+            fromDate,
+            toDate,
+            page,
+            limit,
+        } = req.query;
+
+        let query = {};
+
+        if (mainCategoryId) {
+            query.mainCategoryId = mainCategoryId;
+        }
+
+        if (position) {
+            query.position = position;
+        }
+
+        if (status) {
+            query.status = status;
+        }
+
+        if (search) {
+            query.$or = [
+                { "position": { $regex: search, $options: "i" } },
+                { "colour": { $regex: search, $options: "i" } },
+                { "desc": { $regex: search, $options: "i" } },
+            ];
+        }
+
+        if (fromDate && !toDate) {
+            query.createdAt = { $gte: fromDate };
+        }
+
+        if (!fromDate && toDate) {
+            query.createdAt = { $lte: toDate };
+        }
+
+        if (fromDate && toDate) {
+            query.$and = [
+                { createdAt: { $gte: fromDate } },
+                { createdAt: { $lte: toDate } },
+            ];
+        }
+
+        let options = {
+            page: Number(page) || 1,
+            limit: Number(limit) || 15,
+            sort: { createdAt: -1 },
+            populate: ('mainCategoryId'),
+        };
+
+        let data = await MainCategoryBanner.paginate(query, options);
+
+        return res.status(200).json({
+            status: 200,
+            message: "Banner data found.",
+            data: data,
+        });
+    } catch (err) {
+        return res.status(500).send({
+            msg: "Internal server error",
+            error: err.message,
+        });
+    }
+};
+
+exports.mainCategoryDeleteBanner = async (req, res) => {
+    try {
+        const bannerId = req.params.id;
+        const mainCategoryBanner = await MainCategoryBanner.findById(bannerId);
+
+        if (!mainCategoryBanner) {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+
+        await MainCategoryBanner.findByIdAndDelete(bannerId);
+
+        return res.status(200).json({ status: 200, message: "Banner deleted successfully.", data: {} });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+    }
+};
+
 exports.createCategory = async (req, res) => {
     try {
         const findCategory = await mainCategory.findById({ _id: req.body.categoryId });

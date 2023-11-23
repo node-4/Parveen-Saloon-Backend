@@ -3,11 +3,9 @@ const Schema = mongoose.Schema;
 
 const testimonialSchema = new Schema(
     {
-        userName: {
-            type: String,
-        },
-        userProffession: {
-            type: String,
+        mainCategoryId: {
+            type: Schema.Types.ObjectId,
+            ref: "mainCategory"
         },
         title: {
             type: String
