@@ -4,7 +4,7 @@ var multer = require("multer");
 const path = require("path");
 const express = require("express");
 const router = express()
-const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType, subCategory, mainCategoryBannerUpload } = require('../middlewares/imageUpload')
+const { productUpload, bannerUpload, blogUpload, aboutusUpload, subCategoryUpload, categoryUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload, charges, serviceType, subCategory, mainCategoryBannerUpload, testimonial } = require('../middlewares/imageUpload')
 module.exports = (app) => {
         app.post("/api/v1/admin/registration", auth.registration);
         app.post("/api/v1/admin/login", auth.signin);
@@ -62,12 +62,12 @@ module.exports = (app) => {
         app.delete("/api/v1/admin/Banner/deleteBanner/mainCategory/:id", [authJwt.verifyToken], auth.mainCategoryDeleteBanner);
 
         app.post("/api/v1/admin/Category/createCategory", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.createCategory);
-        app.get("/api/v1/admin/Category/allCategory/:categoryId", auth.getCategories);
+        app.get("/api/v1/admin/Category/allCategory/:mainCategoryId", auth.getCategories);
         app.get("/api/v1/admin/Category/getAllCategory", auth.getAllCategories);
         app.put("/api/v1/admin/Category/update/:id", [authJwt.verifyToken], subCategoryUpload.single('image'), auth.updateCategory);
         app.delete("/api/v1/admin/Category/delete/:id", [authJwt.verifyToken], auth.removeCategory);
         app.post("/api/v1/admin/SubCategory/createCategory", [authJwt.verifyToken], subCategory.single('image'), auth.createSubCategory);
-        app.get("/api/v1/admin/SubCategory/:categoryId/:subCategoryId", auth.getSubCategories);
+        app.get("/api/v1/admin/SubCategory/:mainCategoryId/:categoryId", auth.getSubCategories);
         app.get("/api/v1/admin/getAllSubCategories", auth.getAllSubCategories);
         app.put("/api/v1/admin/SubCategory/update/:id", [authJwt.verifyToken], subCategory.single('image'), auth.updateSubCategory);
         app.delete("/api/v1/admin/SubCategory/delete/:id", [authJwt.verifyToken], auth.removeSubCategory);
@@ -80,6 +80,7 @@ module.exports = (app) => {
         app.put("/api/v1/admin/Item/update/:id", [authJwt.verifyToken], auth.updateItem);
         app.delete("/api/v1/admin/Item/delete/:id", [authJwt.verifyToken], auth.removeItem);
         app.post("/api/v1/admin/Service/addService", [authJwt.verifyToken], serviceUpload.array('image'), auth.createService);
+        app.post("/api/v1/admin/Service/addPackages", [authJwt.verifyToken], serviceUpload.array('image'), auth.createPackage);
         app.get("/api/v1/admin/Service/:mainCategoryId/:categoryId/:subCategoryId", [authJwt.verifyToken], auth.getService);
         app.get("/api/v1/admin/Service/getAllService", [authJwt.verifyToken], auth.getAllService);
         app.get('/api/v1/admin/service/:id', [authJwt.verifyToken], auth.getServiceById);
@@ -102,10 +103,6 @@ module.exports = (app) => {
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        app.post("/api/v1/admin/FacialType/addFacialType", [authJwt.verifyToken], auth.createFacialType);
-        app.get("/api/v1/admin/FacialType/allFacialType", auth.getFacialTypes);
-        app.put("/api/v1/admin/FacialType/updateFacialType/:id", [authJwt.verifyToken], auth.updateFacialType);
-        app.delete("/api/v1/admin/FacialType/deleteFacialType/:id", [authJwt.verifyToken], auth.removeFacialType);
         app.post('/api/v1/admin/createSubscription', auth.createSubscription);
         // app.get('/api/v1/admin/getSubscription/:mainCategoryId/:categoryId', auth.getSubscription);
         app.get('/api/v1/admin/getSubscription', auth.getSubscription);
@@ -141,6 +138,13 @@ module.exports = (app) => {
         app.get('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.getAreaById);
         app.put('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.updateAreaById);
         app.delete('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.deleteAreaById);
+        app.post("/api/v1/admin-testimonial", [authJwt.verifyToken], testimonial.single('image'), auth.createTestimonial);
+        app.get("/api/v1/admin/testimonial", [authJwt.verifyToken], auth.getAllTestimonials);
+        app.get("/api/v1/admin/testimonial/:id", [authJwt.verifyToken], auth.getTestimonialById);
+        app.put('/api/v1/admin/testimonials/:id', [authJwt.verifyToken, testimonial.single('image')], auth.updateTestimonial);
+        app.delete('/api/v1/admin/testimonials/:id', authJwt.verifyToken, auth.deleteTestimonial);
+
+
 
 
 

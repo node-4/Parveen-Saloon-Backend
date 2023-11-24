@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const schema = mongoose.Schema;
 const categorySchema = schema({
-    categoryId: {
+    mainCategoryId: {
         type: schema.Types.ObjectId,
         ref: "mainCategory"
     },
@@ -17,6 +17,9 @@ const categorySchema = schema({
         default: true
     },
     notice: {
+        type: String
+    },
+    colour: {
         type: String
     },
 }, { timestamps: true });

@@ -238,7 +238,7 @@ exports.resendOTP = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-exports.updateLocation = async (req, res) => {
+exports.updateLocation1 = async (req, res) => {
         try {
                 const user = await User.findOne({ _id: req.user._id, });
                 if (!user) {
@@ -263,6 +263,51 @@ exports.updateLocation = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+
+exports.updateLocation = async (req, res) => {
+        try {
+                const user = await User.findOne({ _id: req.user._id });
+                if (!user) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                }
+
+                let updateFields = {};
+
+                if (req.body.currentLat || req.body.currentLong) {
+                        const coordinates = [parseFloat(req.body.currentLat), parseFloat(req.body.currentLong)];
+                        updateFields.currentLocation = { type: "Point", coordinates };
+                }
+
+                if (req.body.city) {
+                        updateFields.city = req.body.city;
+                        updateFields.isCity = true;
+                }
+
+                if (req.body.sector) {
+                        updateFields.sector = req.body.sector;
+                        updateFields.isSector = true;
+                }
+
+                const updatedUser = await User.findByIdAndUpdate(
+                        { _id: user._id },
+                        { $set: updateFields },
+                        { new: true }
+                );
+
+                if (updatedUser) {
+                        let obj = {
+                                currentLocation: updatedUser.currentLocation,
+                                city: updatedUser.city,
+                                sector: updatedUser.sector,
+                        };
+                        return res.status(200).send({ status: 200, message: "Location update successful.", data: obj });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+
 exports.createAddress = async (req, res, next) => {
         try {
                 const data = await User.findOne({ _id: req.user._id, });
@@ -3158,27 +3203,6 @@ exports.allDebitTransactionUser = async (req, res) => {
                 }
         } catch (err) {
                 return res.status(400).json({ message: err.message });
-        }
-};
-exports.createTestimonial = async (req, res) => {
-        try {
-                if (!req.file) {
-                        return res.status(400).json({ error: "Image file is required" });
-                }
-                const { userName, userProffession, title, description } = req.body;
-                const testimonial = new Testimonial({
-                        userName,
-                        userProffession,
-                        title,
-                        description,
-                        image: req.file.path,
-                });
-
-                const savedTestimonial = await testimonial.save();
-                res.status(201).json({ status: 201, data: savedTestimonial });
-        } catch (error) {
-                console.error(error);
-                res.status(500).json({ error: "Failed to create testimonial" });
         }
 };
 exports.getAllTestimonials = async (req, res) => {

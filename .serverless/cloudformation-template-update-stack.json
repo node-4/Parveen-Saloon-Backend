@@ -162,7 +162,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/ravikhanna/dev/1698735777552-2023-10-31T07:02:57.552Z/ravikhanna.zip"
+          "S3Key": "serverless/ravikhanna/dev/1700833145460-2023-11-24T13:39:05.460Z/ravikhanna.zip"
         },
         "Handler": "server.handler",
         "Runtime": "nodejs18.x",
@@ -180,14 +180,14 @@
         "AppLogGroup"
       ]
     },
-    "AppLambdaVersionJsC246bRCpl2kfhoyIs9Z3LsQKULu7TJA5flkZjH0": {
+    "AppLambdaVersionrrEeOV5K3jgXk8JwmH1PuDoUKd18fdMoHc4EHDkGnjM": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AppLambdaFunction"
         },
-        "CodeSha256": "o1HrgnNwTZyZHxF739MN5JnaOafPSmaIeCuy+9DIdIc="
+        "CodeSha256": "DZoU6ejul/8KaqDNZoFnRKFeDhF6yqD0Hjk8elxGB14="
       }
     },
     "ApiGatewayRestApi": {
@@ -408,7 +408,7 @@
         "AppLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1698735750755": {
+    "ApiGatewayDeployment1700833104158": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -473,7 +473,7 @@
     "AppLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AppLambdaVersionJsC246bRCpl2kfhoyIs9Z3LsQKULu7TJA5flkZjH0"
+        "Ref": "AppLambdaVersionrrEeOV5K3jgXk8JwmH1PuDoUKd18fdMoHc4EHDkGnjM"
       },
       "Export": {
         "Name": "sls-ravikhanna-dev-AppLambdaFunctionQualifiedArn"
