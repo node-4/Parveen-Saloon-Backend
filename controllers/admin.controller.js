@@ -176,12 +176,16 @@ exports.removeBrand = async (req, res) => {
 };
 exports.AddBanner = async (req, res) => {
     try {
-        let fileUrl;
+        let fileUrl, isVideo = false;;
         if (req.file) {
             fileUrl = req.file.path;
         }
 
         const position = req.body.position;
+        const video = req.body.video;
+        if (video) {
+            isVideo = true;
+        }
 
         const existingBanners = await banner.findOne({ position: position, type: req.body.type });
         if (existingBanners) {
@@ -194,11 +198,13 @@ exports.AddBanner = async (req, res) => {
             subCategoryId: req.body.subCategoryId,
             servicesId: req.body.servicesId,
             image: fileUrl,
+            video: video,
             colour: req.body.colour,
             position: position,
             type: req.body.type,
             desc: req.body.desc,
             status: req.body.status,
+            isVideo: isVideo,
         });
 
         return res.status(200).json({ status: 200, message: "Banner is Added", data: Data });
@@ -936,7 +942,7 @@ exports.removeMainCategory = async (req, res) => {
 
 exports.addBannerforMainCategory = async (req, res) => {
     try {
-        let fileUrl;
+        let fileUrl, isVideo = false;
         if (req.file) {
             fileUrl = req.file ? req.file.path : "";
         }
@@ -948,7 +954,14 @@ exports.addBannerforMainCategory = async (req, res) => {
             desc: req.body.desc,
             status: req.body.status,
             position: req.body.position,
+            video: req.body.video,
         };
+
+        if (req.body.video) {
+            isVideo = true;
+        }
+
+        data.isVideo = isVideo;
 
         const bannerData = await MainCategoryBanner.create(data);
 
@@ -1994,14 +2007,15 @@ exports.createService = async (req, res) => {
 
         const category = await service.create(data);
 
-        const serviceTypeRef = await ServiceTypeRef.create({
-            service: category._id,
-            serviceType: req.body.serviceTypesId,
-        });
+        if (req.body.serviceTypesId) {
+            const serviceTypeRef = await ServiceTypeRef.create({
+                service: category._id,
+                serviceType: req.body.serviceTypesId,
+            });
 
-        category.serviceTypes = serviceTypeRef._id;
-        await category.save();
-
+            category.serviceTypes = serviceTypeRef._id;
+            await category.save();
+        }
         return res.status(200).json({ message: "Service added successfully.", status: 200, data: category });
     } catch (error) {
         console.error(error);

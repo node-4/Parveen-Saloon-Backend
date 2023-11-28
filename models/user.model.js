@@ -96,7 +96,7 @@ var userSchema = new schema(
             type: String,
         },
         otpExpiration: {
-            type: Date,
+            type: String,
         },
         accountVerification: {
             type: Boolean,

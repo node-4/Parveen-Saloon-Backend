@@ -23,6 +23,13 @@ const bannerSchema = mongoose.Schema({
     image: {
         type: String,
     },
+    video: {
+        type: String,
+    },
+    isVideo: {
+        type: Boolean,
+        default: false,
+    },
     colour: {
         type: String,
     },

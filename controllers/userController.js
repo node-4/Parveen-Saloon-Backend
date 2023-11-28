@@ -134,7 +134,7 @@ exports.loginWithPhone = async (req, res) => {
                         const userObj = {};
                         userObj.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
                         // userObj.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-                        let otpExpiration = new Date(Date.now() + 30 * 1000);
+                        userObj.otpExpiration = Date.now() + 30 * 1000;
                         userObj.accountVerification = false;
                         const updated = await User.findOneAndUpdate({ phone: phone, userType: "USER" }, userObj, { new: true, });
                         let obj = { id: updated._id, otp: updated.otp, phone: updated.phone }
@@ -175,7 +175,7 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image refferalCode completeProfile city sector').populate('city sector');
+                const data = await User.findOne({ _id: req.user._id, }).select('fullName email phone gender alternatePhone dob address1 address2 image refferalCode completeProfile city sector isCity isSector').populate('city sector');
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
