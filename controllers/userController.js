@@ -25,12 +25,13 @@ const Category = require("../models/category/Category");
 const MainCategory = require("../models/category/mainCategory");
 const SubCategory = require("../models/category/subCategory");
 const transactionModel = require("../models/transactionModel");
-const DateAndTimeSlot = require('../models/date&TimeSlotModel');
 const MinimumCart = require('../models/miniumCartAmountModel');
 const City = require('../models/cityModel');
 const Area = require('../models/areaModel');
 const banner = require('../models/banner/banner');
 const { charges } = require("../middlewares/imageUpload");
+const Slot = require('../models/SlotModel');
+const moment = require('moment');
 
 
 
@@ -1721,7 +1722,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                                                         total: price * req.body.quantity,
                                                         type: findPackage.type,
                                                         packageType: findPackage.packageType,
-                                                        serviceTypeId: serviceTypeId,
+                                                        // serviceTypeId: serviceTypeId,
                                                 },
                                         ],
                                         price: price,
@@ -1807,8 +1808,6 @@ exports.addToCartPackageNormal = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
-
-
 
 exports.addToCartPackageCustomise1 = async (req, res) => {
         try {
@@ -1934,7 +1933,7 @@ exports.addToCartPackageCustomise1 = async (req, res) => {
         }
 };
 
-exports.addToCartPackageCustomise = async (req, res) => {
+exports.addToCartPackageCustomise2 = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
@@ -2064,6 +2063,143 @@ exports.addToCartPackageCustomise = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+
+exports.addToCartPackageCustomise = async (req, res) => {
+        try {
+                const userData = await User.findOne({ _id: req.user._id });
+
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                }
+
+                const findCart = await Cart.findOne({ userId: userData._id });
+                const findPackage = req.body.packageId ? await Package.findById(req.body.packageId) : null;
+
+                if (!findPackage) {
+                        return res.status(404).json({ status: 404, message: "Package not found" });
+                }
+
+                if (findCart) {
+                        const existingPackage = findCart.packages.find(pkg => pkg.packageId.equals(findPackage._id));
+
+                        if (req.body.quantity <= 0) {
+                                return res.status(400).json({ status: 400, message: "Quantity must be greater than 0." });
+                        }
+
+                        if (existingPackage) {
+                                existingPackage.quantity += req.body.quantity;
+                                existingPackage.total = existingPackage.price * existingPackage.quantity;
+                                findCart.totalAmount += existingPackage.price * req.body.quantity;
+                                findCart.paidAmount += existingPackage.price * req.body.quantity;
+                                await findCart.save();
+
+                                return res.status(200).json({ status: 200, message: "Package quantity updated in the cart.", data: findCart });
+                        } else {
+                                const price = findPackage.discountActive ? findPackage.discountPrice : findPackage.originalPrice;
+
+                                const newPackage = {
+                                        packageId: findPackage._id,
+                                        type: "Package",
+                                        packageType: "Customize",
+                                        services: [
+                                                {
+                                                        serviceId: findPackage._id,
+                                                        serviceType: findPackage.serviceType,
+                                                        categoryId: findPackage.categoryId,
+                                                        price: price,
+                                                        quantity: req.body.quantity,
+                                                        total: price * req.body.quantity,
+                                                        type: findPackage.type,
+                                                        packageType: findPackage.packageType,
+                                                },
+                                        ],
+                                        price: price,
+                                        quantity: req.body.quantity,
+                                        total: price * req.body.quantity,
+                                };
+
+                                findCart.packages.push(newPackage);
+                                findCart.totalAmount += newPackage.total;
+                                findCart.paidAmount += newPackage.total;
+                                findCart.totalItem++;
+
+                                await findCart.save();
+
+                                return res.status(200).json({ status: 200, message: "Package added to the cart.", data: findCart });
+                        }
+                } else {
+                        const Charged = [];
+                        let paidAmount = 0;
+                        let totalAmount = 0;
+                        let additionalFee = 0;
+
+                        const findCharge = await Charges.find({});
+
+                        if (findCharge.length > 0) {
+                                for (const charge of findCharge) {
+                                        const obj1 = {
+                                                chargeId: charge._id,
+                                                charge: charge.charge,
+                                                discountCharge: charge.discountCharge,
+                                                discount: charge.discount,
+                                                cancelation: charge.cancelation,
+                                        };
+
+                                        if (!charge.cancelation) {
+                                                additionalFee += charge.discount ? charge.discountCharge : charge.charge;
+                                        }
+
+                                        Charged.push(obj1);
+                                }
+                        }
+
+                        if (findPackage.type === "Package") {
+                                const price = findPackage.discountActive ? findPackage.discountPrice : findPackage.originalPrice;
+                                totalAmount = (price * req.body.quantity).toFixed(2);
+                                paidAmount = (Number(totalAmount) + Number(additionalFee)).toFixed(2);
+
+                                const obj = {
+                                        userId: userData._id,
+                                        Charges: Charged,
+                                        packages: [
+                                                {
+                                                        packageId: findPackage._id,
+                                                        type: "Package",
+                                                        packageType: "Customize",
+                                                        services: [
+                                                                {
+                                                                        serviceId: findPackage._id,
+                                                                        serviceType: findPackage.serviceType,
+                                                                        categoryId: findPackage.categoryId,
+                                                                        price: price,
+                                                                        quantity: req.body.quantity,
+                                                                        total: price * req.body.quantity,
+                                                                        type: findPackage.type,
+                                                                        packageType: findPackage.packageType,
+                                                                },
+                                                        ],
+                                                        price: price,
+                                                        quantity: req.body.quantity,
+                                                        total: price * req.body.quantity,
+                                                },
+                                        ],
+                                        totalAmount: totalAmount,
+                                        additionalFee: additionalFee,
+                                        paidAmount: paidAmount,
+                                        totalItem: 1,
+                                };
+
+                                const Data = await Cart.create(obj);
+
+                                return res.status(200).json({ status: 200, message: "Package successfully added to cart.", data: Data });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error: " + error.message });
+        }
+};
+
 
 exports.addToCartPackageEdit1 = async (req, res) => {
         try {
@@ -4386,86 +4522,51 @@ exports.getIssueReports = async (req, res) => {
         }
 };
 
-
-exports.createDateTimeSlot = async (req, res) => {
+exports.getAllSlots = async (req, res) => {
         try {
-                const { startTime, endTime, slotPrice, isSlotPrice, isAvailable } = req.body;
-                const dateTimeSlot = new DateAndTimeSlot({
-                        startTime,
-                        endTime,
-                        slotPrice,
-                        isSlotPrice,
-                        isAvailable,
+                const slots = await Slot.find();
+
+                return res.status(200).json({
+                        status: 200,
+                        message: 'Slots retrieved successfully.',
+                        data: slots,
                 });
-                await dateTimeSlot.save();
-                res.status(201).json(dateTimeSlot);
         } catch (error) {
                 console.error(error);
-                res.status(500).json({ error: 'Failed to create date and time slot.' });
+                return res.status(500).json({
+                        status: 500,
+                        message: 'Internal server error',
+                        data: error.message,
+                });
         }
 };
 
-exports.getAllDateTimeSlots = async (req, res) => {
+exports.getSlotById = async (req, res) => {
         try {
-                const dateAndTimeSlots = await DateAndTimeSlot.find();
-                res.json(dateAndTimeSlots);
-        } catch (error) {
-                console.error(error);
-                res.status(500).json({ error: 'Failed to fetch date and time slots.' });
-        }
-};
+                const slot = await Slot.findById(req.params.id);
 
-exports.getDateAndTimeSlotById = async (req, res) => {
-        try {
-                const slot = await DateAndTimeSlot.findById(req.params.id);
                 if (!slot) {
-                        res.status(404).json({ status: 404, error: 'Slot not found' });
-                } else {
-                        res.status(200).json({ status: 200, data: slot });
+                        return res.status(404).json({
+                                status: 404,
+                                message: 'Slot not found.',
+                                data: {},
+                        });
                 }
-        } catch (error) {
-                console.log(error);
-                res.status(500).json({ status: 500, error: 'Internal Server Error' });
-        }
-};
 
-exports.updateDateTimeSlot = async (req, res) => {
-        try {
-                const { startTime, endTime, slotPrice, isSlotPrice, isAvailable } = req.body;
-                const updatedDateTimeSlot = await DateAndTimeSlot.findByIdAndUpdate(
-                        req.params.id,
-                        {
-                                startTime,
-                                endTime,
-                                slotPrice,
-                                isSlotPrice,
-                                isAvailable,
-                        },
-                        { new: true }
-                );
-                if (!updatedDateTimeSlot) {
-                        return res.status(404).json({ error: 'Date and time slot not found.' });
-                }
-                res.json(updatedDateTimeSlot);
+                return res.status(200).json({
+                        status: 200,
+                        message: 'Slot retrieved successfully.',
+                        data: slot,
+                });
         } catch (error) {
                 console.error(error);
-                res.status(500).json({ error: 'Failed to update date and time slot.' });
+                return res.status(500).json({
+                        status: 500,
+                        message: 'Internal server error',
+                        data: error.message,
+                });
         }
 };
-
-exports.deleteDateTimeSlot = async (req, res) => {
-        try {
-                const deletedDateTimeSlot = await DateAndTimeSlot.findByIdAndRemove(req.params.id);
-                if (!deletedDateTimeSlot) {
-                        return res.status(404).json({ error: 'Date and time slot not found.' });
-                }
-                res.json({ message: 'Date and time slot deleted successfully.' });
-        } catch (error) {
-                console.error(error);
-                res.status(500).json({ error: 'Failed to delete date and time slot.' });
-        }
-};
-
 
 exports.getAllCities = async (req, res) => {
         try {

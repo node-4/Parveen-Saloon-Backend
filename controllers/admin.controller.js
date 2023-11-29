@@ -42,6 +42,9 @@ const City = require('../models/cityModel');
 const Area = require('../models/areaModel');
 const MainCategoryBanner = require('../models/banner/mainCategoryBanner');
 const Testimonial = require("../models/testimonial");
+const Slot = require('../models/SlotModel');
+const moment = require('moment');
+
 
 
 
@@ -2208,7 +2211,7 @@ exports.removeService = async (req, res) => {
     }
 };
 
-exports.createPackage = async (req, res) => {
+exports.createPackage1 = async (req, res) => {
     try {
         const findMainCategory = await mainCategory.findById(req.body.mainCategoryId);
 
@@ -2344,13 +2347,15 @@ exports.createPackage = async (req, res) => {
 
         const category = await Package.create(packageData);
 
-        const serviceTypeRef = await ServiceTypeRef.create({
-            service: category._id,
-            serviceType: req.body.serviceTypesId,
-        });
+        if (req.body.serviceTypesId) {
+            const serviceTypeRef = await ServiceTypeRef.create({
+                service: category._id,
+                serviceType: req.body.serviceTypesId,
+            });
 
-        category.serviceTypes = serviceTypeRef._id;
-        await category.save();
+            category.serviceTypes = serviceTypeRef._id;
+            await category.save();
+        }
 
         for (let i = 0; i < req.body.selectedCount; i++) {
             let obj1 = {
@@ -2368,12 +2373,183 @@ exports.createPackage = async (req, res) => {
         category.servicePackages = servicePackages;
         await category.save();
 
+
         return res.status(200).json({ message: "Package added successfully.", status: 200, data: category });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
+exports.createPackage = async (req, res) => {
+    try {
+        const findMainCategory = await mainCategory.findById(req.body.mainCategoryId);
+
+        if (!findMainCategory) {
+            return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
+        }
+
+        let findCategory;
+        const findSubCategories = [];
+
+        if (req.body.categoryId) {
+            findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: req.body.categoryId });
+
+            if (!findCategory) {
+                return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+            }
+        } else {
+            const existingPackage = await Package.findOne({
+                title: req.body.title,
+                mainCategoryId: findMainCategory._id,
+                type: "Package",
+                packageType: req.body.packageType,
+            });
+
+            if (existingPackage) {
+                return res.status(409).json({ message: "Package already exists.", status: 409, data: {} });
+            }
+        }
+
+        if (req.body.subCategoryId && Array.isArray(req.body.subCategoryId)) {
+            for (const subCategoryId of req.body.subCategoryId) {
+                const findSubCategory = await subCategory.findOne({
+                    _id: subCategoryId,
+                    mainCategoryId: findMainCategory._id,
+                    categoryId: findCategory ? findCategory._id : null,
+                });
+
+                if (!findSubCategory) {
+                    return res.status(404).json({ message: "Subcategory Not Found", status: 404, data: {} });
+                }
+
+                findSubCategories.push(findSubCategory);
+            }
+        }
+
+        let discountPrice, originalPrice, discount = 0, totalTime;
+        if (req.body.timeInMin > 60) {
+            const hours = Math.floor(req.body.timeInMin / 60);
+            const minutes = req.body.timeInMin % 60;
+            totalTime = `${hours} hr ${minutes} min`;
+        } else {
+            const minutes = req.body.timeInMin % 60;
+            totalTime = `00 hr ${minutes} min`;
+        }
+
+        if (req.body.discountActive === "true") {
+            originalPrice = req.body.originalPrice;
+            discountPrice = req.body.discountPrice;
+
+            if (originalPrice && discountPrice) {
+                discount = ((originalPrice - discountPrice) / originalPrice) * 100;
+                discount = Math.max(discount, 0);
+                discount = Math.round(discount);
+            }
+        }
+
+        let images = [];
+        if (req.files) {
+            for (let j = 0; j < req.files.length; j++) {
+                let obj = {
+                    img: req.files[j].path,
+                };
+                images.push(obj);
+            }
+        }
+
+        let items = [], services = [], servicePackages = [];
+
+        if (req.body.services) {
+            for (let i = 0; i < req.body.services.length; i++) {
+                let findItem = await service.findById(req.body.services[i]);
+
+                if (!findItem) {
+                    return res.status(404).json({ message: `Service Not Found`, status: 404, data: {} });
+                }
+
+                let item1 = {
+                    service: findItem._id,
+                };
+                services.push(item1);
+            }
+        }
+
+        if (req.body.items) {
+            for (let i = 0; i < req.body.items.length; i++) {
+                let findItem = await item.findById(req.body.items[i]);
+
+                if (!findItem) {
+                    return res.status(404).json({ message: `Item Not Found`, status: 404, data: {} });
+                }
+
+                let item1 = {
+                    item: findItem._id,
+                };
+                items.push(item1);
+            }
+        }
+
+        const packageData = {
+            mainCategoryId: findMainCategory._id,
+            categoryId: findCategory ? findCategory._id : null,
+            subCategoryId: findSubCategories.map(subCategory => subCategory._id),
+            title: req.body.title,
+            description: req.body.description,
+            originalPrice: req.body.originalPrice,
+            discountActive: req.body.discountActive,
+            discount: discount,
+            discountPrice: discountPrice,
+            totalTime: totalTime,
+            timeInMin: req.body.timeInMin,
+            images: images,
+            E4uSafety: req.body.E4uSafety,
+            thingsToKnow: req.body.thingsToKnow,
+            E4uSuggestion: req.body.E4uSuggestion,
+            type: "Package",
+            packageType: req.body.packageType,
+            selected: req.body.packageType !== "Normal", // Assume selected if not Normal
+            selectedCount: req.body.packageType === "Customize" ? req.body.selectedCount || 0 : 0, // Set to 0 for non-Customize
+            services: services,
+            items: items,
+        };
+
+        const category = await Package.create(packageData);
+
+        if (req.body.serviceTypesId) {
+            const serviceTypeRef = await ServiceTypeRef.create({
+                service: category._id,
+                serviceType: req.body.serviceTypesId,
+            });
+
+            category.serviceTypes = serviceTypeRef._id;
+            await category.save();
+        }
+
+        if (req.body.packageType === "Customize" && req.body.selectedCount > 0) {
+            for (let i = 0; i < req.body.selectedCount; i++) {
+                let obj1 = {
+                    serviceId: category._id,
+                    categoryId: findCategory ? findCategory._id : null,
+                    services: services,
+                }
+                let savePackage = await servicePackage.create(obj1);
+                if (savePackage) {
+                    await Package.findByIdAndUpdate({ _id: category._id }, { $push: { servicePackageId: savePackage._id } }, { new: true })
+                }
+                servicePackages.push(savePackage);
+            }
+
+            category.servicePackages = servicePackages;
+            await category.save();
+        }
+
+        return res.status(200).json({ message: "Package added successfully.", status: 200, data: category });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
+    }
+};
+
 exports.getPackage = async (req, res) => {
     try {
         const findMainCategory = await mainCategory.findById({ _id: req.params.mainCategoryId });
@@ -3714,7 +3890,194 @@ exports.deleteTestimonial = async (req, res) => {
     }
 };
 
+exports.createSlot = async (req, res) => {
+    try {
+        const {
+            dateFrom,
+            dateTo,
+            timeFrom,
+            timeTo,
+            selectDuration,
+            jobAcceptance,
+            mainCategory,
+            surgeAmount
+        } = req.body;
 
+        if (!['15', '20', '30', '45', '60'].includes(selectDuration)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid selectDuration value.',
+                data: {},
+            });
+        }
+
+        const durationInMinutes = parseInt(selectDuration);
+
+        const startTime = moment(`${timeFrom}`, 'h:mm A');
+        const endTime = moment(`${timeTo}`, 'h:mm A');
+
+        if (!startTime.isValid() || !endTime.isValid() || endTime.isBefore(startTime)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid time range.',
+                data: {},
+            });
+        }
+
+        const slots = [];
+
+        let currentSlotTime = startTime.clone();
+
+        while (currentSlotTime.isSameOrBefore(endTime)) {
+            const currentDate = moment();
+
+            const currentDateTime = moment(`${dateFrom} ${currentSlotTime.format('HH:mm')}`, 'YYYY-MM-DD HH:mm');
+
+            const status = currentDate.isSameOrAfter(moment(dateTo));
+
+            const newSlot = await Slot.create({
+                dateFrom: dateFrom,
+                dateTo: dateTo,
+                timeFrom: currentSlotTime.format('HH:mm'),
+                timeTo: currentSlotTime.clone().add(durationInMinutes, 'minutes').format('HH:mm'),
+                selectDuration,
+                jobAcceptance,
+                mainCategory,
+                surgeAmount,
+                status,
+            });
+
+            slots.push(newSlot);
+
+            currentSlotTime.add(durationInMinutes, 'minutes');
+        }
+
+        return res.status(201).json({
+            status: 201,
+            message: 'Slots created successfully.',
+            data: slots,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            data: error.message,
+        });
+    }
+};
+
+exports.getAllSlots = async (req, res) => {
+    try {
+        const slots = await Slot.find();
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Slots retrieved successfully.',
+            data: slots,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            data: error.message,
+        });
+    }
+};
+
+exports.getSlotById = async (req, res) => {
+    try {
+        const slot = await Slot.findById(req.params.id);
+
+        if (!slot) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Slot not found.',
+                data: {},
+            });
+        }
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Slot retrieved successfully.',
+            data: slot,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            data: error.message,
+        });
+    }
+};
+
+exports.updateSlotById = async (req, res) => {
+    try {
+        const updatedSlot = await Slot.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+
+        if (!updatedSlot) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Slot not found.',
+                data: {},
+            });
+        }
+
+        if (req.body.selectDuration && !['15', '20', '30', '45', '60'].includes(req.body.selectDuration)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid selectDuration value.',
+                data: {},
+            });
+        }
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Slot updated successfully.',
+            data: updatedSlot,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            data: error.message,
+        });
+    }
+};
+
+exports.deleteSlotById = async (req, res) => {
+    try {
+        const deletedSlot = await Slot.findByIdAndDelete(req.params.id);
+
+        if (!deletedSlot) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Slot not found.',
+                data: {},
+            });
+        }
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Slot deleted successfully.',
+            data: deletedSlot,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            data: error.message,
+        });
+    }
+};
 
 
 

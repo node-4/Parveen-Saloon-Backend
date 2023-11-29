@@ -148,6 +148,11 @@ module.exports = (app) => {
         app.get("/api/v1/admin/testimonial/:id", [authJwt.verifyToken], auth.getTestimonialById);
         app.put('/api/v1/admin/testimonials/:id', [authJwt.verifyToken, testimonial.single('image')], auth.updateTestimonial);
         app.delete('/api/v1/admin/testimonials/:id', authJwt.verifyToken, auth.deleteTestimonial);
+        app.post('/api/v1/admin/slot', [authJwt.verifyToken], auth.createSlot);
+        app.get('/api/v1/admin/slot', [authJwt.verifyToken], auth.getAllSlots);
+        app.get('/api/v1/admin/slot/:id', [authJwt.verifyToken], auth.getSlotById);
+        app.put('/api/v1/admin/slot/:id', [authJwt.verifyToken], auth.updateSlotById);
+        app.delete('/api/v1/admin/slot/:id', [authJwt.verifyToken], auth.deleteSlotById);
 
 
 

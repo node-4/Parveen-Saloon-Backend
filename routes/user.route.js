@@ -79,11 +79,8 @@ module.exports = (app) => {
         app.get('/api/v1/user/frequently-added-services', [authJwt.verifyToken], auth.getFrequentlyAddedServices);
         app.post('/api/v1/user/orders/:orderId/reportIssue', [authJwt.verifyToken], auth.reportIssue);
         app.get('/api/v1/user/orders/:orderId/reportIssue', [authJwt.verifyToken], auth.getIssueReports);
-        app.post('/api/v1/user/cart/dateAndTime', [authJwt.verifyToken], auth.createDateTimeSlot);
-        app.get('/api/v1/user/cart/dateAndTime', [authJwt.verifyToken], auth.getAllDateTimeSlots);
-        app.get('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.getDateAndTimeSlotById);
-        app.put('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.updateDateTimeSlot);
-        app.delete('/api/v1/user/cart/dateAndTime/:id', [authJwt.verifyToken], auth.deleteDateTimeSlot);
+        app.get('/api/v1/user/slot', [authJwt.verifyToken], auth.getAllSlots);
+        app.get('/api/v1/user/slot/:id', [authJwt.verifyToken], auth.getSlotById);
         app.get('/api/v1/user/city/cities', [authJwt.verifyToken], auth.getAllCities);
         app.get('/api/v1/user/city/cities/:id', [authJwt.verifyToken], auth.getCityById);
         app.get('/api/v1/user/area/areas', [authJwt.verifyToken], auth.getAllAreas);
