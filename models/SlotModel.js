@@ -37,6 +37,10 @@ const slotSchema = new Schema({
         type: Number,
         default: 0,
     },
+    isSurgeAmount: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const Slot = mongoose.model('Slot', slotSchema);

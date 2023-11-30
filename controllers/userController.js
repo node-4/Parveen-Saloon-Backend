@@ -439,7 +439,21 @@ exports.getCart = async (req, res) => {
                 if (!userData) {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
-                        let findCart = await Cart.findOne({ userId: userData._id }).populate("coupanId services.serviceId Charges.chargeId").populate({ path: 'freeService.freeServiceId', populate: { path: 'serviceId', model: 'services', select: "title originalPrice totalTime discount discountActive timeInMin" }, })
+                        let findCart = await Cart.findOne({ userId: userData._id })
+                                .populate("coupanId services.serviceId Charges.chargeId")
+                                .populate({
+                                        path: 'freeService.freeServiceId',
+                                        populate: { path: 'serviceId', model: 'Service', select: "title originalPrice totalTime discount discountActive timeInMin" }
+                                })
+                                .populate({
+                                        path: 'packages.services.serviceId',
+                                        model: 'Service',
+                                        select: 'title originalPrice totalTime discount discountActive timeInMin'
+                                })
+                                .populate({
+                                        path: 'packages.packageId',
+                                        model: 'Package'
+                                });
 
                         const minimumCart = await MinimumCart.findOne();
 
@@ -447,12 +461,6 @@ exports.getCart = async (req, res) => {
                                 return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
                         } else {
                                 let totalOriginalPrice = 0;
-                                for (const cartItem of findCart.services) {
-                                        if (cartItem.serviceId.originalPrice) {
-                                                totalOriginalPrice += cartItem.serviceId.originalPrice * cartItem.quantity;
-                                        }
-                                }
-
                                 let totalDiscountActive = 0;
                                 let totalDiscount = 0;
                                 let totalDiscountPrice = 0;
@@ -461,53 +469,71 @@ exports.getCart = async (req, res) => {
                                 let totalHours = 0;
                                 let totalMinutes = 0;
 
-                                const timeSlotsFromCart = {
-                                        startTime: findCart.startTime,
-                                        endTime: findCart.endTime,
-                                };
-                                console.log(timeSlotsFromCart);
+                                for (const cartItem of findCart.services) {
+                                        if (cartItem.serviceId) {
+                                                if (cartItem.serviceId.originalPrice) {
+                                                        totalOriginalPrice += cartItem.serviceId.originalPrice * cartItem.quantity;
+                                                }
 
-                                const matchingTimeSlots = await DateAndTimeSlot.find({
+                                                if (cartItem.serviceId.discountActive) {
+                                                        totalDiscountActive++;
+                                                }
+
+                                                totalDiscount += cartItem.serviceId.discount ? cartItem.serviceId.discount * cartItem.quantity : 0;
+
+                                                if (cartItem.serviceId.discountActive && cartItem.serviceId.discountPrice) {
+                                                        totalDiscountPrice += cartItem.serviceId.discountPrice * cartItem.quantity;
+                                                }
+
+                                                totalQuantityInCart += cartItem.quantity;
+                                                totalIsInCart++;
+
+                                                const timeParts = cartItem.serviceId.totalTime.split(" ");
+                                                const hours = parseInt(timeParts[0]) || 0;
+                                                const minutes = parseInt(timeParts[2]) || 0;
+
+                                                totalHours += hours;
+                                                totalMinutes += minutes;
+                                        }
+                                }
+
+                                for (const cartItem of findCart.packages) {
+                                        if (cartItem.packageId) {
+                                                for (const service of cartItem.services) {
+                                                        if (service.serviceId && service.serviceId.totalTime) {
+                                                                const timeParts = service.serviceId.totalTime.split(" ");
+                                                                const hours = parseInt(timeParts[0]) || 0;
+                                                                const minutes = parseInt(timeParts[2]) || 0;
+
+                                                                totalHours += hours;
+                                                                totalMinutes += minutes;
+                                                        }
+                                                }
+                                        }
+                                }
+
+                                const timeSlotsFromCart = {
+                                        timeFrom: findCart.startTime,
+                                        timeTo: findCart.endTime,
+                                };
+
+                                const matchingTimeSlots = await Slot.find({
                                         $and: [
-                                                { isSlotPrice: true },
+                                                { isSurgeAmount: true },
                                                 timeSlotsFromCart,
                                         ],
                                 });
 
                                 let totalIsSlotPrice = 0;
                                 for (const slot of matchingTimeSlots) {
-                                        totalIsSlotPrice += slot.slotPrice;
+                                        totalIsSlotPrice += slot.surgeAmount;
                                 }
                                 findCart.paidAmount += totalIsSlotPrice;
-
-
-                                for (const cartItem of findCart.services) {
-                                        if (cartItem.serviceId.discountActive) {
-                                                totalDiscountActive++;
-                                        }
-
-                                        totalDiscount += cartItem.serviceId.discount ? cartItem.serviceId.discount * cartItem.quantity : 0;
-
-                                        if (cartItem.serviceId.discountActive && cartItem.serviceId.discountPrice) {
-                                                totalDiscountPrice += cartItem.serviceId.discountPrice * cartItem.quantity;
-                                        }
-
-                                        totalQuantityInCart += cartItem.quantity;
-                                        totalIsInCart++;
-
-                                        const timeParts = cartItem.serviceId.totalTime.split(" ");
-                                        const hours = parseInt(timeParts[0]) || 0;
-                                        const minutes = parseInt(timeParts[2]) || 0;
-
-                                        totalHours += hours;
-                                        totalMinutes += minutes;
-                                }
 
                                 const totalHoursString = totalHours > 0 ? `${totalHours} hr` : "";
                                 const totalMinutesString = totalMinutes > 0 ? ` ${totalMinutes} min` : "";
 
                                 const totalTimeTaken = totalHoursString + totalMinutesString;
-
 
                                 if (findCart.totalAmount <= findCart.minimumCartAmount) {
                                         return res.status(400).json({ status: 400, data: { "Please add more data to place an order minimumAmount": findCart.minimumCartAmount } });
@@ -3307,17 +3333,17 @@ exports.addDateAndTimeToCart = async (req, res) => {
                 }
 
                 let findCart = await Cart.findOne({ userId: userData._id });
-
+                console.log(findCart);
                 if (findCart) {
-                        if (findCart.services.length === 0) {
-                                return res.status(404).send({ status: 404, message: "Your cart has no services found." });
+                        if (findCart.services.length === 0 && findCart.packages.length === 0) {
+                                return res.status(404).send({ status: 404, message: "Your cart has no services or packages found." });
                         }
 
                         const d = new Date(req.body.date);
                         let text = d.toISOString();
 
-                        const isStartTimeValid = await DateAndTimeSlot.findOne({ startTime: req.body.startTime, isAvailable: true });
-                        const isEndTimeValid = await DateAndTimeSlot.findOne({ endTime: req.body.endTime, isAvailable: true });
+                        const isStartTimeValid = await Slot.findOne({ timeFrom: req.body.startTime, status: false });
+                        const isEndTimeValid = await Slot.findOne({ timeTo: req.body.endTime, status: false });
 
                         if (!isStartTimeValid || !isEndTimeValid) {
                                 return res.status(400).send({ status: 400, message: "Invalid startTime or endTime. Please select an available time slot." });

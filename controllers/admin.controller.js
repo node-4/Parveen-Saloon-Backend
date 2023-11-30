@@ -4037,6 +4037,14 @@ exports.updateSlotById = async (req, res) => {
             });
         }
 
+        const isSurgeAmountProvided = req.body.surgeAmount && req.body.surgeAmount > 0;
+
+        const isSurgeAmountInDatabase = updatedSlot.surgeAmount > 0;
+
+        updatedSlot.isSurgeAmount = isSurgeAmountProvided || isSurgeAmountInDatabase;
+
+        await updatedSlot.save();
+
         return res.status(200).json({
             status: 200,
             message: 'Slot updated successfully.',
