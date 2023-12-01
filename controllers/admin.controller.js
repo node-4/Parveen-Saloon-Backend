@@ -2380,7 +2380,7 @@ exports.createPackage1 = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
-exports.createPackage = async (req, res) => {
+exports.createPackage2 = async (req, res) => {
     try {
         const findMainCategory = await mainCategory.findById(req.body.mainCategoryId);
 
@@ -2549,6 +2549,159 @@ exports.createPackage = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
+
+exports.createPackage = async (req, res) => {
+    try {
+        const { mainCategoryId, categoryId, subCategoryId, title, description, originalPrice, discountActive, discountPrice, timeInMin, E4uSafety, thingsToKnow, E4uSuggestion, packageType, selectedCount, services, items, serviceTypesId } = req.body;
+
+        // Validate input parameters and handle errors
+
+        const findMainCategory = await mainCategory.findById(mainCategoryId);
+        if (!findMainCategory) {
+            return res.status(404).json({ message: "Main Category Not Found", status: 404, data: {} });
+        }
+
+        let findCategory;
+        const findSubCategories = [];
+
+        if (categoryId) {
+            findCategory = await Category.findOne({ mainCategoryId: findMainCategory._id, _id: categoryId });
+            if (!findCategory) {
+                return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+            }
+        } else {
+            const existingPackage = await Package.findOne({
+                title,
+                mainCategoryId: findMainCategory._id,
+                type: "Package",
+                packageType,
+            });
+
+            if (existingPackage) {
+                return res.status(409).json({ message: "Package already exists.", status: 409, data: {} });
+            }
+        }
+
+        if (subCategoryId && Array.isArray(subCategoryId)) {
+            for (const currentSubCategoryId of subCategoryId) {
+                const findSubCategory = await subCategory.findOne({
+                    _id: currentSubCategoryId,
+                    mainCategoryId: findMainCategory._id,
+                    categoryId: findCategory ? findCategory._id : null,
+                });
+
+                if (!findSubCategory) {
+                    return res.status(404).json({ message: "Subcategory Not Found", status: 404, data: {} });
+                }
+
+                findSubCategories.push(findSubCategory);
+            }
+        }
+
+        let discount = 0, totalTime;
+        if (timeInMin > 60) {
+            const hours = Math.floor(timeInMin / 60);
+            const minutes = timeInMin % 60;
+            totalTime = `${hours} hr ${minutes} min`;
+        } else {
+            const minutes = timeInMin % 60;
+            totalTime = `00 hr ${minutes} min`;
+        }
+
+        if (discountActive === "true") {
+            if (originalPrice && discountPrice) {
+                discount = Math.max(((originalPrice - discountPrice) / originalPrice) * 100, 0);
+                discount = Math.round(discount);
+            }
+        }
+
+        let images = [];
+        if (req.files) {
+            images = req.files.map(file => ({ img: file.path }));
+        }
+
+        const packageData = {
+            mainCategoryId: findMainCategory._id,
+            categoryId: findCategory ? findCategory._id : null,
+            subCategoryId: findSubCategories.map(subCategory => subCategory._id),
+            title,
+            description,
+            originalPrice,
+            discountActive,
+            discount,
+            discountPrice,
+            totalTime,
+            timeInMin,
+            images,
+            E4uSafety,
+            thingsToKnow,
+            E4uSuggestion,
+            type: "Package",
+            packageType,
+            selected: packageType !== "Normal",
+            selectedCount: packageType === "Customize" ? selectedCount || 0 : 0,
+            services: [],
+            items: [],
+        };
+
+        if (services && Array.isArray(services)) {
+            for (const serviceId of services) {
+                const findService = await service.findById(serviceId);
+                if (!findService) {
+                    return res.status(404).json({ message: `Service Not Found`, status: 404, data: {} });
+                }
+                packageData.services.push({ service: findService._id });
+            }
+        }
+
+        if (items && Array.isArray(items)) {
+            for (const itemId of items) {
+                const findItem = await item.findById(itemId);
+                if (!findItem) {
+                    return res.status(404).json({ message: `Item Not Found`, status: 404, data: {} });
+                }
+                packageData.items.push({ item: findItem._id });
+            }
+        }
+
+        const category = await Package.create(packageData);
+
+        if (serviceTypesId) {
+            const serviceTypeRef = await ServiceTypeRef.create({
+                service: category._id,
+                serviceType: serviceTypesId,
+            });
+
+            category.serviceTypes = serviceTypeRef._id;
+            await category.save();
+        }
+
+        if (packageType === "Customize" && selectedCount > 0) {
+            const servicePackages = [];
+            for (let i = 0; i < selectedCount; i++) {
+                const obj1 = {
+                    serviceId: category._id,
+                    categoryId: findCategory ? findCategory._id : null,
+                    services: packageData.services,
+                };
+                const savePackage = await servicePackage.create(obj1);
+                if (savePackage) {
+                    await Package.findByIdAndUpdate({ _id: category._id }, { $push: { servicePackageId: savePackage._id } }, { new: true });
+                }
+                servicePackages.push(savePackage);
+            }
+
+            category.servicePackages = servicePackages;
+            await category.save();
+        }
+
+        return res.status(200).json({ message: "Package added successfully.", status: 200, data: category });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
+    }
+};
+
 
 exports.getPackage = async (req, res) => {
     try {

@@ -447,14 +447,14 @@ exports.getCart = async (req, res) => {
                                 })
                                 .populate({
                                         path: 'packages.services.serviceId',
-                                        model: 'Service',
+                                        model: 'Package',
                                         select: 'title originalPrice totalTime discount discountActive timeInMin'
                                 })
                                 .populate({
                                         path: 'packages.packageId',
                                         model: 'Package'
                                 });
-
+                        console.log("cart", findCart);
                         const minimumCart = await MinimumCart.findOne();
 
                         if (!findCart) {
@@ -1597,7 +1597,6 @@ exports.addToCartSingleService = async (req, res) => {
         }
 };
 
-
 exports.addToCartPackageNormal1 = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
@@ -1704,6 +1703,7 @@ exports.addToCartPackageNormal1 = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error" + error.message });
         }
 };
+
 exports.addToCartPackageNormal = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
@@ -1724,6 +1724,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                         if (req.body.quantity <= 0) {
                                 return res.status(400).json({ status: 400, message: "Quantity must be greater than 0." });
                         }
+                        console.log("existingPackage", existingPackage);
 
                         if (existingPackage) {
                                 existingPackage.quantity += req.body.quantity;
@@ -1755,6 +1756,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                                         quantity: req.body.quantity,
                                         total: price * req.body.quantity,
                                 };
+                                console.log(newPackage, );
                                 findCart.packages.push(newPackage);
                                 findCart.totalAmount += newPackage.total;
                                 findCart.paidAmount += newPackage.total;
@@ -2225,7 +2227,6 @@ exports.addToCartPackageCustomise = async (req, res) => {
                 return res.status(500).send({ status: 500, message: "Server error: " + error.message });
         }
 };
-
 
 exports.addToCartPackageEdit1 = async (req, res) => {
         try {
