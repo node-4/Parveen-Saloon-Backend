@@ -366,6 +366,17 @@ const CartSchema = new Schema({
                                         },
                                 },
                         ],
+                        price: {
+                                type: Number,
+                        },
+                        quantity: {
+                                type: Number,
+                                default: 1,
+                        },
+                        total: {
+                                type: Number,
+                                default: 0,
+                        },
                 },
         ],
         totalAmount: {

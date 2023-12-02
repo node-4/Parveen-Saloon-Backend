@@ -1724,7 +1724,6 @@ exports.addToCartPackageNormal = async (req, res) => {
                         if (req.body.quantity <= 0) {
                                 return res.status(400).json({ status: 400, message: "Quantity must be greater than 0." });
                         }
-                        console.log("existingPackage", existingPackage);
 
                         if (existingPackage) {
                                 existingPackage.quantity += req.body.quantity;
@@ -1744,9 +1743,6 @@ exports.addToCartPackageNormal = async (req, res) => {
                                                         serviceId: findPackage._id,
                                                         serviceType: findPackage.serviceType,
                                                         categoryId: findPackage.categoryId,
-                                                        price: price,
-                                                        quantity: req.body.quantity,
-                                                        total: price * req.body.quantity,
                                                         type: findPackage.type,
                                                         packageType: findPackage.packageType,
                                                         // serviceTypeId: serviceTypeId,
@@ -1756,7 +1752,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                                         quantity: req.body.quantity,
                                         total: price * req.body.quantity,
                                 };
-                                console.log(newPackage, );
+                                console.log(newPackage,);
                                 findCart.packages.push(newPackage);
                                 findCart.totalAmount += newPackage.total;
                                 findCart.paidAmount += newPackage.total;
@@ -1838,130 +1834,6 @@ exports.addToCartPackageNormal = async (req, res) => {
 };
 
 exports.addToCartPackageCustomise1 = async (req, res) => {
-        try {
-                const userData = await User.findOne({ _id: req.user._id });
-                if (!userData) {
-                        return res.status(404).send({ status: 404, message: "User not found" });
-                } else {
-                        const findCart = await Cart.findOne({ userId: userData._id });
-                        if (findCart) {
-                                const findService = await service.findById({ _id: req.body._id });
-                                const existingService = findCart.services.find(service => service.serviceId.equals(findService._id));
-                                if (req.body.quantity <= 0) {
-                                        return res.status(400).json({ status: 400, message: "Quantity must be a positive number greater than zero." });
-                                }
-                                if (existingService) {
-                                        existingService.quantity += req.body.quantity;
-                                        existingService.total = existingService.price * existingService.quantity;
-
-                                        findCart.totalAmount += existingService.price * req.body.quantity;
-                                        findCart.paidAmount += existingService.price * req.body.quantity;
-
-                                        await findCart.save();
-
-                                        return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
-
-                                } else {
-                                        const price = findService.discountActive ? findService.discountPrice : findService.originalPrice;
-
-                                        const newService = {
-                                                serviceId: findService._id,
-                                                price: price,
-                                                quantity: req.body.quantity,
-                                                total: price * req.body.quantity,
-                                                type: findService.type,
-                                                packageType: findService.packageType,
-                                        };
-
-                                        findCart.services.push(newService);
-
-                                        findCart.totalAmount += newService.total;
-                                        findCart.paidAmount += newService.total;
-                                        findCart.totalItem++;
-
-                                        await findCart.save();
-
-                                        return res.status(200).json({ status: 200, message: "Service added to the cart.", data: findCart });
-                                }
-
-                        } else {
-                                let findService = await service.findById({ _id: req.body._id });
-                                if (findService) {
-                                        let Charged = [], paidAmount = 0, totalAmount = 0, additionalFee = 0;
-                                        const findCharge = await Charges.find({});
-                                        if (findCharge.length > 0) {
-                                                for (let i = 0; i < findCharge.length; i++) {
-                                                        let obj1 = {
-                                                                chargeId: findCharge[i]._id,
-                                                                charge: findCharge[i].charge,
-                                                                discountCharge: findCharge[i].discountCharge,
-                                                                discount: findCharge[i].discount,
-                                                                cancelation: findCharge[i].cancelation,
-                                                        }
-                                                        if (findCharge[i].cancelation == false) {
-                                                                if (findCharge[i].discount == true) {
-                                                                        additionalFee = additionalFee + findCharge[i].discountCharge
-                                                                } else {
-                                                                        additionalFee = additionalFee + findCharge[i].charge
-                                                                }
-                                                        }
-                                                        Charged.push(obj1)
-                                                }
-                                        }
-                                        if (findService.type == "Package") {
-                                                if (findService.packageType == "Customise") {
-                                                        let price = 0, services = [];
-                                                        if (findService.discountActive == true) {
-                                                                price = findService.discountPrice;
-                                                        } else {
-                                                                price = findService.originalPrice;
-                                                        }
-                                                        if (req.body.quantity <= 0) {
-                                                                return res.status(400).json({ status: 400, message: "Quantity must be a positive number greater than zero." });
-                                                        }
-                                                        totalAmount = Number(price * req.body.quantity).toFixed(2);
-                                                        paidAmount = (Number((price * req.body.quantity).toFixed(2)) + Number(additionalFee))
-                                                        console.log(totalAmount, additionalFee, paidAmount);
-                                                        if (findService.selectedCount == (req.body.packageServices).length) {
-                                                                let obj = {
-                                                                        serviceId: findService._id,
-                                                                        packageServices: req.body.packageServices,
-                                                                        price: price,
-                                                                        quantity: req.body.quantity,
-                                                                        total: price * req.body.quantity,
-                                                                        type: "Package",
-                                                                        packageType: "Customise",
-                                                                }
-                                                                services.push(obj)
-                                                                let obj1 = {
-                                                                        userId: userData._id,
-                                                                        Charges: Charged,
-                                                                        services: services,
-                                                                        totalAmount: totalAmount,
-                                                                        additionalFee: additionalFee,
-                                                                        paidAmount: paidAmount,
-                                                                        totalItem: 1,
-                                                                }
-                                                                const Data = await Cart.create(obj1);
-                                                                return res.status(200).json({ status: 200, message: "Service successfully add to cart. ", data: Data })
-                                                        } else {
-                                                                return res.status(201).send({ status: 201, message: `You can select only ${findService.selectedCount} services, not more than ${findService.selectedCount}` });
-                                                        }
-                                                }
-                                        }
-
-                                } else {
-                                        return res.status(404).send({ status: 404, message: "Service not found" });
-                                }
-                        }
-                }
-        } catch (error) {
-                console.error(error);
-                return res.status(500).send({ status: 500, message: "Server error" + error.message });
-        }
-};
-
-exports.addToCartPackageCustomise2 = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {

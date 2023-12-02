@@ -32,6 +32,12 @@ const packageSchema = new Schema({
             ref: "Service"
         }
     }],
+    addOnServices: [{
+        service: {
+            type: Schema.Types.ObjectId,
+            ref: "Service"
+        }
+    }],
     selectedCount: { type: Number, default: 0 },
     selected: { type: Boolean, default: false },
     type: { type: String, enum: ['Package'] },

@@ -2552,9 +2552,7 @@ exports.createPackage2 = async (req, res) => {
 
 exports.createPackage = async (req, res) => {
     try {
-        const { mainCategoryId, categoryId, subCategoryId, title, description, originalPrice, discountActive, discountPrice, timeInMin, E4uSafety, thingsToKnow, E4uSuggestion, packageType, selectedCount, services, items, serviceTypesId } = req.body;
-
-        // Validate input parameters and handle errors
+        let { mainCategoryId, categoryId, subCategoryId, title, description, originalPrice, discountActive, discountPrice, timeInMin, E4uSafety, thingsToKnow, E4uSuggestion, packageType, selectedCount, services, addOnServices, items, serviceTypesId } = req.body;
 
         const findMainCategory = await mainCategory.findById(mainCategoryId);
         if (!findMainCategory) {
@@ -2597,8 +2595,32 @@ exports.createPackage = async (req, res) => {
                 findSubCategories.push(findSubCategory);
             }
         }
-
         let discount = 0, totalTime;
+        let totalServiceOriginalPrice = 0;
+        let totalServiceDiscountPrice = 0;
+        // let totalServiceDiscount = 0;
+
+        if (!originalPrice) {
+            if (services && Array.isArray(services)) {
+                for (const serviceId of services) {
+                    const findService = await service.findById(serviceId);
+                    if (!findService) {
+                        return res.status(404).json({ message: `Service Not Found`, status: 404, data: {} });
+                    }
+                    console.log("findService", findService);
+                    totalServiceOriginalPrice += findService.originalPrice || 0;
+                    if (findService.discountActive) {
+                        totalServiceDiscountPrice += findService.discountPrice || 0;
+                        discount = findService.discount || 0;
+                        discountActive = findService.discountActive || false;
+                    }
+                }
+            }
+            originalPrice = totalServiceOriginalPrice;
+            discountPrice = totalServiceDiscountPrice;
+            // discount = totalServiceDiscount;
+        }
+
         if (timeInMin > 60) {
             const hours = Math.floor(timeInMin / 60);
             const minutes = timeInMin % 60;
@@ -2608,10 +2630,20 @@ exports.createPackage = async (req, res) => {
             totalTime = `00 hr ${minutes} min`;
         }
 
+        let calculatedDiscount = 0;
+        if (req.body.originalPrice) {
+            if (discountActive === "true") {
+                if (originalPrice && discountPrice) {
+                    calculatedDiscount = Math.max(((originalPrice - discountPrice) / originalPrice) * 100, 0);
+                    calculatedDiscount = Math.round(calculatedDiscount);
+                }
+            }
+        }
+
         if (discountActive === "true") {
-            if (originalPrice && discountPrice) {
-                discount = Math.max(((originalPrice - discountPrice) / originalPrice) * 100, 0);
-                discount = Math.round(discount);
+            if (originalPrice && totalServiceDiscountPrice) {
+                calculatedDiscount = Math.max(((totalServiceDiscountPrice) / originalPrice) * 100, 0);
+                calculatedDiscount = Math.round(calculatedDiscount);
             }
         }
 
@@ -2626,10 +2658,10 @@ exports.createPackage = async (req, res) => {
             subCategoryId: findSubCategories.map(subCategory => subCategory._id),
             title,
             description,
-            originalPrice,
-            discountActive,
-            discount,
-            discountPrice,
+            originalPrice: originalPrice || totalServiceOriginalPrice,
+            discountActive: discountActive,
+            discount: calculatedDiscount || discount,
+            discountPrice: discountPrice || totalServiceDiscountPrice,
             totalTime,
             timeInMin,
             images,
@@ -2641,6 +2673,7 @@ exports.createPackage = async (req, res) => {
             selected: packageType !== "Normal",
             selectedCount: packageType === "Customize" ? selectedCount || 0 : 0,
             services: [],
+            addOnServices: [],
             items: [],
         };
 
@@ -2651,6 +2684,16 @@ exports.createPackage = async (req, res) => {
                     return res.status(404).json({ message: `Service Not Found`, status: 404, data: {} });
                 }
                 packageData.services.push({ service: findService._id });
+            }
+        }
+
+        if (addOnServices && Array.isArray(addOnServices)) {
+            for (const serviceId of addOnServices) {
+                const findService = await service.findById(serviceId);
+                if (!findService) {
+                    return res.status(404).json({ message: `Service Not Found`, status: 404, data: {} });
+                }
+                packageData.addOnServices.push({ service: findService._id });
             }
         }
 
@@ -2701,7 +2744,6 @@ exports.createPackage = async (req, res) => {
         return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
 };
-
 
 exports.getPackage = async (req, res) => {
     try {
