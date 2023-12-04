@@ -331,41 +331,52 @@ const CartSchema = new Schema({
                                 type: Schema.Types.ObjectId,
                                 ref: 'Package',
                         },
-                        type: {
-                                type: String,
-                                enum: ['Package']
-                        },
                         packageType: {
                                 type: String,
                                 enum: ['Customize', 'Normal', 'Edit']
                         },
-                        services: [
-                                {
-                                        serviceId: {
-                                                type: Schema.Types.ObjectId,
-                                                ref: 'Service',
-                                        },
-                                        serviceType: {
-                                                type: Schema.Types.ObjectId,
-                                                ref: 'ServiceType',
-                                        },
-                                        categoryId: {
-                                                type: Schema.Types.ObjectId,
-                                                ref: 'Category',
-                                        },
-                                        price: {
-                                                type: Number,
-                                        },
-                                        quantity: {
-                                                type: Number,
-                                                default: 1,
-                                        },
-                                        total: {
-                                                type: Number,
-                                                default: 0,
-                                        },
+                        services: [{
+                                serviceId: {
+                                        type: Schema.Types.ObjectId,
+                                        ref: 'Service',
                                 },
-                        ],
+                                serviceType: {
+                                        type: Schema.Types.ObjectId,
+                                        ref: 'ServiceType',
+                                },
+                                price: {
+                                        type: Number,
+                                },
+                                quantity: {
+                                        type: Number,
+                                        default: 1,
+                                },
+                                total: {
+                                        type: Number,
+                                        default: 0,
+                                },
+                        }],
+                        addOnServices: [{
+                                serviceId: {
+                                        type: Schema.Types.ObjectId,
+                                        ref: 'Service',
+                                },
+                                serviceType: {
+                                        type: Schema.Types.ObjectId,
+                                        ref: 'ServiceType',
+                                },
+                                price: {
+                                        type: Number,
+                                },
+                                quantity: {
+                                        type: Number,
+                                        default: 1,
+                                },
+                                total: {
+                                        type: Number,
+                                        default: 0,
+                                },
+                        }],
                         price: {
                                 type: Number,
                         },

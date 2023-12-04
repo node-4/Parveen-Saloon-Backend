@@ -1712,7 +1712,8 @@ exports.addToCartPackageNormal = async (req, res) => {
                 }
 
                 const findCart = await Cart.findOne({ userId: userData._id });
-                const findPackage = req.body.packageId ? await Package.findById({ _id: req.body.packageId }) : null;
+                const findPackage = req.body.packageId ? await Package.findOne({ _id: req.body.packageId, packageType: "Normal" }).populate('services.service') : null;
+                console.log("findPackage", findPackage.services);
 
                 if (!findPackage) {
                         return res.status(404).json({ status: 404, message: "Package not found" });
@@ -1736,18 +1737,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                                 const price = findPackage.discountActive ? findPackage.discountPrice : findPackage.originalPrice;
                                 const newPackage = {
                                         packageId: findPackage._id,
-                                        type: "Package",
                                         packageType: "Normal",
-                                        services: [
-                                                {
-                                                        serviceId: findPackage._id,
-                                                        serviceType: findPackage.serviceType,
-                                                        categoryId: findPackage.categoryId,
-                                                        type: findPackage.type,
-                                                        packageType: findPackage.packageType,
-                                                        // serviceTypeId: serviceTypeId,
-                                                },
-                                        ],
                                         price: price,
                                         quantity: req.body.quantity,
                                         total: price * req.body.quantity,
@@ -1798,21 +1788,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                                         packages: [
                                                 {
                                                         packageId: findPackage._id,
-                                                        type: "Package",
                                                         packageType: "Normal",
-                                                        services: [
-                                                                {
-                                                                        serviceId: findPackage._id,
-                                                                        serviceType: findPackage.serviceType,
-                                                                        categoryId: findPackage.categoryId,
-                                                                        price: price,
-                                                                        quantity: req.body.quantity,
-                                                                        total: price * req.body.quantity,
-                                                                        type: findPackage.type,
-                                                                        packageType: findPackage.packageType,
-                                                                        // serviceTypeId: serviceTypeId,
-                                                                },
-                                                        ],
                                                         price: price,
                                                         quantity: req.body.quantity,
                                                         total: price * req.body.quantity,
@@ -1823,6 +1799,7 @@ exports.addToCartPackageNormal = async (req, res) => {
                                         paidAmount: paidAmount,
                                         totalItem: 1,
                                 };
+                                console.log("obj", obj);
                                 const Data = await Cart.create(obj);
                                 return res.status(200).json({ status: 200, message: "Package successfully added to cart.", data: Data });
                         }
@@ -2247,7 +2224,8 @@ exports.addToCartPackageEdit = async (req, res) => {
                 }
 
                 const findCart = await Cart.findOne({ userId: userData._id });
-                const findPackage = req.body.packageId ? await Package.findById({ _id: req.body.packageId }) : null;
+                const findPackage = req.body.packageId ? await Package.findOne({ _id: req.body.packageId, packageType: "Edit" }).populate('services.service').populate('addOnServices.service') : null;
+                console.log("findPackage", findPackage.services);
 
                 if (!findPackage) {
                         return res.status(404).json({ status: 404, message: "Package not found" });
@@ -2271,21 +2249,35 @@ exports.addToCartPackageEdit = async (req, res) => {
                                 const price = findPackage.discountActive ? findPackage.discountPrice : findPackage.originalPrice;
                                 const newPackage = {
                                         packageId: findPackage._id,
-                                        type: "Package",
-                                        packageType: "Edit", // Change this according to your logic
-                                        services: [
-                                                {
-                                                        serviceId: findPackage._id,
-                                                        serviceType: findPackage.serviceType,
-                                                        categoryId: findPackage.categoryId,
-                                                        price: price,
-                                                        quantity: req.body.quantity,
-                                                        total: price * req.body.quantity,
-                                                        type: findPackage.type,
-                                                        packageType: findPackage.packageType,
-                                                        // serviceTypeId: serviceTypeId,
-                                                },
-                                        ],
+                                        packageType: "Edit",
+                                        // services: [
+                                        //         {
+                                        //                 serviceId: findPackage._id,
+                                        //                 serviceType: findPackage.serviceType,
+                                        //                 categoryId: findPackage.categoryId,
+                                        //                 price: price,
+                                        //                 quantity: req.body.quantity,
+                                        //                 total: price * req.body.quantity,
+                                        //                 type: findPackage.type,
+                                        //                 packageType: findPackage.packageType,
+                                        //                 // serviceTypeId: serviceTypeId,
+                                        //         },
+                                        // ],
+
+                                        services: findPackage.services.map(service => ({
+                                                serviceId: service.service._id,
+                                                serviceType: service.service.serviceTypes,
+                                                price: service.service.price,
+                                                quantity: service.quantity,
+                                                total: service.total,
+                                        })),
+                                        addOnServices: findPackage.addOnServices.map(addOnServices => ({
+                                                serviceId: addOnServices.service._id,
+                                                serviceType: addOnServices.service.serviceTypes,
+                                                price: addOnServices.service.price,
+                                                quantity: addOnServices.quantity,
+                                                total: addOnServices.total,
+                                        })),
                                         price: price,
                                         quantity: req.body.quantity,
                                         total: price * req.body.quantity,
@@ -2335,21 +2327,21 @@ exports.addToCartPackageEdit = async (req, res) => {
                                         packages: [
                                                 {
                                                         packageId: findPackage._id,
-                                                        type: "Package",
-                                                        packageType: "Edit", // Change this according to your logic
-                                                        services: [
-                                                                {
-                                                                        serviceId: findPackage._id,
-                                                                        serviceType: findPackage.serviceType,
-                                                                        categoryId: findPackage.categoryId,
-                                                                        price: price,
-                                                                        quantity: req.body.quantity,
-                                                                        total: price * req.body.quantity,
-                                                                        type: findPackage.type,
-                                                                        packageType: findPackage.packageType,
-                                                                        // serviceTypeId: serviceTypeId,
-                                                                },
-                                                        ],
+                                                        packageType: "Edit",
+                                                        services: findPackage.services.map(service => ({
+                                                                serviceId: service.service._id,
+                                                                serviceType: service.service.serviceTypes,
+                                                                price: service.service.price,
+                                                                quantity: service.service.quantity,
+                                                                total: service.service.total,
+                                                        })),
+                                                        addOnServices: findPackage.addOnServices.map(service => ({
+                                                                serviceId: service.service._id,
+                                                                serviceType: service.service.serviceTypes,
+                                                                price: service.service.price,
+                                                                quantity: service.quantity,
+                                                                total: service.total,
+                                                        })),
                                                         price: price,
                                                         quantity: req.body.quantity,
                                                         total: price * req.body.quantity,

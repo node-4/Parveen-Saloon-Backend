@@ -2598,6 +2598,7 @@ exports.createPackage = async (req, res) => {
         let discount = 0, totalTime;
         let totalServiceOriginalPrice = 0;
         let totalServiceDiscountPrice = 0;
+        let totalServiceTime = 0;
         // let totalServiceDiscount = 0;
 
         if (!originalPrice) {
@@ -2609,6 +2610,9 @@ exports.createPackage = async (req, res) => {
                     }
                     console.log("findService", findService);
                     totalServiceOriginalPrice += findService.originalPrice || 0;
+                    if (!req.body.timeInMin) {
+                        totalServiceTime += findService.timeInMin || 0;
+                    }
                     if (findService.discountActive) {
                         totalServiceDiscountPrice += findService.discountPrice || 0;
                         discount = findService.discount || 0;
@@ -2618,6 +2622,7 @@ exports.createPackage = async (req, res) => {
             }
             originalPrice = totalServiceOriginalPrice;
             discountPrice = totalServiceDiscountPrice;
+            // timeInMin = totalServiceTime
             // discount = totalServiceDiscount;
         }
 
@@ -2663,7 +2668,7 @@ exports.createPackage = async (req, res) => {
             discount: calculatedDiscount || discount,
             discountPrice: discountPrice || totalServiceDiscountPrice,
             totalTime,
-            timeInMin,
+            timeInMin: totalServiceTime || timeInMin,
             images,
             E4uSafety,
             thingsToKnow,
