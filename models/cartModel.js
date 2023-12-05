@@ -344,17 +344,14 @@ const CartSchema = new Schema({
                                         type: Schema.Types.ObjectId,
                                         ref: 'ServiceType',
                                 },
-                                price: {
+                                originalPrice: {
                                         type: Number,
                                 },
-                                quantity: {
+                                discountPrice: {
                                         type: Number,
-                                        default: 1,
                                 },
-                                total: {
-                                        type: Number,
-                                        default: 0,
-                                },
+                                discountActive: { type: Boolean, },
+                                selected: { type: Boolean, default: true },
                         }],
                         addOnServices: [{
                                 serviceId: {
@@ -365,17 +362,15 @@ const CartSchema = new Schema({
                                         type: Schema.Types.ObjectId,
                                         ref: 'ServiceType',
                                 },
-                                price: {
+                                originalPrice: {
                                         type: Number,
                                 },
-                                quantity: {
+                                discountPrice: {
                                         type: Number,
-                                        default: 1,
                                 },
-                                total: {
-                                        type: Number,
-                                        default: 0,
-                                },
+                                discountActive: { type: Boolean, },
+                                selected: { type: Boolean, default: false },
+
                         }],
                         price: {
                                 type: Number,
