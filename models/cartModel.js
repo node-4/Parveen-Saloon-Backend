@@ -344,6 +344,10 @@ const CartSchema = new Schema({
                                         type: Schema.Types.ObjectId,
                                         ref: 'ServiceType',
                                 },
+                                quantity: {
+                                        type: Number,
+                                        default: 1,
+                                },
                                 originalPrice: {
                                         type: Number,
                                 },
@@ -361,6 +365,10 @@ const CartSchema = new Schema({
                                 serviceType: {
                                         type: Schema.Types.ObjectId,
                                         ref: 'ServiceType',
+                                },
+                                quantity: {
+                                        type: Number,
+                                        default: 1,
                                 },
                                 originalPrice: {
                                         type: Number,

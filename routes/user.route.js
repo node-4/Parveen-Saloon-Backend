@@ -33,7 +33,7 @@ module.exports = (app) => {
         app.post('/api/v1/user/Cart/remove-from-cart', [authJwt.verifyToken], auth.removeFromCart);
         //
         app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
-        app.put('/api/v1/user/Cart/updateQuantity/:serviceId', [authJwt.verifyToken], auth.updateServiceQuantity);
+        app.put('/api/v1/user/Cart/updateQuantity', [authJwt.verifyToken], auth.updateServiceQuantity);
         //
         app.put("/api/v1/user/Cart/provideTip", [authJwt.verifyToken], auth.provideTip);
         app.get("/api/v1/user/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);
@@ -87,7 +87,7 @@ module.exports = (app) => {
         app.get('/api/v1/user/area/areas/:id', [authJwt.verifyToken], auth.getAreaById);
         app.get('/api/v1/user/areas/city/:cityId', [authJwt.verifyToken], auth.getAreasByCityId);
         app.get("/api/v1/user/Banner/all/staticBanner", [authJwt.verifyToken], auth.getStaticBanner);
-        app.put('/api/v1/user/updateCartPackageEdit', [authJwt.verifyToken], auth.updateCartPackageEdit);
+        app.put('/api/v1/user/updateCartPackageEdit', [authJwt.verifyToken], auth.updateEditPackageInCart);
 
 
 }

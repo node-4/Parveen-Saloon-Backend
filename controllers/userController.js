@@ -2262,6 +2262,7 @@ exports.addToCartPackageEdit = async (req, res) => {
                                         services: findPackage.services.map(service => ({
                                                 serviceId: service.service._id,
                                                 serviceType: service.service.serviceTypes,
+                                                quantity: service.service.quantity,
                                                 originalPrice: service.service.originalPrice,
                                                 discountPrice: service.service.discountPrice,
                                                 discountActive: service.service.discountActive,
@@ -2269,6 +2270,7 @@ exports.addToCartPackageEdit = async (req, res) => {
                                         addOnServices: findPackage.addOnServices.map(service => ({
                                                 serviceId: service.service._id,
                                                 serviceType: service.service.serviceTypes,
+                                                quantity: service.service.quantity,
                                                 originalPrice: service.service.originalPrice,
                                                 discountPrice: service.service.discountPrice,
                                                 discountActive: service.service.discountActive,
@@ -2727,7 +2729,7 @@ exports.addServiceToCart = async (req, res) => {
 //         }
 //       };
 
-exports.updateServiceQuantity = async (req, res) => {
+exports.updateServiceQuantity1 = async (req, res) => {
         try {
                 const { serviceId } = req.params;
                 const { quantity } = req.body;
@@ -2757,6 +2759,81 @@ exports.updateServiceQuantity = async (req, res) => {
 
                 findCart.totalAmount = findCart.services.reduce((total, service) => total + service.total, 0);
                 findCart.paidAmount += (existingService.price * (quantity - oldQuantity));
+
+                await findCart.save();
+
+                return res.status(200).json({ status: 200, message: "Service quantity updated in the cart.", data: findCart });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+
+exports.updateServiceQuantity = async (req, res) => {
+        try {
+                const { Services, packageServices, AddOnServices, quantity } = req.body;
+
+                if (quantity <= 0) {
+                        return res.status(400).json({ status: 400, message: "Quantity must be a positive number greater than zero." });
+                }
+
+                const userData = await User.findOne({ _id: req.user._id });
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                }
+
+                const findCart = await Cart.findOne({ userId: userData._id });
+                if (!findCart) {
+                        return res.status(404).send({ status: 404, message: "Cart not found" });
+                }
+
+                if (Services) {
+                        Services.forEach(serviceId => {
+                                const service = findCart.services.find(s => s.serviceId.equals(serviceId));
+                                if (service) {
+                                        const price = service.discountActive ? service.discountPrice : service.originalPrice;
+
+                                        const oldQuantity = service.quantity;
+                                        service.quantity = quantity;
+                                        service.total = price * quantity;
+
+                                        findCart.totalAmount = findCart.services.reduce((total, s) => total + s.total, 0);
+                                        findCart.paidAmount += price * (quantity - oldQuantity);
+                                }
+                        });
+                }
+
+                if (packageServices) {
+                        packageServices.forEach(serviceId => {
+                                findCart.packages.forEach(pkg => {
+                                        const service = pkg.services.find(s => s.serviceId.equals(serviceId));
+                                        if (service) {
+                                                const price = service.discountActive ? service.discountPrice : service.originalPrice;
+
+                                                service.quantity = quantity;
+                                                service.total = price * quantity;
+
+                                                pkg.total = pkg.services.reduce((total, s) => total + s.total, 0);
+                                        }
+                                });
+                        });
+                }
+
+                if (AddOnServices) {
+                        AddOnServices.forEach(serviceId => {
+                                findCart.packages.forEach(pkg => {
+                                        const addOnService = pkg.addOnServices.find(s => s.serviceId.equals(serviceId));
+                                        if (addOnService) {
+                                                const price = addOnService.discountActive ? addOnService.discountPrice : addOnService.originalPrice;
+
+                                                addOnService.quantity = quantity;
+                                                addOnService.total = price * quantity;
+
+                                                pkg.total = pkg.addOnServices.reduce((total, s) => total + s.total, 0);
+                                        }
+                                });
+                        });
+                }
 
                 await findCart.save();
 
@@ -4579,7 +4656,7 @@ exports.getStaticBanner = async (req, res) => {
         }
 };
 
-exports.updateCartPackageEdit1 = async (req, res) => {
+exports.updateEditPackageInCart = async (req, res) => {
         try {
                 const userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
@@ -4587,6 +4664,7 @@ exports.updateCartPackageEdit1 = async (req, res) => {
                 }
 
                 const findCart = await Cart.findOne({ userId: userData._id });
+
                 const findPackage = req.body.packageId ? await Package.findOne({ _id: req.body.packageId, packageType: "Edit" }).populate('services.service').populate('addOnServices.service') : null;
 
                 if (!findPackage) {
@@ -4600,120 +4678,23 @@ exports.updateCartPackageEdit1 = async (req, res) => {
                                 return res.status(400).json({ status: 400, message: "Package not found in the cart." });
                         }
 
-                        const selectedServices = req.body.selectedServices || [];
-                        const selectedAddOnServices = req.body.selectedAddOnServices || [];
-
-                        existingPackage.services = findPackage.services.map(service => {
-                                const isSelected = selectedServices.includes(service.service._id.toString());
-                                return {
-                                        serviceId: service.service._id,
-                                        serviceType: service.service.serviceTypes,
-                                        originalPrice: isSelected ? service.service.originalPrice : 0,
-                                        discountPrice: isSelected ? (service.service.discountActive ? service.service.discountPrice : 0) : 0,
-                                        discountActive: isSelected ? service.service.discountActive : false,
-                                };
-                        });
-
-                        existingPackage.addOnServices = findPackage.addOnServices.map(addOnService => {
-                                const isSelected = selectedAddOnServices.includes(addOnService.service._id.toString());
-                                return {
-                                        serviceId: addOnService.service._id,
-                                        serviceType: addOnService.service.serviceTypes,
-                                        originalPrice: isSelected ? addOnService.service.originalPrice : 0,
-                                        discountPrice: isSelected ? (addOnService.service.discountActive ? addOnService.service.discountPrice : 0) : 0,
-                                        discountActive: isSelected ? addOnService.service.discountActive : false,
-                                };
-                        });
-
-                        existingPackage.total = calculateTotal(existingPackage);
-                        findCart.totalAmount = calculateTotalAmount(findCart);
-                        findCart.paidAmount = findCart.totalAmount;
-
-                        await findCart.save();
-                        return res.status(200).json({ status: 200, message: "Cart updated successfully.", data: findCart });
-                } else {
-                        return res.status(404).json({ status: 404, message: "Cart not found." });
-                }
-        } catch (error) {
-                console.error(error);
-                return res.status(500).send({ status: 500, message: "Server error" + error.message });
-        }
-};
-
-exports.updateCartPackageEdit = async (req, res) => {
-        try {
-                const userData = await User.findOne({ _id: req.user._id });
-                if (!userData) {
-                        return res.status(404).send({ status: 404, message: "User not found" });
-                }
-
-                const findCart = await Cart.findOne({ userId: userData._id });
-                const findPackage = req.body.packageId ? await Package.findOne({ _id: req.body.packageId, packageType: "Edit" }).populate('services.service').populate('addOnServices.service') : null;
-
-                if (!findPackage) {
-                        return res.status(404).json({ status: 404, message: "Package not found" });
-                }
-
-                if (findCart) {
-                        let existingPackage = findCart.packages.find(pkg => pkg.packageId.equals(findPackage._id));
-
-                        if (!existingPackage) {
-                                const price = findPackage.discountActive ? findPackage.discountPrice : findPackage.originalPrice;
-                                existingPackage = {
-                                        packageId: findPackage._id,
-                                        packageType: "Edit",
-                                        services: findPackage.services.map(service => ({
-                                                serviceId: service.service._id,
-                                                serviceType: service.service.serviceTypes,
-                                                originalPrice: service.service.originalPrice,
-                                                discountPrice: service.service.discountPrice,
-                                                discountActive: service.service.discountActive,
-                                        })),
-                                        addOnServices: findPackage.addOnServices.map(service => ({
-                                                serviceId: service.service._id,
-                                                serviceType: service.service.serviceTypes,
-                                                originalPrice: service.service.originalPrice,
-                                                discountPrice: service.service.discountPrice,
-                                                discountActive: service.service.discountActive,
-                                        })),
-                                        price: price,
-                                        quantity: 0,
-                                        total: 0,
-                                };
-                                findCart.packages.push(existingPackage);
+                        if (req.body.selectedServices) {
+                                existingPackage.services.forEach(service => {
+                                        service.selected = req.body.selectedServices.includes(service.serviceId.toString());
+                                });
                         }
 
-                        const selectedServices = req.body.selectedServices || [];
-                        const selectedAddOnServices = req.body.selectedAddOnServices || [];
-
-                        existingPackage.services = findPackage.services.map(service => {
-                                const isSelected = selectedServices.includes(service.service._id.toString());
-                                return {
-                                        serviceId: service.service._id,
-                                        serviceType: service.service.serviceTypes,
-                                        originalPrice: isSelected ? service.service.originalPrice : 0,
-                                        discountPrice: isSelected ? (service.service.discountActive ? service.service.discountPrice : 0) : 0,
-                                        discountActive: isSelected ? service.service.discountActive : false,
-                                };
-                        });
-
-                        existingPackage.addOnServices = findPackage.addOnServices.map(addOnService => {
-                                const isSelected = selectedAddOnServices.includes(addOnService.service._id.toString());
-                                return {
-                                        serviceId: addOnService.service._id,
-                                        serviceType: addOnService.service.serviceTypes,
-                                        originalPrice: isSelected ? addOnService.service.originalPrice : 0,
-                                        discountPrice: isSelected ? (addOnService.service.discountActive ? addOnService.service.discountPrice : 0) : 0,
-                                        discountActive: isSelected ? addOnService.service.discountActive : false,
-                                };
-                        });
+                        if (req.body.selectedAddOnServices) {
+                                existingPackage.addOnServices.forEach(addOnService => {
+                                        addOnService.selected = req.body.selectedAddOnServices.includes(addOnService.serviceId.toString());
+                                });
+                        }
 
                         existingPackage.total = calculateTotal(existingPackage);
                         findCart.totalAmount = calculateTotalAmount(findCart);
-                        findCart.paidAmount = findCart.totalAmount;
+                        findCart.paidAmount = findCart.totalAmount + findCart.additionalFee;
 
                         await findCart.save();
-
                         return res.status(200).json({ status: 200, message: "Cart updated successfully.", data: findCart });
                 } else {
                         return res.status(404).json({ status: 404, message: "Cart not found." });
@@ -4729,10 +4710,13 @@ function calculateTotal(package) {
 
         if (Array.isArray(package.services)) {
                 total += calculateServiceTotal(package.services);
+                console.log("totalServices", total);
         }
 
         if (Array.isArray(package.addOnServices)) {
                 total += calculateServiceTotal(package.addOnServices);
+                console.log("totalAddOnServices", total);
+
         }
 
         return total;
@@ -4743,6 +4727,8 @@ function calculateTotalAmount(cart) {
 
         for (const pkg of cart.packages) {
                 totalAmount += pkg.total;
+                console.log("totalAmount", totalAmount);
+
         }
 
         return totalAmount;
@@ -4753,7 +4739,18 @@ function calculateServiceTotal(services) {
 
         if (Array.isArray(services)) {
                 for (const service of services) {
-                        total += typeof service.total === 'number' ? service.total : 0;
+                        console.log(service);
+                        if (service.selected == true) {
+                                if (service.discountActive == true) {
+
+                                        total += service.discountPrice * 1;
+
+                                } else {
+
+                                        total += service.originalPrice * 1;
+
+                                }
+                        }
                 }
         }
 

@@ -2617,6 +2617,10 @@ exports.createPackage = async (req, res) => {
                         totalServiceDiscountPrice += findService.discountPrice || 0;
                         discount = findService.discount || 0;
                         discountActive = findService.discountActive || false;
+                    } else {
+                        totalServiceDiscountPrice += findService.originalPrice || 0;
+                        discount = 0;
+                        discountActive = false;
                     }
                 }
             }
@@ -2681,6 +2685,7 @@ exports.createPackage = async (req, res) => {
             addOnServices: [],
             items: [],
         };
+        console.log("packageData", packageData);
 
         if (services && Array.isArray(services)) {
             for (const serviceId of services) {
