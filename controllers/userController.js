@@ -4641,7 +4641,7 @@ exports.getStaticBanner = async (req, res) => {
                 const modifiedBanners = banners.map(banner => {
                         return {
                                 ...banner._doc,
-                                desc: banner.desc + firstName + "!",
+                                desc: banner.desc + " " +  firstName + "!",
                         };
                 });
 

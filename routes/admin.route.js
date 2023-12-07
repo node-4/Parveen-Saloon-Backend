@@ -80,11 +80,15 @@ module.exports = (app) => {
         app.put("/api/v1/admin/Item/update/:id", [authJwt.verifyToken], auth.updateItem);
         app.delete("/api/v1/admin/Item/delete/:id", [authJwt.verifyToken], auth.removeItem);
         app.post("/api/v1/admin/Service/addService", [authJwt.verifyToken], serviceUpload.array('image'), auth.createService);
+        app.put('/api/v1/admin/services/:serviceId/add-location', [authJwt.verifyToken], auth.addServiceLocation)
+        app.put('/api/v1/admin/services/:serviceId/update-location/:locationId', [authJwt.verifyToken], auth.updateServiceLocation)
         app.get("/api/v1/admin/Service/:mainCategoryId/:categoryId/:subCategoryId", [authJwt.verifyToken], auth.getService);
         app.get("/api/v1/admin/Service/getAllService", [authJwt.verifyToken], auth.getAllService);
         app.get('/api/v1/admin/service/:id', [authJwt.verifyToken], auth.getServiceById);
         app.delete("/api/v1/admin/Service/delete/:id", [authJwt.verifyToken], auth.removeService);
         app.post("/api/v1/admin/Service/addPackages", [authJwt.verifyToken], serviceUpload.array('image'), auth.createPackage);
+        app.put('/api/v1/admin/package/:packageId/add-location', [authJwt.verifyToken], auth.addPackageLocation)
+        app.put('/api/v1/admin/package/:packageId/update-location/:locationId', [authJwt.verifyToken], auth.updatePackageLocation)
         app.get("/api/v1/admin/Package/:mainCategoryId/:categoryId/:subCategoryId", [authJwt.verifyToken], auth.getPackage);
         app.get("/api/v1/admin/Package/getAllService", [authJwt.verifyToken], auth.getAllPackage);
         app.get('/api/v1/admin/Package/:id', [authJwt.verifyToken], auth.getPackageById);
