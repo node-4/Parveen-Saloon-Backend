@@ -2777,6 +2777,59 @@ exports.addPackageLocation = async (req, res) => {
             }
         }
 
+        // if (req.body.location && Array.isArray(req.body.location)) {
+        //     const newLocations = req.body.location.map(async loc => {
+        //         const { city, sector } = loc;
+
+        //         const matchingServices = existingPackage.services.filter(service => {
+        //             const matchingLocations = service.service.location.filter(location =>
+        //                 location.city.toString() === city.toString() &&
+        //                 location.sector.toString() === sector.toString()
+        //             );
+        //             return matchingLocations.length > 0;
+        //         });
+        //         console.log("matchingServices", matchingServices);
+        //         const firstMatchingService = matchingServices;
+        //         let originalPrice = loc.originalPrice || 0;
+        //         let discountActive = loc.discountActive || false;
+        //         let discountPrice = loc.discountPrice || 0;
+        //         let discount = 0;
+        //         console.log("firstMatchingService", firstMatchingService);
+
+        //         if (firstMatchingService) {
+        //             const firstLocationMatch = firstMatchingService.service.location.find(location =>
+        //                 location.city.toString() === city.toString() &&
+        //                 location.sector.toString() === sector.toString()
+        //             );
+
+        //             if (firstLocationMatch) {
+        //                 originalPrice = originalPrice || firstLocationMatch.originalPrice || 0;
+        //                 discountActive = discountActive || firstLocationMatch.discountActive || false;
+        //                 discountPrice = discountPrice || firstLocationMatch.discountPrice || 0;
+
+        //                 if (discountActive && originalPrice > 0 && discountPrice > 0) {
+        //                     discount = ((originalPrice - discountPrice) / originalPrice) * 100;
+        //                     discount = Math.max(discount, 0);
+        //                     discount = Math.round(discount);
+        //                 }
+        //             }
+        //         }
+
+        //         const newLocation = {
+        //             city: city,
+        //             sector: sector,
+        //             originalPrice: originalPrice,
+        //             discountActive: discountActive,
+        //             discountPrice: discountPrice,
+        //             discount: discount,
+        //         };
+
+        //         return newLocation;
+        //     });
+
+        //     existingPackage.location = existingPackage.location.concat(await Promise.all(newLocations));
+        // }
+
         if (req.body.location && Array.isArray(req.body.location)) {
             const newLocations = req.body.location.map(async loc => {
                 const { city, sector } = loc;
@@ -2789,22 +2842,28 @@ exports.addPackageLocation = async (req, res) => {
                     return matchingLocations.length > 0;
                 });
 
-                const firstMatchingService = matchingServices[0];
-                let originalPrice = loc.originalPrice || 0;
-                let discountActive = loc.discountActive || false;
-                let discountPrice = loc.discountPrice || 0;
-                let discount = 0;
-
-                if (firstMatchingService) {
-                    const firstLocationMatch = firstMatchingService.service.location.find(location =>
+                const locationEntries = matchingServices.map(service => {
+                    const locationMatch = service.service.location.find(location =>
                         location.city.toString() === city.toString() &&
                         location.sector.toString() === sector.toString()
                     );
 
-                    if (firstLocationMatch) {
-                        originalPrice = originalPrice || firstLocationMatch.originalPrice || 0;
-                        discountActive = discountActive || firstLocationMatch.discountActive || false;
-                        discountPrice = discountPrice || firstLocationMatch.discountPrice || 0;
+                    let originalPrice = loc.originalPrice || 0;
+                    let discountActive = loc.discountActive || false;
+                    let discountPrice = loc.discountPrice || 0;
+                    let discount = 0;
+
+                    if (locationMatch) {
+                        if (!discountActive) {
+                            const serviceDiscountInactive = matchingServices.find(s => !s.service.discountActive);
+                            if (serviceDiscountInactive && serviceDiscountInactive.service && serviceDiscountInactive.service.originalPrice) {
+                                originalPrice = serviceDiscountInactive.service.originalPrice;
+                            }
+                        }
+
+                        originalPrice = originalPrice || locationMatch.originalPrice || 0;
+                        discountActive = discountActive || locationMatch.discountActive || false;
+                        discountPrice = discountPrice || locationMatch.discountPrice || 0;
 
                         if (discountActive && originalPrice > 0 && discountPrice > 0) {
                             discount = ((originalPrice - discountPrice) / originalPrice) * 100;
@@ -2812,23 +2871,23 @@ exports.addPackageLocation = async (req, res) => {
                             discount = Math.round(discount);
                         }
                     }
-                }
 
-                const newLocation = {
-                    city: city,
-                    sector: sector,
-                    originalPrice: originalPrice,
-                    discountActive: discountActive,
-                    discountPrice: discountPrice,
-                    discount: discount,
-                };
+                    return {
+                        city: city,
+                        sector: sector,
+                        originalPrice: originalPrice,
+                        discountActive: discountActive,
+                        discountPrice: discountPrice,
+                        discount: discount,
+                    };
+                });
 
-                return newLocation;
+                return locationEntries;
             });
 
-            existingPackage.location = existingPackage.location.concat(await Promise.all(newLocations));
+            const flattenedLocations = [].concat(...await Promise.all(newLocations));
+            existingPackage.location = existingPackage.location.concat(flattenedLocations);
         }
-
 
         const updatedPackage = await existingPackage.save();
 
