@@ -348,14 +348,12 @@ const CartSchema = new Schema({
                                         type: Number,
                                         default: 1,
                                 },
-                                originalPrice: {
-                                        type: Number,
-                                },
-                                discountPrice: {
-                                        type: Number,
-                                },
-                                discountActive: { type: Boolean, },
-                                selected: { type: Boolean, default: true },
+                                originalPrice: { type: Number },
+                                discountActive: { type: Boolean, default: false },
+                                discount: { type: Number },
+                                discountPrice: { type: Number },
+                                totalPrice: { type: Number },
+                                selected: { type: Boolean, default: false },
                         }],
                         addOnServices: [{
                                 serviceId: {
@@ -370,13 +368,11 @@ const CartSchema = new Schema({
                                         type: Number,
                                         default: 1,
                                 },
-                                originalPrice: {
-                                        type: Number,
-                                },
-                                discountPrice: {
-                                        type: Number,
-                                },
-                                discountActive: { type: Boolean, },
+                                originalPrice: { type: Number },
+                                discountActive: { type: Boolean, default: false },
+                                discount: { type: Number },
+                                discountPrice: { type: Number },
+                                totalPrice: { type: Number },
                                 selected: { type: Boolean, default: false },
 
                         }],

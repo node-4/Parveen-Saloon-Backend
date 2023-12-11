@@ -88,6 +88,7 @@ module.exports = (app) => {
         app.get('/api/v1/user/areas/city/:cityId', [authJwt.verifyToken], auth.getAreasByCityId);
         app.get("/api/v1/user/Banner/all/staticBanner", [authJwt.verifyToken], auth.getStaticBanner);
         app.put('/api/v1/user/updateCartPackageEdit', [authJwt.verifyToken], auth.updateEditPackageInCart);
+        app.put('/api/v1/user/updateCustomizePackageInCart', [authJwt.verifyToken], auth.updateCustomizePackageInCart);
 
 
 }
