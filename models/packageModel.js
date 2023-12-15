@@ -7,7 +7,7 @@ const packageSchema = new Schema({
     mainCategoryId: { type: Schema.Types.ObjectId, ref: 'mainCategory' },
     categoryId: { type: Schema.Types.ObjectId, ref: 'Category' },
     subCategoryId: [{ type: Schema.Types.ObjectId, ref: 'subCategory' }],
-    servicePackageId: { type: Schema.Types.ObjectId, ref: 'servicePackage' },
+    servicePackageId: [{ type: Schema.Types.ObjectId, ref: 'servicePackage' }],
     serviceTypes: { type: Schema.Types.ObjectId, ref: 'ServiceTypeRef' },
     location: [{
         city: { type: mongoose.Schema.ObjectId, ref: 'City' },
@@ -46,6 +46,7 @@ const packageSchema = new Schema({
     selected: { type: Boolean, default: false },
     type: { type: String, enum: ['Package'] },
     packageType: { type: String, enum: ['Customize', 'Normal', 'Edit'] },
+    status: { type: Boolean, default: false },
 }, { timestamps: true });
 
 packageSchema.plugin(mongoosePaginate);

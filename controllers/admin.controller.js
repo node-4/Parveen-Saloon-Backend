@@ -2007,6 +2007,7 @@ exports.createService = async (req, res) => {
             E4uSuggestion: req.body.E4uSuggestion,
             type: req.body.type,
             items: items,
+            status: req.body.status
         };
 
         const category = await service.create(data);
@@ -2212,6 +2213,7 @@ exports.getService = async (req, res) => {
             mainCategoryId: findMainCategory._id,
             categoryId: findCategory._id,
             subCategoryId: findSubCategory._id,
+            status: false,
         }).populate({
             path: 'location.city',
             model: 'City',
@@ -2301,7 +2303,7 @@ exports.getService = async (req, res) => {
 };
 exports.getAllService = async (req, res) => {
     try {
-        const findService = await service.find().populate('mainCategoryId', 'name').populate('categoryId', 'name').populate('subCategoryId', 'name')
+        const findService = await service.find({ status: false }).populate('mainCategoryId', 'name').populate('categoryId', 'name').populate('subCategoryId', 'name')
             .populate({
                 path: 'location.city',
                 model: 'City',
@@ -2534,7 +2536,7 @@ exports.createPackage1 = async (req, res) => {
 
 exports.createPackage = async (req, res) => {
     try {
-        let { mainCategoryId, categoryId, subCategoryId, title, description, originalPrice, discountActive, discountPrice, timeInMin, E4uSafety, thingsToKnow, E4uSuggestion, packageType, selectedCount, services, addOnServices, items, serviceTypesId } = req.body;
+        let { mainCategoryId, categoryId, subCategoryId, title, description, originalPrice, discountActive, discountPrice, timeInMin, E4uSafety, thingsToKnow, E4uSuggestion, packageType, selectedCount, services, addOnServices, items, serviceTypesId, status } = req.body;
 
         const findMainCategory = await mainCategory.findById(mainCategoryId);
         if (!findMainCategory) {
@@ -2666,6 +2668,7 @@ exports.createPackage = async (req, res) => {
             services: [],
             addOnServices: [],
             items: [],
+            status,
         };
         console.log("packageData", packageData);
 
@@ -3158,6 +3161,70 @@ exports.removePackage = async (req, res) => {
         return res.status(200).json({ message: "Package Deleted Successfully!" });
     }
 };
+
+exports.updatePackage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        let findPackage = await Package.findById(id);
+        if (!findPackage) {
+            return res.status(404).json({ message: "Service Not Found", status: 404, data: {} });
+        } else {
+            let findCategory, findSubCategory, discountPrice = 0, discount = 0, totalTime;
+            if (req.body.categoryId != (null || undefined)) {
+                findCategory = await Category.findById({ _id: req.body.categoryId });
+                if (!findCategory) {
+                    return res.status(404).json({ message: "Category Not Found", status: 404, data: {} });
+                }
+            }
+            if (req.body.subCategoryId != (null || undefined)) {
+                findSubCategory = await subCategory.findOne({ categoryId: findCategory._id || findPackage.categoryId, _id: req.body.subCategoryId });
+                if (!findSubCategory) {
+                    return res.status(404).json({ message: "Sub Category not found.", status: 404, data: {} });
+                }
+            }
+            if (req.body.timeInMin != (null || undefined)) {
+                if (req.body.timeInMin > 60) {
+                    const hours = Math.floor(req.body.timeInMin / 60);
+                    const minutes = req.body.timeInMin % 60;
+                    totalTime = `${hours} hr ${minutes} min`
+                } else {
+                    const minutes = req.body.timeInMin % 60;
+                    totalTime = `00 hr ${minutes} min`
+                }
+            }
+            if (req.body.discountActive == true) {
+                discountPrice = (req.body.price) - (((req.body.price) * (req.body.discount)) / 100);
+                discount = req.body.discount;
+            } else {
+                discountPrice = findPackage.discountPrice;
+                discount = findPackage.discount;
+            }
+            const data = {
+                categoryId: findCategory._id || findPackage.categoryId,
+                subCategoryId: findSubCategory._id || findPackage.subCategoryId,
+                name: req.body.name || findPackage.name,
+                totalTime: totalTime || findPackage.totalTime,
+                timeInMin: req.body.timeInMin || findPackage.timeInMin,
+                originalPrice: req.body.originalPrice || findPackage.originalPrice,
+                discountPrice: discountPrice || findPackage.discountPrice,
+                discount: discount || findPackage.discount,
+                discountActive: req.body.discountActive || findPackage.discountActive,
+                E4uSafety: req.body.E4uSafety || findPackage.E4uSafety,
+                thingsToKnow: req.body.thingsToKnow || findPackage.thingsToKnow,
+                E4uSuggestion: req.body.E4uSuggestion || findPackage.E4uSuggestion,
+                type: req.body.type || findPackage.type,
+                discription: req.body.discription || findPackage.discription,
+                status: req.body.status
+            };
+            const category = await Package.findByIdAndUpdate({ _id: findPackage._id }, { $set: data }, { new: true });
+            return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: "internal server error ", data: error.message, });
+    }
+};
+
 exports.updateImagesinPackage = async (req, res) => {
     const { id } = req.params;
     let findPackage = await Package.findById({ _id: id });
@@ -3594,6 +3661,7 @@ exports.updateService = async (req, res) => {
                 E4uSuggestion: req.body.E4uSuggestion || findService.E4uSuggestion,
                 type: req.body.type || findService.type,
                 discription: req.body.discription || findService.discription,
+                status: req.body.status
             };
             const category = await service.findByIdAndUpdate({ _id: findService._id }, { $set: data }, { new: true });
             return res.status(200).json({ message: "Service add successfully.", status: 200, data: category });

@@ -4440,6 +4440,7 @@ exports.updateCustomizePackageInCart = async (req, res) => {
                 if (!findPackage) {
                         return res.status(404).json({ status: 404, message: "Package not found" });
                 }
+                console.log("findPackage", findPackage);
 
                 if (findCart) {
                         const existingPackage = findCart.packages.find(pkg => pkg.packageId.equals(findPackage._id));
@@ -4447,6 +4448,14 @@ exports.updateCustomizePackageInCart = async (req, res) => {
                         if (!existingPackage) {
                                 return res.status(400).json({ status: 400, message: "Package not found in the cart." });
                         }
+                        console.log("123", existingPackage);
+
+                        // if (req.body.selectedServices && req.body.selectedServices.length !== findPackage.selectedCount) {
+                        //         return res.status(400).json({
+                        //             status: 400,
+                        //             message: `Please select ${findPackage.selectedCount} services for the customized package.`,
+                        //         });
+                        //     }
 
                         if (req.body.selectedServices) {
                                 existingPackage.services.forEach(service => {
