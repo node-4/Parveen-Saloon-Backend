@@ -2319,7 +2319,7 @@ exports.getAllService = async (req, res) => {
                 data: findService,
             });
         } else {
-            return res.status(44).json({ message: "Services not found.", status: 404, data: {} });
+            return res.status(404).json({ message: "Services not found.", status: 404, data: {} });
         }
     } catch (error) {
         console.error(error);

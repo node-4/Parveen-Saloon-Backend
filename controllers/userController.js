@@ -433,7 +433,7 @@ exports.getFreeServices = async (req, res) => {
 //         }
 // };
 
-exports.getCart = async (req, res) => {
+exports.getCart1 = async (req, res) => {
         try {
                 let userData = await User.findOne({ _id: req.user._id });
                 if (!userData) {
@@ -556,6 +556,161 @@ exports.getCart = async (req, res) => {
                                         },
                                 });
                         }
+                }
+        } catch (error) {
+                console.log(error);
+                return res.status(501).send({ status: 501, message: "Server error.", data: {} });
+        }
+};
+
+function getServicePrice1(service, userCity, userSector) {
+        const location = service.location.find(location =>
+                location.city.toString() === userCity.toString() &&
+                location.sector.toString() === userSector.toString()
+        );
+        console.log("Location:", location);
+
+        console.log("Price Details:", {
+                originalPrice: location ? location.originalPrice || 0 : service.originalPrice || 0,
+                discountPrice: location ? location.discountPrice || 0 : service.discountPrice || 0,
+                discount: location ? location.discount || 0 : service.discount || 0,
+                discountActive: location ? location.discountActive || false : service.discountActive || false,
+        });
+
+        return {
+                originalPrice: location ? location.originalPrice || 0 : service.originalPrice || 0,
+                discountPrice: location ? location.discountPrice || 0 : service.discountPrice || 0,
+                discount: location ? location.discount || 0 : service.discount || 0,
+                discountActive: location ? location.discountActive || false : service.discountActive || false,
+        };
+}
+
+exports.getCart = async (req, res) => {
+        try {
+                let userData = await User.findOne({ _id: req.user._id });
+                if (!userData) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        let findCart = await Cart.findOne({ userId: userData._id })
+                                .populate("coupanId services.serviceId Charges.chargeId")
+                                .populate({
+                                        path: 'freeService.freeServiceId',
+                                        populate: { path: 'serviceId', model: 'Service', select: "title originalPrice totalTime discount discountActive timeInMin" }
+                                })
+                                .populate({
+                                        path: 'packages.packageId',
+                                        model: 'Package'
+                                });
+                        console.log("cart", findCart);
+                        console.log("userData", userData);
+                        const minimumCart = await MinimumCart.findOne();
+
+                        if (!findCart) {
+                                return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+                        }
+                        let totalOriginalPrice = 0;
+                        let totalDiscountActive = 0;
+                        let totalDiscount = 0;
+                        let totalDiscountPrice = 0;
+                        let totalQuantityInCart = 0;
+                        let totalIsInCart = 0;
+                        let totalHours = 0;
+                        let totalMinutes = 0;
+                        let totalIsSlotPrice = 0;
+
+                        for (const cartItem of findCart.packages) {
+                                console.log("cartItem", cartItem);
+
+                                if (cartItem.serviceId) {
+                                        const priceDetails = getServicePrice1(cartItem.serviceId, userData.city, userData.sector);
+                                        console.log("Service Price Details:", priceDetails);
+
+                                        cartItem.serviceId.originalPrice = priceDetails.originalPrice;
+                                        cartItem.serviceId.discountPrice = priceDetails.discountPrice;
+                                        cartItem.serviceId.discount = priceDetails.discount;
+                                        cartItem.serviceId.discountActive = priceDetails.discountActive;
+
+                                        totalOriginalPrice += priceDetails.originalPrice * cartItem.quantity;
+                                        totalDiscountActive += priceDetails.discountActive ? 1 : 0;
+                                        totalDiscount += priceDetails.discount * cartItem.quantity;
+                                        totalDiscountPrice += priceDetails.discountActive ? priceDetails.discountPrice * cartItem.quantity : 0;
+                                        totalQuantityInCart += cartItem.quantity;
+                                        totalIsInCart++;
+
+                                        const timeParts = cartItem.serviceId.totalTime.split(" ");
+                                        const hours = parseInt(timeParts[0]) || 0;
+                                        const minutes = parseInt(timeParts[2]) || 0;
+
+                                        totalHours += hours;
+                                        totalMinutes += minutes;
+                                }
+                        }
+
+                        for (const cartItem of findCart.packages) {
+                                if (cartItem.packageId) {
+                                        for (const service of cartItem.services) {
+                                                if (service.serviceId) {
+                                                        const priceDetails = getServicePrice1(service.serviceId, userData.city, userData.sector);
+
+                                                        service.serviceId.originalPrice = priceDetails.originalPrice;
+                                                        service.serviceId.discountPrice = priceDetails.discountPrice;
+                                                        service.serviceId.discount = priceDetails.discount;
+                                                        service.serviceId.discountActive = priceDetails.discountActive;
+                                                        console.log("Package Service Price Details:", priceDetails);
+
+                                                        const timeParts = service.serviceId.totalTime.split(" ");
+                                                        const hours = parseInt(timeParts[0]) || 0;
+                                                        const minutes = parseInt(timeParts[2]) || 0;
+
+                                                        totalHours += hours;
+                                                        totalMinutes += minutes;
+                                                }
+                                        }
+                                }
+                        }
+
+                        const timeSlotsFromCart = {
+                                timeFrom: findCart.startTime,
+                                timeTo: findCart.endTime,
+                        };
+
+                        const matchingTimeSlots = await Slot.find({
+                                $and: [
+                                        { isSurgeAmount: true },
+                                        timeSlotsFromCart,
+                                ],
+                        });
+
+                        for (const slot of matchingTimeSlots) {
+                                totalIsSlotPrice += slot.surgeAmount;
+                        }
+                        findCart.paidAmount += totalIsSlotPrice;
+
+                        const totalHoursString = totalHours > 0 ? `${totalHours} hr` : "";
+                        const totalMinutesString = totalMinutes > 0 ? ` ${totalMinutes} min` : "";
+
+                        const totalTimeTaken = totalHoursString + totalMinutesString;
+
+                        if (findCart.totalAmount <= findCart.minimumCartAmount) {
+                                return res.status(400).json({ status: 400, data: { "Please add more data to place an order minimumAmount": findCart.minimumCartAmount } });
+                        }
+
+                        return res.status(200).json({
+                                message: "Cart data found.",
+                                status: 200,
+                                data: {
+                                        ...findCart.toObject(),
+                                        totalOriginalPrice,
+                                        totalDiscountActive,
+                                        totalDiscount,
+                                        totalDiscountPrice,
+                                        totalQuantityInCart,
+                                        totalIsInCart,
+                                        minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0,
+                                        totalTimeTaken,
+                                        totalIsSlotPrice
+                                },
+                        });
                 }
         } catch (error) {
                 console.log(error);
