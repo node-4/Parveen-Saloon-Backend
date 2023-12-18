@@ -563,160 +563,271 @@ exports.getCart1 = async (req, res) => {
         }
 };
 
-function getServicePrice1(service, userCity, userSector) {
-        const location = service.location.find(location =>
-                location.city.toString() === userCity.toString() &&
-                location.sector.toString() === userSector.toString()
-        );
-        console.log("Location:", location);
+async function getServicePrice1(serviceId, userCity, userSector) {
+        try {
+                console.log("serviceId", serviceId);
+                console.log("userCity", userCity);
+                console.log("userSector", userSector);
+                let service1;
+                service1 = await service.findById(serviceId).populate('location');
 
-        console.log("Price Details:", {
-                originalPrice: location ? location.originalPrice || 0 : service.originalPrice || 0,
-                discountPrice: location ? location.discountPrice || 0 : service.discountPrice || 0,
-                discount: location ? location.discount || 0 : service.discount || 0,
-                discountActive: location ? location.discountActive || false : service.discountActive || false,
-        });
 
-        return {
-                originalPrice: location ? location.originalPrice || 0 : service.originalPrice || 0,
-                discountPrice: location ? location.discountPrice || 0 : service.discountPrice || 0,
-                discount: location ? location.discount || 0 : service.discount || 0,
-                discountActive: location ? location.discountActive || false : service.discountActive || false,
-        };
+                const location = service1.location.find(location =>
+                        location.city.toString() === userCity.toString() &&
+                        location.sector.toString() === userSector.toString()
+                );
+
+                console.log("Service:", service1);
+                console.log("Location:", location);
+
+                if (!location) {
+                        throw new Error("Location not found for the specified city and sector.");
+                }
+
+                console.log("Price Details:", {
+                        originalPrice: location.originalPrice || 0,
+                        discountPrice: location.discountPrice || 0,
+                        discount: location.discount || 0,
+                        discountActive: location.discountActive || false,
+                        totalTime: location.totalTime || "",
+                });
+
+                return {
+                        originalPrice: location.originalPrice || 0,
+                        discountPrice: location.discountPrice || 0,
+                        discount: location.discount || 0,
+                        discountActive: location.discountActive || false,
+                        totalTime: location.totalTime || "",
+
+                };
+        } catch (error) {
+                console.error("Error in getServicePrice:", error);
+                return {
+                        originalPrice: 0,
+                        discountPrice: 0,
+                        discount: 0,
+                        discountActive: false,
+                        totalTime: "",
+                };
+        }
 }
 
 exports.getCart = async (req, res) => {
         try {
-                let userData = await User.findOne({ _id: req.user._id });
+                const userData = await User.findOne({ _id: req.user._id });
+
                 if (!userData) {
-                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
-                } else {
-                        let findCart = await Cart.findOne({ userId: userData._id })
-                                .populate("coupanId services.serviceId Charges.chargeId")
-                                .populate({
-                                        path: 'freeService.freeServiceId',
-                                        populate: { path: 'serviceId', model: 'Service', select: "title originalPrice totalTime discount discountActive timeInMin" }
-                                })
-                                .populate({
-                                        path: 'packages.packageId',
-                                        model: 'Package'
-                                });
-                        console.log("cart", findCart);
-                        console.log("userData", userData);
-                        const minimumCart = await MinimumCart.findOne();
+                        return res.status(404).json({ status: 404, message: "No user found", data: {} });
+                }
 
-                        if (!findCart) {
-                                return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
-                        }
-                        let totalOriginalPrice = 0;
-                        let totalDiscountActive = 0;
-                        let totalDiscount = 0;
-                        let totalDiscountPrice = 0;
-                        let totalQuantityInCart = 0;
-                        let totalIsInCart = 0;
-                        let totalHours = 0;
-                        let totalMinutes = 0;
-                        let totalIsSlotPrice = 0;
+                const findCart = await Cart.findOne({ userId: userData._id })
+                        .populate("coupanId services.serviceId Charges.chargeId")
+                        .populate({
+                                path: 'freeService.freeServiceId',
+                                populate: { path: 'serviceId', model: 'Service', select: "title originalPrice totalTime discount discountActive timeInMin" }
+                        })
+                        .populate({
+                                path: 'services.serviceId',
+                                model: 'Service',
+                                populate: {
+                                        path: 'mainCategoryId categoryId subCategoryId',
+                                        model: 'mainCategory'
+                                }
+                        })
+                        .populate({
+                                path: 'services.serviceId',
+                                model: 'Service',
+                                populate: {
+                                        path: 'categoryId',
+                                        model: 'Category'
+                                }
+                        })
+                        .populate({
+                                path: 'services.serviceId',
+                                model: 'Service',
+                                populate: {
+                                        path: 'subCategoryId',
+                                        model: 'subCategory'
+                                }
+                        })
+                        .populate({
+                                path: 'packages.packageId',
+                                model: 'Package',
+                                populate: {
+                                        path: 'mainCategoryId categoryId subCategoryId',
+                                        model: 'mainCategory'
+                                }
+                        })
+                        .populate({
+                                path: 'packages.packageId',
+                                model: 'Package',
+                                populate: {
+                                        path: 'categoryId',
+                                        model: 'Category'
+                                }
+                        })
+                        .populate({
+                                path: 'packages.packageId',
+                                model: 'Package',
+                                populate: {
+                                        path: 'subCategoryId',
+                                        model: 'subCategory'
+                                }
+                        })
+                        .populate({
+                                path: 'packages.packageId.servicces.serviceId',
+                                model: 'Service',
+                                // populate: {
+                                //         path: 'subCategoryId',
+                                //         model: 'subCategory'
+                                // }
+                        })
+                if (!findCart) {
+                        return res.status(404).json({ status: 404, message: "Cart is empty.", data: {} });
+                }
 
-                        for (const cartItem of findCart.packages) {
-                                console.log("cartItem", cartItem);
+                const { totalOriginalPrice, totalDiscountActive, totalDiscount, totalDiscountPrice, totalQuantityInCart, totalIsInCart, totalTimeTaken, totalIsSlotPrice } = await calculateCartPrices(findCart, userData);
 
-                                if (cartItem.serviceId) {
-                                        const priceDetails = getServicePrice1(cartItem.serviceId, userData.city, userData.sector);
-                                        console.log("Service Price Details:", priceDetails);
+                const minimumCart = await MinimumCart.findOne();
 
-                                        cartItem.serviceId.originalPrice = priceDetails.originalPrice;
-                                        cartItem.serviceId.discountPrice = priceDetails.discountPrice;
-                                        cartItem.serviceId.discount = priceDetails.discount;
-                                        cartItem.serviceId.discountActive = priceDetails.discountActive;
+                if (findCart.totalAmount <= (minimumCart ? minimumCart.minimumCartAmount : 0)) {
+                        return res.status(400).json({
+                                status: 400,
+                                message: "Please add more items to meet the minimum cart amount.",
+                                data: { minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0 }
+                        });
+                }
 
-                                        totalOriginalPrice += priceDetails.originalPrice * cartItem.quantity;
-                                        totalDiscountActive += priceDetails.discountActive ? 1 : 0;
-                                        totalDiscount += priceDetails.discount * cartItem.quantity;
-                                        totalDiscountPrice += priceDetails.discountActive ? priceDetails.discountPrice * cartItem.quantity : 0;
-                                        totalQuantityInCart += cartItem.quantity;
-                                        totalIsInCart++;
+                return res.status(200).json({
+                        status: 200,
+                        message: "Cart data found.",
+                        data: {
+                                ...findCart.toObject(),
+                                totalOriginalPrice,
+                                totalDiscountActive,
+                                totalDiscount,
+                                totalDiscountPrice,
+                                totalQuantityInCart,
+                                totalIsInCart,
+                                minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0,
+                                totalTimeTaken,
+                                totalIsSlotPrice
+                        },
+                });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ status: 500, message: "Server error.", data: {} });
+        }
+};
 
-                                        const timeParts = cartItem.serviceId.totalTime.split(" ");
+async function calculateCartPrices(findCart, userData) {
+        let totalOriginalPrice = 0;
+        let totalDiscountActive = 0;
+        let totalDiscount = 0;
+        let totalDiscountPrice = 0;
+        let totalQuantityInCart = 0;
+        let totalIsInCart = 0;
+        let totalHours = 0;
+        let totalMinutes = 0;
+        let totalIsSlotPrice = 0;
+
+        for (const cartItem of findCart.services) {
+                if (cartItem.serviceId) {
+                        const priceDetails = await getServicePrice1(cartItem.serviceId, userData.city, userData.sector);
+
+                        cartItem.serviceId.originalPrice = priceDetails.originalPrice;
+                        cartItem.serviceId.discountPrice = priceDetails.discountPrice;
+                        cartItem.serviceId.discount = priceDetails.discount;
+                        cartItem.serviceId.discountActive = priceDetails.discountActive;
+
+                        totalOriginalPrice += priceDetails.originalPrice * cartItem.quantity;
+                        totalDiscountActive += priceDetails.discountActive ? 1 : 0;
+                        totalDiscount += priceDetails.discount * cartItem.quantity;
+                        totalDiscountPrice += priceDetails.discountActive ? priceDetails.discountPrice * cartItem.quantity : 0;
+                        totalQuantityInCart += cartItem.quantity;
+                        totalIsInCart++;
+
+                        const timeParts = cartItem.serviceId.totalTime.split(" ");
+                        console.log("timeParts", timeParts);
+
+                        const hours = parseInt(timeParts[0]) || 0;
+                        const minutes = parseInt(timeParts[2]) || 0;
+
+                        totalHours += hours;
+                        totalMinutes += minutes;
+                }
+        }
+
+        for (const cartItem of findCart.packages) {
+
+                for (const service of cartItem.services) {
+                        if (service.serviceId) {
+                                const priceDetails = await getServicePrice1(service.serviceId, userData.city, userData.sector);
+
+                                service.serviceId.originalPrice = priceDetails.originalPrice;
+                                service.serviceId.discountPrice = priceDetails.discountPrice;
+                                service.serviceId.discount = priceDetails.discount;
+                                service.serviceId.discountActive = priceDetails.discountActive;
+
+                                totalOriginalPrice += priceDetails.originalPrice * service.quantity;
+                                totalDiscountActive += priceDetails.discountActive ? 1 : 0;
+                                totalDiscount += priceDetails.discount * service.quantity;
+                                totalDiscountPrice += priceDetails.discountActive ? priceDetails.discountPrice * service.quantity : 0;
+                                totalQuantityInCart += findCart.quantity;
+                                totalIsInCart++;
+
+                                const timeParts = (service.serviceId.totalTime || "").split(" ");
+                                console.log("timeParts", timeParts);
+                                console.log("service.serviceId.totalTime", service.serviceId.totalTime);
+                                if (timeParts.length === 2) {
                                         const hours = parseInt(timeParts[0]) || 0;
-                                        const minutes = parseInt(timeParts[2]) || 0;
+                                        const minutes = parseInt(timeParts[1]) || 0;
 
                                         totalHours += hours;
                                         totalMinutes += minutes;
                                 }
                         }
-
-                        for (const cartItem of findCart.packages) {
-                                if (cartItem.packageId) {
-                                        for (const service of cartItem.services) {
-                                                if (service.serviceId) {
-                                                        const priceDetails = getServicePrice1(service.serviceId, userData.city, userData.sector);
-
-                                                        service.serviceId.originalPrice = priceDetails.originalPrice;
-                                                        service.serviceId.discountPrice = priceDetails.discountPrice;
-                                                        service.serviceId.discount = priceDetails.discount;
-                                                        service.serviceId.discountActive = priceDetails.discountActive;
-                                                        console.log("Package Service Price Details:", priceDetails);
-
-                                                        const timeParts = service.serviceId.totalTime.split(" ");
-                                                        const hours = parseInt(timeParts[0]) || 0;
-                                                        const minutes = parseInt(timeParts[2]) || 0;
-
-                                                        totalHours += hours;
-                                                        totalMinutes += minutes;
-                                                }
-                                        }
-                                }
-                        }
-
-                        const timeSlotsFromCart = {
-                                timeFrom: findCart.startTime,
-                                timeTo: findCart.endTime,
-                        };
-
-                        const matchingTimeSlots = await Slot.find({
-                                $and: [
-                                        { isSurgeAmount: true },
-                                        timeSlotsFromCart,
-                                ],
-                        });
-
-                        for (const slot of matchingTimeSlots) {
-                                totalIsSlotPrice += slot.surgeAmount;
-                        }
-                        findCart.paidAmount += totalIsSlotPrice;
-
-                        const totalHoursString = totalHours > 0 ? `${totalHours} hr` : "";
-                        const totalMinutesString = totalMinutes > 0 ? ` ${totalMinutes} min` : "";
-
-                        const totalTimeTaken = totalHoursString + totalMinutesString;
-
-                        if (findCart.totalAmount <= findCart.minimumCartAmount) {
-                                return res.status(400).json({ status: 400, data: { "Please add more data to place an order minimumAmount": findCart.minimumCartAmount } });
-                        }
-
-                        return res.status(200).json({
-                                message: "Cart data found.",
-                                status: 200,
-                                data: {
-                                        ...findCart.toObject(),
-                                        totalOriginalPrice,
-                                        totalDiscountActive,
-                                        totalDiscount,
-                                        totalDiscountPrice,
-                                        totalQuantityInCart,
-                                        totalIsInCart,
-                                        minimumCartAmount: minimumCart ? minimumCart.minimumCartAmount : 0,
-                                        totalTimeTaken,
-                                        totalIsSlotPrice
-                                },
-                        });
                 }
-        } catch (error) {
-                console.log(error);
-                return res.status(501).send({ status: 501, message: "Server error.", data: {} });
         }
-};
+
+        const timeSlotsFromCart = {
+                timeFrom: findCart.startTime,
+                timeTo: findCart.endTime,
+        };
+
+        const matchingTimeSlots = await Slot.find({
+                $and: [
+                        { isSurgeAmount: true },
+                        timeSlotsFromCart,
+                ],
+        });
+
+        for (const slot of matchingTimeSlots) {
+                totalIsSlotPrice += slot.surgeAmount;
+        }
+
+        findCart.paidAmount += totalIsSlotPrice;
+
+        const totalHoursString = totalHours > 0 ? `${totalHours} hr` : "";
+        const totalMinutesString = totalMinutes > 0 ? ` ${totalMinutes} min` : "";
+
+        const totalTimeTaken = totalHoursString + totalMinutesString;
+
+        await findCart.save();
+
+        return {
+                totalOriginalPrice,
+                totalDiscountActive,
+                totalDiscount,
+                totalDiscountPrice,
+                totalQuantityInCart,
+                totalIsInCart,
+                totalTimeTaken,
+                totalIsSlotPrice
+        };
+}
+
+
 
 exports.listOffer = async (req, res) => {
         try {
@@ -1628,7 +1739,6 @@ exports.addToCartSingleService = async (req, res) => {
                                 services: [{
                                         serviceId: findService._id,
                                         serviceType: findService.serviceType,
-                                        categoryId: findService.categoryId,
                                         packageServices: req.body.packageServices,
                                         price: price,
                                         quantity: quantity,

@@ -308,10 +308,6 @@ const CartSchema = new Schema({
                                 type: Schema.Types.ObjectId,
                                 ref: 'ServiceType',
                         },
-                        categoryId: {
-                                type: Schema.Types.ObjectId,
-                                ref: 'Category',
-                        },
                         price: {
                                 type: Number,
                         },
