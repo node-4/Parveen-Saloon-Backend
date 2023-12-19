@@ -565,9 +565,6 @@ exports.getCart1 = async (req, res) => {
 
 async function getServicePrice1(serviceId, userCity, userSector) {
         try {
-                console.log("serviceId", serviceId);
-                console.log("userCity", userCity);
-                console.log("userSector", userSector);
                 let service1;
                 service1 = await service.findById(serviceId).populate('location');
 
@@ -584,12 +581,12 @@ async function getServicePrice1(serviceId, userCity, userSector) {
                         throw new Error("Location not found for the specified city and sector.");
                 }
 
-                console.log("Price Details:", {
+                console.log("Price Details1:", {
                         originalPrice: location.originalPrice || 0,
                         discountPrice: location.discountPrice || 0,
                         discount: location.discount || 0,
                         discountActive: location.discountActive || false,
-                        totalTime: location.totalTime || "",
+                        totalTime: service1.totalTime || "",
                 });
 
                 return {
@@ -597,7 +594,7 @@ async function getServicePrice1(serviceId, userCity, userSector) {
                         discountPrice: location.discountPrice || 0,
                         discount: location.discount || 0,
                         discountActive: location.discountActive || false,
-                        totalTime: location.totalTime || "",
+                        totalTime: service1.totalTime || "",
 
                 };
         } catch (error) {
@@ -698,6 +695,19 @@ exports.getCart = async (req, res) => {
                         });
                 }
 
+                // if (findCart.packages && findCart.packages.length > 0) {
+                //         for (const cartItem of findCart.packages) {
+                //                 if (cartItem.packageType === 'Customize') {
+                //                         if (cartItem.selectedCount !== cartItem.services.length) {
+                //                                 return res.status(400).json({
+                //                                         status: 400,
+                //                                         message: `Please select ${cartItem.packageId.selectedCount} services for the customized package.`,
+                //                                 });
+                //                         }
+                //                 }
+                //         }
+                // }
+
                 return res.status(200).json({
                         status: 200,
                         message: "Cart data found.",
@@ -732,6 +742,8 @@ async function calculateCartPrices(findCart, userData) {
         let totalIsSlotPrice = 0;
 
         for (const cartItem of findCart.services) {
+                console.log("cartItem test", cartItem);
+
                 if (cartItem.serviceId) {
                         const priceDetails = await getServicePrice1(cartItem.serviceId, userData.city, userData.sector);
 
@@ -748,7 +760,6 @@ async function calculateCartPrices(findCart, userData) {
                         totalIsInCart++;
 
                         const timeParts = cartItem.serviceId.totalTime.split(" ");
-                        console.log("timeParts", timeParts);
 
                         const hours = parseInt(timeParts[0]) || 0;
                         const minutes = parseInt(timeParts[2]) || 0;
@@ -759,8 +770,10 @@ async function calculateCartPrices(findCart, userData) {
         }
 
         for (const cartItem of findCart.packages) {
+                console.log("cartItem test 2", cartItem);
 
                 for (const service of cartItem.services) {
+                        console.log("service test", service);
                         if (service.serviceId) {
                                 const priceDetails = await getServicePrice1(service.serviceId, userData.city, userData.sector);
 
@@ -768,24 +781,21 @@ async function calculateCartPrices(findCart, userData) {
                                 service.serviceId.discountPrice = priceDetails.discountPrice;
                                 service.serviceId.discount = priceDetails.discount;
                                 service.serviceId.discountActive = priceDetails.discountActive;
+                                service.serviceId.totalTime = priceDetails.totalTime;
 
                                 totalOriginalPrice += priceDetails.originalPrice * service.quantity;
                                 totalDiscountActive += priceDetails.discountActive ? 1 : 0;
                                 totalDiscount += priceDetails.discount * service.quantity;
                                 totalDiscountPrice += priceDetails.discountActive ? priceDetails.discountPrice * service.quantity : 0;
-                                totalQuantityInCart += findCart.quantity;
+                                totalQuantityInCart += cartItem.quantity;
                                 totalIsInCart++;
 
-                                const timeParts = (service.serviceId.totalTime || "").split(" ");
-                                console.log("timeParts", timeParts);
-                                console.log("service.serviceId.totalTime", service.serviceId.totalTime);
-                                if (timeParts.length === 2) {
-                                        const hours = parseInt(timeParts[0]) || 0;
-                                        const minutes = parseInt(timeParts[1]) || 0;
+                                const timeParts = (priceDetails.totalTime || "").split(" ");
+                                const hours = parseInt(timeParts[0]) || 0;
+                                const minutes = parseInt(timeParts[2]) || 0;
 
-                                        totalHours += hours;
-                                        totalMinutes += minutes;
-                                }
+                                totalHours += hours;
+                                totalMinutes += minutes;
                         }
                 }
         }
@@ -809,6 +819,7 @@ async function calculateCartPrices(findCart, userData) {
         findCart.paidAmount += totalIsSlotPrice;
 
         const totalHoursString = totalHours > 0 ? `${totalHours} hr` : "";
+
         const totalMinutesString = totalMinutes > 0 ? ` ${totalMinutes} min` : "";
 
         const totalTimeTaken = totalHoursString + totalMinutesString;
@@ -826,8 +837,6 @@ async function calculateCartPrices(findCart, userData) {
                 totalIsSlotPrice
         };
 }
-
-
 
 exports.listOffer = async (req, res) => {
         try {
@@ -2078,7 +2087,8 @@ function calculateCustomizePackagePrice(packageData, userCity, userSector) {
                         }
                 });
         }
-
+        console.log("packageData", packageData)
+        console.log("totalOriginalPrice", totalOriginalPrice)
         return totalOriginalPrice;
 }
 
@@ -2123,6 +2133,8 @@ exports.addToCartPackageEdit = async (req, res) => {
                                 findCart.totalAmount += existingPackage.price * req.body.quantity;
                                 findCart.paidAmount += existingPackage.price * req.body.quantity;
                                 await findCart.save();
+                                console.log("existingPackage", existingPackage);
+
                                 return res.status(200).json({ status: 200, message: "Package quantity updated in the cart.", data: findCart });
                         } else {
                                 const price = calculateEditPackagePrice(findPackage, userData.city, userData.sector);
@@ -2151,6 +2163,7 @@ exports.addToCartPackageEdit = async (req, res) => {
                                         quantity: req.body.quantity,
                                         total: price * req.body.quantity,
                                 };
+                                console.log("newPackage", newPackage);
                                 findCart.packages.push(newPackage);
                                 findCart.totalAmount += newPackage.total;
                                 findCart.paidAmount += newPackage.total;
@@ -2221,6 +2234,8 @@ exports.addToCartPackageEdit = async (req, res) => {
                                         paidAmount: paidAmount,
                                         totalItem: 1,
                                 };
+                                console.log("obj", obj);
+
                                 const Data = await Cart.create(obj);
                                 return res.status(200).json({ status: 200, message: "Package successfully added to cart.", data: Data });
                         }
@@ -4715,12 +4730,12 @@ exports.updateCustomizePackageInCart = async (req, res) => {
                         }
                         console.log("123", existingPackage);
 
-                        // if (req.body.selectedServices && req.body.selectedServices.length !== findPackage.selectedCount) {
-                        //         return res.status(400).json({
-                        //             status: 400,
-                        //             message: `Please select ${findPackage.selectedCount} services for the customized package.`,
-                        //         });
-                        //     }
+                        if (req.body.selectedServices && req.body.selectedServices.length !== findPackage.selectedCount) {
+                                return res.status(400).json({
+                                        status: 400,
+                                        message: `Please select ${findPackage.selectedCount} services for the customized package.`,
+                                });
+                        }
 
                         if (req.body.selectedServices) {
                                 existingPackage.services.forEach(service => {

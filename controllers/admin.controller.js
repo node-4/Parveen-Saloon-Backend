@@ -2744,7 +2744,7 @@ exports.addPackageLocation = async (req, res) => {
     try {
         const packageId = req.params.packageId;
 
-        const existingPackage = await Package.findById(packageId).populate('services.service',).populate('addOnServices.service');
+        const existingPackage = await Package.findById(packageId).populate('services.service').populate('addOnServices.service');
         if (!existingPackage) {
             return res.status(404).json({ message: "Package not found", status: 404, data: {} });
         }
@@ -2752,13 +2752,20 @@ exports.addPackageLocation = async (req, res) => {
         const newLocations = req.body.location.map(loc => ({
             city: loc.city,
             sector: loc.sector,
+            originalPrice: loc.originalPrice,
+            discountActive: loc.discountActive,
+            discountPrice: loc.discountPrice,
         }));
+
         const existingLocations = existingPackage.location.map(loc => ({
             city: loc.city,
             sector: loc.sector,
         }));
 
-        const duplicateLocation = newLocations.find(newLoc => existingLocations.some(existingLoc => existingLoc.city.toString() === newLoc.city.toString() && existingLoc.sector.toString() === newLoc.sector.toString()));
+        const duplicateLocation = newLocations.find(newLoc => existingLocations.some(existingLoc =>
+            existingLoc.city.toString() === newLoc.city.toString() &&
+            existingLoc.sector.toString() === newLoc.sector.toString()
+        ));
 
         if (duplicateLocation) {
             return res.status(409).json({
@@ -2780,116 +2787,52 @@ exports.addPackageLocation = async (req, res) => {
             }
         }
 
-        // if (req.body.location && Array.isArray(req.body.location)) {
-        //     const newLocations = req.body.location.map(async loc => {
-        //         const { city, sector } = loc;
-
-        //         const matchingServices = existingPackage.services.filter(service => {
-        //             const matchingLocations = service.service.location.filter(location =>
-        //                 location.city.toString() === city.toString() &&
-        //                 location.sector.toString() === sector.toString()
-        //             );
-        //             return matchingLocations.length > 0;
-        //         });
-        //         console.log("matchingServices", matchingServices);
-        //         const firstMatchingService = matchingServices;
-        //         let originalPrice = loc.originalPrice || 0;
-        //         let discountActive = loc.discountActive || false;
-        //         let discountPrice = loc.discountPrice || 0;
-        //         let discount = 0;
-        //         console.log("firstMatchingService", firstMatchingService);
-
-        //         if (firstMatchingService) {
-        //             const firstLocationMatch = firstMatchingService.service.location.find(location =>
-        //                 location.city.toString() === city.toString() &&
-        //                 location.sector.toString() === sector.toString()
-        //             );
-
-        //             if (firstLocationMatch) {
-        //                 originalPrice = originalPrice || firstLocationMatch.originalPrice || 0;
-        //                 discountActive = discountActive || firstLocationMatch.discountActive || false;
-        //                 discountPrice = discountPrice || firstLocationMatch.discountPrice || 0;
-
-        //                 if (discountActive && originalPrice > 0 && discountPrice > 0) {
-        //                     discount = ((originalPrice - discountPrice) / originalPrice) * 100;
-        //                     discount = Math.max(discount, 0);
-        //                     discount = Math.round(discount);
-        //                 }
-        //             }
-        //         }
-
-        //         const newLocation = {
-        //             city: city,
-        //             sector: sector,
-        //             originalPrice: originalPrice,
-        //             discountActive: discountActive,
-        //             discountPrice: discountPrice,
-        //             discount: discount,
-        //         };
-
-        //         return newLocation;
-        //     });
-
-        //     existingPackage.location = existingPackage.location.concat(await Promise.all(newLocations));
-        // }
-
         if (req.body.location && Array.isArray(req.body.location)) {
             const newLocations = req.body.location.map(async loc => {
-                const { city, sector } = loc;
+                const { city, sector, originalPrice, discountActive, discountPrice } = loc;
 
-                const matchingServices = existingPackage.services.filter(service => {
-                    const matchingLocations = service.service.location.filter(location =>
+                const matchingServices = existingPackage.services.filter(service =>
+                    service.service.location.some(location =>
                         location.city.toString() === city.toString() &&
                         location.sector.toString() === sector.toString()
-                    );
-                    return matchingLocations.length > 0;
-                });
+                    )
+                );
 
-                const locationEntries = matchingServices.map(service => {
-                    const locationMatch = service.service.location.find(location =>
-                        location.city.toString() === city.toString() &&
-                        location.sector.toString() === sector.toString()
-                    );
+                const aggregatedLocation = {
+                    city: city,
+                    sector: sector,
+                    originalPrice: originalPrice || 0,
+                    discountActive: discountActive || false,
+                    discountPrice: discountPrice || 0,
+                    discount: 0,
+                };
 
-                    let originalPrice = loc.originalPrice || 0;
-                    let discountActive = loc.discountActive || false;
-                    let discountPrice = loc.discountPrice || 0;
-                    let discount = 0;
+                if (!originalPrice || !discountActive || !discountPrice) {
+                    for (const service of matchingServices) {
+                        const locationMatch = service.service.location.find(location =>
+                            location.city.toString() === city.toString() &&
+                            location.sector.toString() === sector.toString()
+                        );
 
-                    if (locationMatch) {
-                        if (!discountActive) {
-                            const serviceDiscountInactive = matchingServices.find(s => !s.service.discountActive);
-                            if (serviceDiscountInactive && serviceDiscountInactive.service && serviceDiscountInactive.service.originalPrice) {
-                                originalPrice = serviceDiscountInactive.service.originalPrice;
-                            }
-                        }
-
-                        originalPrice = originalPrice || locationMatch.originalPrice || 0;
-                        discountActive = discountActive || locationMatch.discountActive || false;
-                        discountPrice = discountPrice || locationMatch.discountPrice || 0;
-
-                        if (discountActive && originalPrice > 0 && discountPrice > 0) {
-                            discount = ((originalPrice - discountPrice) / originalPrice) * 100;
-                            discount = Math.max(discount, 0);
-                            discount = Math.round(discount);
+                        if (locationMatch) {
+                            aggregatedLocation.originalPrice += locationMatch.originalPrice || 0;
+                            aggregatedLocation.discountActive = aggregatedLocation.discountActive || locationMatch.discountActive || false;
+                            aggregatedLocation.discountPrice += locationMatch.discountPrice || 0;
                         }
                     }
+                }
 
-                    return {
-                        city: city,
-                        sector: sector,
-                        originalPrice: originalPrice,
-                        discountActive: discountActive,
-                        discountPrice: discountPrice,
-                        discount: discount,
-                    };
-                });
+                if (aggregatedLocation.discountActive && aggregatedLocation.originalPrice > 0 && aggregatedLocation.discountPrice > 0) {
+                    aggregatedLocation.discount = ((aggregatedLocation.originalPrice - aggregatedLocation.discountPrice) / aggregatedLocation.originalPrice) * 100;
+                    aggregatedLocation.discount = Math.max(aggregatedLocation.discount, 0);
+                    aggregatedLocation.discount = Math.round(aggregatedLocation.discount);
+                }
 
-                return locationEntries;
+                return aggregatedLocation;
             });
 
-            const flattenedLocations = [].concat(...await Promise.all(newLocations));
-            existingPackage.location = existingPackage.location.concat(flattenedLocations);
+            const aggregatedLocations = await Promise.all(newLocations);
+            existingPackage.location = existingPackage.location.concat(aggregatedLocations);
         }
 
         const updatedPackage = await existingPackage.save();
@@ -3020,7 +2963,7 @@ exports.getPackage = async (req, res) => {
         let servicesWithCartInfo = [];
 
         let totalDiscountActive = 0;
-        let totalDiscount = 0; // Initialize total discount
+        let totalDiscount = 0;
         let totalDiscountPrice = 0;
         let totalQuantityInCart = 0;
         let totalIsInCart = 0;
@@ -3040,8 +2983,6 @@ exports.getPackage = async (req, res) => {
                     } else {
                         totalDiscountPriceItem = product.discountActive && product.discount ? product.discount * cartItem.quantity : 0;
                     }
-
-                    // Calculate total original price only when cartItem is defined
                     totalOriginalPrice += (product.originalPrice || 0) * (cartItem.quantity || 0);
                 }
 
@@ -3050,7 +2991,6 @@ exports.getPackage = async (req, res) => {
                 totalDiscountActive += countDiscountItem;
                 totalDiscount += (product.discountActive && product.discount) ? (product.discount * (cartItem?.quantity || 0)) : 0;
 
-                // Calculate total discount price based on discountPrice if discountActive is true
                 if (product.discountActive && product.discountPrice) {
                     totalDiscountPrice += product.discountPrice * (cartItem?.quantity || 0);
                 }
