@@ -34,6 +34,7 @@ module.exports = (app) => {
         //
         app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
         app.put('/api/v1/user/Cart/updateQuantity', [authJwt.verifyToken], auth.updateServiceQuantity);
+        app.put('/api/v1/user/Cart/packages/updateQuantity', [authJwt.verifyToken], auth.updatePackageQuantity);
         //
         app.put("/api/v1/user/Cart/provideTip", [authJwt.verifyToken], auth.provideTip);
         app.get("/api/v1/user/Coupan/listCoupan", [authJwt.verifyToken], auth.listCoupan);

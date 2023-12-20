@@ -146,6 +146,7 @@ module.exports = (app) => {
         app.post('/api/v1/admin/area/areas', [authJwt.verifyToken], auth.createArea);
         app.get('/api/v1/admin/area/areas', [authJwt.verifyToken], auth.getAllAreas);
         app.get('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.getAreaById);
+        app.get('/api/v1/admin/areas/city/:cityId', [authJwt.verifyToken], auth.getAreasByCityId);
         app.put('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.updateAreaById);
         app.delete('/api/v1/admin/area/areas/:id', [authJwt.verifyToken], auth.deleteAreaById);
         app.post("/api/v1/admin-testimonial", [authJwt.verifyToken], testimonial.single('image'), auth.createTestimonial);

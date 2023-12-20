@@ -4181,6 +4181,32 @@ exports.getAreaById = async (req, res) => {
     }
 };
 
+exports.getAreasByCityId = async (req, res) => {
+    try {
+            const cityId = req.params.cityId;
+
+            const existingCity = await City.findById(cityId);
+
+            if (!existingCity) {
+                    return res.status(400).json({
+                            status: 400,
+                            message: 'Invalid city ID',
+                    });
+            }
+
+            const areas = await Area.find({ city: cityId });
+
+            res.status(200).json({
+                    status: 200,
+                    message: 'Areas retrieved successfully',
+                    data: areas,
+            });
+    } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Server error' });
+    }
+};
+
 exports.updateAreaById = async (req, res) => {
     try {
         const { name, cityId, status } = req.body;
