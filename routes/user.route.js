@@ -75,6 +75,7 @@ module.exports = (app) => {
         app.post('/api/v1/user/comment/:_id', [authJwt.verifyToken], auth.commentOnImage);
         app.put("/api/v1/user/orders/:orderId/status", [authJwt.verifyToken], auth.updateOrderStatus);
         app.get("/api/v1/user/Category/allServices", auth.getCategoriesServices);
+        app.get("/api/v1/user/Category/allPackges", auth.getCategoriesPackages);
         app.get("/api/v1/user/Category/allCategory", auth.getCategories);
         app.get('/api/v1/user/Category/search', [authJwt.verifyToken], auth.listServiceforSearch);
         app.get('/api/v1/user/frequently-added-services', [authJwt.verifyToken], auth.getFrequentlyAddedServices);

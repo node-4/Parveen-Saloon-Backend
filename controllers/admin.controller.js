@@ -2220,8 +2220,18 @@ exports.getService = async (req, res) => {
         }).populate({
             path: 'location.sector',
             model: 'Area',
-        });
-
+        }).populate({
+            path: 'serviceTypes',
+            model: 'ServiceTypeRef',
+            populate: [{
+                path: 'service',
+                model: 'Service'
+            }, {
+                path: 'serviceType',
+                model: 'ServiceType'
+            }]
+        }).exec();
+        console.log("findServices", findService);
         let servicesWithCartInfo = [];
 
         let totalDiscountActive = 0;
@@ -2303,7 +2313,7 @@ exports.getService = async (req, res) => {
 };
 exports.getAllService = async (req, res) => {
     try {
-        const findService = await service.find({ status: false }).populate('mainCategoryId', 'name').populate('categoryId', 'name').populate('subCategoryId', 'name')
+        const findService = await service.find().populate('mainCategoryId', 'name').populate('categoryId', 'name').populate('subCategoryId', 'name')
             .populate({
                 path: 'location.city',
                 model: 'City',
@@ -4183,27 +4193,27 @@ exports.getAreaById = async (req, res) => {
 
 exports.getAreasByCityId = async (req, res) => {
     try {
-            const cityId = req.params.cityId;
+        const cityId = req.params.cityId;
 
-            const existingCity = await City.findById(cityId);
+        const existingCity = await City.findById(cityId);
 
-            if (!existingCity) {
-                    return res.status(400).json({
-                            status: 400,
-                            message: 'Invalid city ID',
-                    });
-            }
-
-            const areas = await Area.find({ city: cityId });
-
-            res.status(200).json({
-                    status: 200,
-                    message: 'Areas retrieved successfully',
-                    data: areas,
+        if (!existingCity) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid city ID',
             });
+        }
+
+        const areas = await Area.find({ city: cityId });
+
+        res.status(200).json({
+            status: 200,
+            message: 'Areas retrieved successfully',
+            data: areas,
+        });
     } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
 

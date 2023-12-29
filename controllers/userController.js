@@ -4646,9 +4646,34 @@ exports.getCategoriesServices = async (req, res) => {
                 return res.status(500).json({ message: "Server error", status: 500, data: {} });
         }
 };
+exports.getCategoriesPackages = async (req, res) => {
+        try {
+                const categories = await Category.find();
+
+                if (categories.length === 0) {
+                        return res.status(404).json({ message: "No categories found", status: 404, data: [] });
+                }
+
+                const categoryData = [];
+
+                for (const category of categories) {
+                        const services = await Package.find({ categoryId: category._id });
+
+                        categoryData.push({
+                                category: category,
+                                package: services,
+                        });
+                }
+
+                return res.status(200).json({ message: "Categories found", status: 200, data: categoryData });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Server error", status: 500, data: {} });
+        }
+};
 exports.getCategories = async (req, res) => {
         try {
-                const categories = await Category.find().populate("categoryId");
+                const categories = await Category.find().populate("mainCategoryId");
 
                 if (categories.length === 0) {
                         return res.status(404).json({ message: "No categories found", status: 404, data: [] });
@@ -4657,14 +4682,14 @@ exports.getCategories = async (req, res) => {
                 const categoryData = {};
 
                 for (const category of categories) {
-                        if (!categoryData[category.categoryId._id]) {
-                                categoryData[category.categoryId._id] = {
-                                        category: category.categoryId,
+                        if (!categoryData[category.mainCategoryId._id]) {
+                                categoryData[category.mainCategoryId._id] = {
+                                        category: category.mainCategoryId,
                                         subCategories: [],
                                 };
                         }
 
-                        categoryData[category.categoryId._id].subCategories.push({
+                        categoryData[category.mainCategoryId._id].subCategories.push({
                                 _id: category._id,
                                 name: category.name,
                                 image: category.image,
