@@ -2237,93 +2237,93 @@ exports.getService = async (req, res) => {
             path: 'serviceTypes',
             model: 'ServiceTypeRef',
             populate: [{
-            //     path: 'service',
-            //     model: 'Service'
-            // }, 
-            // {
+                //     path: 'service',
+                //     model: 'Service'
+                // }, 
+                // {
                 path: 'serviceType',
                 model: 'ServiceType'
             }]
         }).exec();
-    console.log("findServices", findService);
-    let servicesWithCartInfo = [];
+        console.log("findServices", findService);
+        let servicesWithCartInfo = [];
 
-    let totalDiscountActive = 0;
-    let totalDiscount = 0;
-    let totalDiscountPrice = 0;
-    let totalQuantityInCart = 0;
-    let totalIsInCart = 0;
-    let totalOriginalPrice = 0;
+        let totalDiscountActive = 0;
+        let totalDiscount = 0;
+        let totalDiscountPrice = 0;
+        let totalQuantityInCart = 0;
+        let totalIsInCart = 0;
+        let totalOriginalPrice = 0;
 
-    if (findService.length > 0 && userCart) {
-        servicesWithCartInfo = findService.map((product) => {
-            const cartItem = userCart.services.find((item) => item.serviceId.equals(product._id));
+        if (findService.length > 0 && userCart) {
+            servicesWithCartInfo = findService.map((product) => {
+                const cartItem = userCart.services.find((item) => item.serviceId.equals(product._id));
 
-            let totalDiscountPriceItem = 0;
-            let isInCartItem = 0;
+                let totalDiscountPriceItem = 0;
+                let isInCartItem = 0;
 
-            if (cartItem) {
-                isInCartItem = 1;
-                if (product.type === "Package") {
-                    totalDiscountPriceItem = product.discountActive && product.discountPrice ? product.discountPrice * cartItem.quantity : 0;
-                } else {
-                    totalDiscountPriceItem = product.discountActive && product.discount ? product.discount * cartItem.quantity : 0;
+                if (cartItem) {
+                    isInCartItem = 1;
+                    if (product.type === "Package") {
+                        totalDiscountPriceItem = product.discountActive && product.discountPrice ? product.discountPrice * cartItem.quantity : 0;
+                    } else {
+                        totalDiscountPriceItem = product.discountActive && product.discount ? product.discount * cartItem.quantity : 0;
+                    }
+
+                    totalOriginalPrice += (product.originalPrice || 0) * (cartItem.quantity || 0);
                 }
 
-                totalOriginalPrice += (product.originalPrice || 0) * (cartItem.quantity || 0);
-            }
+                const countDiscountItem = product.discountActive ? 1 : 0;
 
-            const countDiscountItem = product.discountActive ? 1 : 0;
+                totalDiscountActive += countDiscountItem;
+                totalDiscount += (product.discountActive && product.discount) ? (product.discount * (cartItem?.quantity || 0)) : 0;
 
-            totalDiscountActive += countDiscountItem;
-            totalDiscount += (product.discountActive && product.discount) ? (product.discount * (cartItem?.quantity || 0)) : 0;
+                if (product.discountActive && product.discountPrice) {
+                    totalDiscountPrice += product.discountPrice * (cartItem?.quantity || 0);
+                }
 
-            if (product.discountActive && product.discountPrice) {
-                totalDiscountPrice += product.discountPrice * (cartItem?.quantity || 0);
-            }
+                totalQuantityInCart += cartItem ? cartItem.quantity : 0;
+                totalIsInCart += isInCartItem;
 
-            totalQuantityInCart += cartItem ? cartItem.quantity : 0;
-            totalIsInCart += isInCartItem;
-
-            return {
+                return {
+                    ...product.toObject(),
+                    isInCart: cartItem ? true : false,
+                    quantityInCart: cartItem ? cartItem.quantity : 0,
+                    totalDiscountPrice: totalDiscountPriceItem,
+                    countDiscount: countDiscountItem,
+                };
+            });
+        } else if (findService.length > 0) {
+            servicesWithCartInfo = findService.map((product) => ({
                 ...product.toObject(),
-                isInCart: cartItem ? true : false,
-                quantityInCart: cartItem ? cartItem.quantity : 0,
-                totalDiscountPrice: totalDiscountPriceItem,
-                countDiscount: countDiscountItem,
-            };
-        });
-    } else if (findService.length > 0) {
-        servicesWithCartInfo = findService.map((product) => ({
-            ...product.toObject(),
-            isInCart: false,
-            quantityInCart: 0,
-            totalDiscountPrice: product.discountActive && product.type !== "Package" ? (product.discount || 0) : 0,
-            countDiscount: product.discountActive ? 1 : 0,
-            totalOriginalPrice: product.originalPrice || 0,
-        }));
-    }
+                isInCart: false,
+                quantityInCart: 0,
+                totalDiscountPrice: product.discountActive && product.type !== "Package" ? (product.discount || 0) : 0,
+                countDiscount: product.discountActive ? 1 : 0,
+                totalOriginalPrice: product.originalPrice || 0,
+            }));
+        }
 
-    if (findService.length > 0) {
-        const response = {
-            message: "Services Found",
-            status: 200,
-            data: servicesWithCartInfo,
-            totalDiscountActive,
-            totalDiscount,
-            totalDiscountPrice,
-            totalQuantityInCart,
-            totalIsInCart,
-            totalOriginalPrice,
-        };
-        return res.status(200).json(response);
-    } else {
-        return res.status(404).json({ message: "Services not found.", status: 404, data: {} });
+        if (findService.length > 0) {
+            const response = {
+                message: "Services Found",
+                status: 200,
+                data: servicesWithCartInfo,
+                totalDiscountActive,
+                totalDiscount,
+                totalDiscountPrice,
+                totalQuantityInCart,
+                totalIsInCart,
+                totalOriginalPrice,
+            };
+            return res.status(200).json(response);
+        } else {
+            return res.status(404).json({ message: "Services not found.", status: 404, data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
     }
-} catch (error) {
-    console.log(error);
-    return res.status(500).json({ status: 500, message: "Internal server error", data: error.message });
-}
 };
 exports.getAllService = async (req, res) => {
     try {
@@ -3008,12 +3008,12 @@ exports.getPackage = async (req, res) => {
 
         if (findService.length > 0 && userCart) {
             servicesWithCartInfo = findService.map((product) => {
-                const cartItem = userCart.services.find((item) => item.serviceId.equals(product._id));
+                const cartItem = userCart.packages.find((item) => item.packageId.equals(product._id));
 
                 let totalDiscountPriceItem = 0;
                 let isInCartItem = 0;
 
-                if (cartItem) {
+                if (cartItem !== undefined) {
                     isInCartItem = 1;
                     if (product.type === "Package") {
                         totalDiscountPriceItem = product.discountActive && product.discountPrice ? product.discountPrice * cartItem.quantity : 0;
@@ -3037,7 +3037,7 @@ exports.getPackage = async (req, res) => {
 
                 return {
                     ...product.toObject(),
-                    isInCart: cartItem ? true : false,
+                    isInCart: isInCartItem === 1,
                     quantityInCart: cartItem ? cartItem.quantity : 0,
                     totalDiscountPrice: totalDiscountPriceItem,
                     countDiscount: countDiscountItem,
