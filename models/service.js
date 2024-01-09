@@ -144,6 +144,7 @@ const serviceSchema = new Schema({
     selected: { type: Boolean, default: false },
     type: { type: String, enum: ['Service'] },
     status: { type: Boolean, default: false },
+    isServiceTypes: { type: Boolean, default: false },
 }, { timestamps: true });
 
 serviceSchema.plugin(mongoosePaginate);

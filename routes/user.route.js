@@ -31,6 +31,7 @@ module.exports = (app) => {
         app.post("/api/v1/user/Cart/addToCartPackageCustomise", [authJwt.verifyToken], auth.addToCartPackageCustomise);
         app.post("/api/v1/user/Cart/addToCartPackageEdit", [authJwt.verifyToken], auth.addToCartPackageEdit);
         app.post('/api/v1/user/Cart/remove-from-cart', [authJwt.verifyToken], auth.removeFromCart);
+        app.post('/api/v1/user/Cart/remove-package-from-cart', [authJwt.verifyToken], auth.removePackageFromCart);
         //
         app.post('/api/v1/user/Cart/add-service', [authJwt.verifyToken], auth.addServiceToCart);
         app.put('/api/v1/user/Cart/updateQuantity', [authJwt.verifyToken], auth.updateServiceQuantity);

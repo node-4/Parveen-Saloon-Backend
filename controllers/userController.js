@@ -2337,7 +2337,7 @@ exports.addToCartPackageEdit = async (req, res) => {
 
                 const findCart = await Cart.findOne({ userId: userData._id });
                 const findPackage = req.body.packageId ? await Package.findOne({ _id: req.body.packageId, packageType: "Edit" }).populate('services.service').populate('addOnServices.service') : null;
-
+               
                 if (!findPackage) {
                         return res.status(404).json({ status: 404, message: "Package not found" });
                 }
@@ -2623,6 +2623,98 @@ exports.removeFromCart = async (req, res) => {
                         .send({ status: 500, message: "Server error" + error.message });
         }
 };
+
+exports.removePackageFromCart = async (req, res) => {
+        try {
+                const userData = await User.findOne({ _id: req.user._id });
+                if (!userData) {
+                        return res.status(404).send({ status: 404, message: "User not found" });
+                } else {
+                        const findCart = await Cart.findOne({ userId: userData._id });
+                        if (!findCart) {
+                                return res.status(404).send({ status: 404, message: "Cart not found" });
+                        }
+
+                        const serviceIdToRemove = req.body.serviceId;
+                        const packageIdToRemove = req.body.packageId;
+                        const isPackageService = req.body.isPackageService || false;
+
+                        if (packageIdToRemove) {
+                                const packageIndex = findCart.packages.findIndex(
+                                        (pkg) => pkg.packageId.toString() === packageIdToRemove
+                                );
+
+                                if (packageIndex !== -1) {
+                                        const removedPackage = findCart.packages.splice(packageIndex, 1)[0];
+                                        findCart.totalAmount -= removedPackage.total || 0;
+                                        findCart.paidAmount -= removedPackage.total || 0;
+                                        findCart.totalItem--;
+                                }
+                        } else if (isPackageService) {
+                                const packageIndex = findCart.packages.findIndex((pkg) =>
+                                        pkg.services.some((service) => service.serviceId.toString() === serviceIdToRemove)
+                                );
+
+                                if (packageIndex !== -1) {
+                                        const packageToUpdate = findCart.packages[packageIndex];
+                                        const serviceToRemoveIndex = packageToUpdate.services.findIndex(
+                                                (service) => service.serviceId.toString() === serviceIdToRemove
+                                        );
+
+                                        if (serviceToRemoveIndex !== -1) {
+                                                const removedService = packageToUpdate.services.splice(serviceToRemoveIndex, 1)[0];
+                                                findCart.totalAmount -= removedService.total || 0;
+                                                findCart.paidAmount -= removedService.total || 0;
+                                                findCart.totalItem--;
+                                        }
+
+                                        if (packageToUpdate.services.length === 0) {
+                                                findCart.packages.splice(packageIndex, 1);
+                                        }
+                                }
+                        } else {
+                                let serviceIndex =
+                                        findCart.services &&
+                                        findCart.services.findIndex((service) => service.serviceId.equals(serviceIdToRemove));
+
+                                let freeServiceIndex =
+                                        findCart.freeService &&
+                                        findCart.freeService.findIndex(
+                                                (freeService) => freeService.freeServiceId.toString() === serviceIdToRemove
+                                        );
+
+                                if (serviceIndex !== -1) {
+                                        const removedService = findCart.services.splice(serviceIndex, 1)[0];
+                                        findCart.totalAmount -= removedService.total || 0;
+                                        findCart.paidAmount -= removedService.total || 0;
+                                        findCart.totalItem--;
+                                } else if (freeServiceIndex !== -1) {
+                                        findCart.freeService.splice(freeServiceIndex, 1);
+                                        findCart.freeServiceCount = (findCart.freeServiceCount || 0) - 1;
+                                }
+                        }
+
+                        if (findCart.services.length === 0 && findCart.packages.length === 0) {
+                                await Cart.findByIdAndDelete({ _id: findCart._id });
+                                return res.status(200).json({
+                                        status: 200,
+                                        message: "Cart permanently deleted as it is empty.",
+                                });
+                        } else {
+                                await findCart.save();
+                                return res.status(200).json({
+                                        status: 200,
+                                        message: "Item removed from the cart.",
+                                        data: findCart,
+                                });
+                        }
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).send({ status: 500, message: "Server error" + error.message });
+        }
+};
+
 
 // exports.addToCart = async (req, res) => {
 //         try {

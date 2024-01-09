@@ -2009,9 +2009,7 @@ exports.createService = async (req, res) => {
             items: items,
             status: req.body.status
         };
-
         const category = await service.create(data);
-
         if (req.body.serviceTypesId) {
             const serviceTypeRef = await ServiceTypeRef.create({
                 service: category._id,
@@ -2019,6 +2017,7 @@ exports.createService = async (req, res) => {
             });
 
             category.serviceTypes = serviceTypeRef._id;
+            category.isServiceTypes = true;
             await category.save();
         }
         return res.status(200).json({ message: "Service added successfully.", status: 200, data: category });
@@ -2226,7 +2225,7 @@ exports.getService = async (req, res) => {
             mainCategoryId: findMainCategory._id,
             categoryId: findCategory._id,
             subCategoryId: findSubCategory._id,
-            status: false,
+            status: true,
         }).populate({
             path: 'location.city',
             model: 'City',
